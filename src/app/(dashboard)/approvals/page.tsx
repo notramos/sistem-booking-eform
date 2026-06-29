@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePendingBookings, useApproveBooking, useRejectBooking } from '@/hooks/useBookings';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,8 @@ import { formatDate, formatTime, getStatusLabel, getStatusColor } from '@/lib/ut
 import { CheckCircle2, XCircle, CalendarDays, Clock, User, Loader2, ClipboardList } from 'lucide-react';
 
 export default function ApprovalsPage() {
-  const { data: pendingData, isLoading, isError, refetch } = usePendingBookings();
+  const { hasAnyRole } = useAuth();
+  const { data: pendingData, isLoading, isError, refetch } = usePendingBookings(hasAnyRole(['sekretariat', 'admin']));
   const approveBooking = useApproveBooking();
   const rejectBooking = useRejectBooking();
 

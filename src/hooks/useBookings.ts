@@ -35,14 +35,15 @@ export function useMyBookings(status?: string) {
   });
 }
 
-export function usePendingBookings() {
+export function usePendingBookings(enabled: boolean = true) {
   return useQuery({
     queryKey: ['pending-bookings'],
     queryFn: async () => {
       const res = await bookingsApi.pending();
       return res.data;
     },
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
+    enabled,
   });
 }
 

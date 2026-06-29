@@ -29,7 +29,7 @@ export function Header() {
       const res = await notificationsApi.unreadCount();
       return res.data.data;
     },
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
   });
 
   const handleLogout = async () => {
