@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Plus, Pencil, Trash2, X, XCircle } from 'lucide-react';
 import type { RoomCategory, RoomFacility } from '@/types';
 
 function CategoryManager() {
@@ -18,8 +19,9 @@ function CategoryManager() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '' });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: categories, isLoading } = useQuery({
+  const { data: categories, isLoading, isError, refetch } = useQuery({
     queryKey: ['room-categories'],
     queryFn: async () => {
       const res = await roomsApi.categories.list();
@@ -110,6 +112,16 @@ function CategoryManager() {
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
                 </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <XCircle className="w-8 h-8 text-destructive" />
+                      <p className="text-muted-foreground">Gagal memuat data kategori</p>
+                      <Button variant="outline" size="sm" onClick={() => refetch()}>Muat Ulang</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : categories?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Belum ada kategori</TableCell>
@@ -129,7 +141,7 @@ function CategoryManager() {
                         <button onClick={() => openEdit(cat)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => { if (confirm('Hapus kategori ini?')) deleteMutation.mutate(cat.id); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                        <button onClick={() => setDeleteId(cat.id)} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -141,6 +153,25 @@ function CategoryManager() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Kategori</DialogTitle>
+            <DialogDescription>Kategori yang dihapus tidak dapat dikembalikan. Yakin ingin melanjutkan?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteId(null)}>Batal</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => { if (deleteId) deleteMutation.mutate(deleteId); setDeleteId(null); }}
+            >
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -150,8 +181,9 @@ function FacilityManager() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', icon: '' });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: facilities, isLoading } = useQuery({
+  const { data: facilities, isLoading, isError, refetch } = useQuery({
     queryKey: ['room-facilities'],
     queryFn: async () => {
       const res = await roomsApi.facilities.list();
@@ -243,6 +275,16 @@ function FacilityManager() {
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
                 </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <XCircle className="w-8 h-8 text-destructive" />
+                      <p className="text-muted-foreground">Gagal memuat data fasilitas</p>
+                      <Button variant="outline" size="sm" onClick={() => refetch()}>Muat Ulang</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : facilities?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Belum ada fasilitas</TableCell>
@@ -262,7 +304,7 @@ function FacilityManager() {
                         <button onClick={() => openEdit(fac)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => { if (confirm('Hapus fasilitas ini?')) deleteMutation.mutate(fac.id); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                        <button onClick={() => setDeleteId(fac.id)} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -274,6 +316,25 @@ function FacilityManager() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Fasilitas</DialogTitle>
+            <DialogDescription>Fasilitas yang dihapus tidak dapat dikembalikan. Yakin ingin melanjutkan?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteId(null)}>Batal</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => { if (deleteId) deleteMutation.mutate(deleteId); setDeleteId(null); }}
+            >
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

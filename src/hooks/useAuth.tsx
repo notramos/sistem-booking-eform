@@ -25,13 +25,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function getCookie(name: string): string | undefined {
+  return document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(name + '='))
+    ?.split('=')[1];
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUser = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie('token');
       if (!token) {
         setLoading(false);
         return;
@@ -39,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await authApi.getUser();
       setUser(res.data.data);
     } catch {
-      localStorage.removeItem("token");
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       setUser(null);
     } finally {
       setLoading(false);
@@ -50,19 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, [fetchUser]);
 
-  const setTokenCookie = (token: string) => {
-    document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
-  };
-
-  const removeTokenCookie = () => {
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-  };
-
   const login = useCallback(async (email: string, password: string) => {
     const res = await authApi.login(email, password);
     const { user: userData, token } = res.data.data;
-    localStorage.setItem("token", token);
-    setTokenCookie(token);
+    document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
     setUser(userData);
   }, []);
 
@@ -72,23 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     } finally {
-      localStorage.removeItem("token");
-      removeTokenCookie();
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       setUser(null);
     }
   }, []);
 
   const hasRole = useCallback(
-    (role: string) => {
-      return user?.roles?.some((r) => r.name === role) ?? false;
-    },
+    (role: string) => user?.roles?.some((r) => r.name === role) ?? false,
     [user],
   );
 
   const hasAnyRole = useCallback(
-    (roles: string[]) => {
-      return roles.some((role) => hasRole(role));
-    },
+    (roles: string[]) => roles.some((role) => hasRole(role)),
     [hasRole],
   );
 

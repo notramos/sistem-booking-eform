@@ -10,15 +10,26 @@ import { Select } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Download, FileText, FileSpreadsheet, CalendarDays } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, CalendarDays, XCircle } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
 import { formatDate, downloadBlob } from '@/lib/utils';
+import { toast } from 'sonner';
+
+function ReportError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-3 text-center py-8">
+      <XCircle className="w-8 h-8 text-destructive" />
+      <p className="text-muted-foreground">Gagal memuat data laporan</p>
+      <Button variant="outline" size="sm" onClick={onRetry}>Muat Ulang</Button>
+    </div>
+  );
+}
 
 function BookingReport({ startDate, endDate }: { startDate: Date | undefined; endDate: Date | undefined }) {
   const sd = startDate ? format(startDate, 'yyyy-MM-dd') : '';
   const ed = endDate ? format(endDate, 'yyyy-MM-dd') : '';
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['report-bookings', sd, ed],
     queryFn: async () => {
       const res = await reportsApi.bookings({ start_date: sd, end_date: ed });
@@ -33,6 +44,8 @@ function BookingReport({ startDate, endDate }: { startDate: Date | undefined; en
     <div>
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Memuat...</div>
+      ) : isError ? (
+        <ReportError onRetry={() => refetch()} />
       ) : bookings.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">Tidak ada data booking</div>
       ) : (
@@ -78,7 +91,7 @@ function BookingReport({ startDate, endDate }: { startDate: Date | undefined; en
 function RoomUtilization({ startDate, endDate }: { startDate: Date | undefined; endDate: Date | undefined }) {
   const sd = startDate ? format(startDate, 'yyyy-MM-dd') : '';
   const ed = endDate ? format(endDate, 'yyyy-MM-dd') : '';
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['report-utilization', sd, ed],
     queryFn: async () => {
       const res = await reportsApi.roomUtilization({ start_date: sd, end_date: ed });
@@ -93,6 +106,8 @@ function RoomUtilization({ startDate, endDate }: { startDate: Date | undefined; 
     <div>
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Memuat...</div>
+      ) : isError ? (
+        <ReportError onRetry={() => refetch()} />
       ) : rooms.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">Tidak ada data utilisasi</div>
       ) : (
@@ -140,7 +155,7 @@ function RoomUtilization({ startDate, endDate }: { startDate: Date | undefined; 
 function UserActivity({ startDate, endDate }: { startDate: Date | undefined; endDate: Date | undefined }) {
   const sd = startDate ? format(startDate, 'yyyy-MM-dd') : '';
   const ed = endDate ? format(endDate, 'yyyy-MM-dd') : '';
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['report-activity', sd, ed],
     queryFn: async () => {
       const res = await reportsApi.userActivity({ start_date: sd, end_date: ed });
@@ -155,6 +170,8 @@ function UserActivity({ startDate, endDate }: { startDate: Date | undefined; end
     <div>
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Memuat...</div>
+      ) : isError ? (
+        <ReportError onRetry={() => refetch()} />
       ) : activities.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">Tidak ada data aktivitas</div>
       ) : (
@@ -192,7 +209,7 @@ function MonthlyReport() {
   const [year, setYear] = useState(String(now.getFullYear()));
   const [month, setMonth] = useState(String(now.getMonth() + 1).padStart(2, '0'));
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['report-monthly', year, month],
     queryFn: async () => {
       const res = await reportsApi.monthly(year, month);
@@ -239,6 +256,8 @@ function MonthlyReport() {
 
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Memuat...</div>
+      ) : isError ? (
+        <ReportError onRetry={() => refetch()} />
       ) : !data ? (
         <div className="text-center py-8 text-muted-foreground">Pilih bulan untuk melihat laporan</div>
       ) : (
@@ -310,7 +329,7 @@ export default function AdminReportsPage() {
       const res = await reportsApi.exportPdf(tab, { start_date: formatDateParam(startDate), end_date: formatDateParam(endDate) });
       downloadBlob(res.data as Blob, `report-${tab}-${formatDateParam(startDate)}.pdf`);
     } catch {
-      // silent
+      toast.error('Gagal mengekspor laporan PDF');
     }
   };
 
@@ -319,7 +338,7 @@ export default function AdminReportsPage() {
       const res = await reportsApi.exportExcel(tab, { start_date: formatDateParam(startDate), end_date: formatDateParam(endDate) });
       downloadBlob(res.data as Blob, `report-${tab}-${formatDateParam(startDate)}.xlsx`);
     } catch {
-      // silent
+      toast.error('Gagal mengekspor laporan Excel');
     }
   };
 
@@ -357,10 +376,10 @@ export default function AdminReportsPage() {
 
       <Tabs defaultValue="bookings" value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="bookings">Booking Report</TabsTrigger>
-          <TabsTrigger value="utilization">Room Utilization</TabsTrigger>
-          <TabsTrigger value="activity">User Activity</TabsTrigger>
-          <TabsTrigger value="monthly">Monthly Report</TabsTrigger>
+          <TabsTrigger value="bookings">Laporan Booking</TabsTrigger>
+          <TabsTrigger value="utilization">Utilisasi Ruangan</TabsTrigger>
+          <TabsTrigger value="activity">Aktivitas User</TabsTrigger>
+          <TabsTrigger value="monthly">Laporan Bulanan</TabsTrigger>
         </TabsList>
         <TabsContent value="bookings">
           <BookingReport startDate={startDate} endDate={endDate} />

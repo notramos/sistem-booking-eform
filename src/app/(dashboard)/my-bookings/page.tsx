@@ -6,12 +6,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { CalendarDays, Clock, MapPin, XCircle, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MyBookingsPage() {
   const [statusFilter, setStatusFilter] = useState('');
+  const [cancelId, setCancelId] = useState<string | null>(null);
   const { data: bookings, isLoading } = useMyBookings(statusFilter || undefined);
   const cancelBooking = useCancelBooking();
 
@@ -42,8 +45,9 @@ export default function MyBookingsPage() {
         {statuses.map((s) => (
           <button
             key={s.value}
+            aria-pressed={statusFilter === s.value}
             onClick={() => setStatusFilter(s.value)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
               statusFilter === s.value
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
@@ -61,12 +65,11 @@ export default function MyBookingsPage() {
           ))}
         </div>
       ) : bookings?.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">Belum ada booking</p>
-          <Link href="/rooms">
-            <Button>Booking Sekarang</Button>
-          </Link>
-        </div>
+        <EmptyState
+          icon={Calendar}
+          title="Belum ada booking"
+          action={{ label: 'Booking Sekarang', href: '/rooms' }}
+        />
       ) : (
         <div className="space-y-3">
           {bookings?.map((booking) => (
@@ -74,12 +77,17 @@ export default function MyBookingsPage() {
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/booking/${booking.id}`}
-                      className="font-semibold text-foreground hover:text-primary transition-colors"
-                    >
-                      {booking.title}
-                    </Link>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link
+                        href={`/booking/${booking.id}`}
+                        className="font-semibold text-foreground hover:text-primary transition-colors"
+                      >
+                        {booking.title}
+                      </Link>
+                      {booking.service_details && (
+                        <Badge variant="outline" className="shrink-0">Pelayanan Gereja</Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground mt-1">{booking.room?.name}</p>
 
                     <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
@@ -106,11 +114,7 @@ export default function MyBookingsPage() {
                     </Badge>
                     {booking.is_cancellable && (
                       <button
-                        onClick={() => {
-                          if (confirm('Yakin ingin membatalkan booking ini?')) {
-                            cancelBooking.mutate(booking.id);
-                          }
-                        }}
+                        onClick={() => setCancelId(booking.id)}
                         className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                         title="Batalkan booking"
                       >
@@ -124,6 +128,25 @@ export default function MyBookingsPage() {
           ))}
         </div>
       )}
+
+      <Dialog open={!!cancelId} onOpenChange={(open) => { if (!open) setCancelId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Batalkan Booking</DialogTitle>
+            <DialogDescription>Booking yang dibatalkan tidak dapat dikembalikan. Yakin ingin melanjutkan?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCancelId(null)}>Batal</Button>
+            <Button
+              variant="destructive"
+              disabled={cancelBooking.isPending}
+              onClick={() => { if (cancelId) cancelBooking.mutate(cancelId); setCancelId(null); }}
+            >
+              Ya, Batalkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

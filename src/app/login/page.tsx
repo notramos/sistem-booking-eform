@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -8,28 +10,30 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
 import { Eye, EyeOff, Church } from "lucide-react";
+import { useState } from "react";
+
+const loginSchema = z.object({
+  email: z.string().email("Format email tidak valid"),
+  password: z.string().min(1, "Password wajib diisi"),
+});
+type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginForm) => {
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       router.push("/dashboard");
     } catch (err: unknown) {
-      const error = err as { message?: string; errors?: Record<string, string[]> };
-      setError(error?.message || "Email atau password salah");
-    } finally {
-      setLoading(false);
+      const e = err as { message?: string };
+      setError("root", { message: e?.message || "Email atau password salah" });
     }
   };
 
@@ -48,27 +52,26 @@ export default function LoginPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-center">Masuk</CardTitle>
-            <CardDescription className="text-center">
-              Masukkan email dan password Anda
-            </CardDescription>
+            <CardDescription className="text-center">Masukkan email dan password Anda</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {errors.root && (
                 <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
-                  {error}
+                  {errors.root.message}
                 </div>
               )}
 
-              <Input
-                id="email"
-                label="Email"
-                type="email"
-                placeholder="nama@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <div>
+                <Input
+                  id="email"
+                  label="Email"
+                  type="email"
+                  placeholder="nama@email.com"
+                  {...register("email")}
+                />
+                {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
+              </div>
 
               <div className="relative">
                 <Input
@@ -76,9 +79,7 @@ export default function LoginPage() {
                   label="Password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Masukkan password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  {...register("password")}
                 />
                 <button
                   type="button"
@@ -87,18 +88,16 @@ export default function LoginPage() {
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+                {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
               </div>
 
               <div className="flex items-center justify-end">
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-primary hover:text-primary/80 transition-colors"
-                >
+                <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 transition-colors">
                   Lupa password?
                 </Link>
               </div>
 
-              <Button type="submit" loading={loading} className="w-full">
+              <Button type="submit" loading={isSubmitting} className="w-full">
                 Masuk
               </Button>
             </form>

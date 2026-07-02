@@ -78,6 +78,12 @@ export interface Booking {
   room?: Room;
   approval?: BookingApproval;
   logs?: BookingLog[];
+  service_details?: {
+    service_type_label: string;
+    contact: string;
+    equipment: string[];
+    dynamic_fields: Record<string, unknown>;
+  } | null;
   created_at: string;
 }
 
@@ -169,4 +175,70 @@ export interface ReportFilter {
   status?: string;
   room_id?: string;
   user_id?: string;
+}
+
+export interface CongregationService {
+  id: string;
+  user_id: string;
+  service_type: string;
+  applicant_name: string;
+  applicant_gender: string | null;
+  baptismal_name: string | null;
+  birth_place: string | null;
+  birth_date: string | null;
+  address: string | null;
+  contact: string;
+  phone: string | null;
+  mobile_phone: string | null;
+  neighborhood: string | null;
+  region: string | null;
+  parish: string | null;
+  father_name: string | null;
+  father_religion: string | null;
+  mother_name: string | null;
+  mother_religion: string | null;
+  school: string | null;
+  grade: string | null;
+  occupation: string | null;
+  family_card_number: string | null;
+  service_date: string | null;
+  description: string | null;
+  status: string;
+  notes: string | null;
+  dynamic_fields: Record<string, unknown> | null;
+  user?: User;
+  created_at: string;
+}
+
+export interface ServiceFieldConfig {
+  name: string;
+  label: string;
+  type: 'text' | 'number' | 'email' | 'tel' | 'date' | 'time' | 'date_range' | 'select' | 'radio' | 'textarea';
+  required?: boolean;
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+  colSpan?: 1 | 2 | 3;
+  dynamicField?: boolean;
+}
+
+export interface ServiceSectionConfig {
+  id: string;
+  title: string;
+  description?: string;
+  fields: ServiceFieldConfig[];
+}
+
+export interface ServiceStepConfig {
+  title: string;
+  description?: string;
+  sections: ServiceSectionConfig[];
+}
+
+export interface ServiceTypeConfig {
+  value: string;
+  label: string;
+  description: string;
+  icon: string;
+  theme: string;
+  steps: ServiceStepConfig[];
 }

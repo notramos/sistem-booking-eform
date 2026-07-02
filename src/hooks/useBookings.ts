@@ -35,11 +35,11 @@ export function useMyBookings(status?: string) {
   });
 }
 
-export function usePendingBookings(enabled: boolean = true) {
+export function usePendingBookings(enabled: boolean = true, page: number = 1) {
   return useQuery({
-    queryKey: ['pending-bookings'],
+    queryKey: ['pending-bookings', page],
     queryFn: async () => {
-      const res = await bookingsApi.pending();
+      const res = await bookingsApi.pending(page);
       return res.data;
     },
     refetchInterval: 60_000,
@@ -130,6 +130,7 @@ export function useRejectBooking() {
       toast.success('Booking berhasil ditolak');
       qc.invalidateQueries({ queryKey: ['pending-bookings'] });
       qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['my-bookings'] });
       qc.invalidateQueries({ queryKey: ['calendar-events'] });
     },
     onError: (err: { message?: string }) => {

@@ -1,164 +1,368 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback, type ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreateCongregationService } from '@/hooks/useCongregationServices';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/date-picker';
-import { format } from 'date-fns';
-import { Heart, ArrowLeft } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { FormSection } from '@/components/ui/form-section';
+import { DynamicFormFields } from '@/components/ui/dynamic-form-fields';
+import { OfficialDocumentPreview } from '@/components/ui/official-document-preview';
+import { WizardProgress } from '@/components/ui/wizard-progress';
+import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
+import type { ServiceTypeConfig } from '@/types';
+import { cn } from '@/lib/utils';
 
-const SERVICE_TYPES = [
-  { value: 'konseling_pastoral', label: 'Konseling Pastoral' },
-  { value: 'kunjungan_pastoral', label: 'Kunjungan Pastoral' },
-  { value: 'bantuan_sosial', label: 'Bantuan Sosial' },
-  { value: 'permohonan_doa', label: 'Permohonan Doa' },
-  { value: 'perjamuan_kudus', label: 'Pelayanan Perjamuan Kudus' },
-  { value: 'pendampingan', label: 'Pendampingan Keluarga' },
-  { value: 'pemberkatan_rumah', label: 'Pemberkatan Rumah' },
-  { value: 'lainnya', label: 'Lainnya' },
-];
+type FormData = Record<string, string>;
+
+const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
+  Droplets, Bird, Flame, Church, Heart, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, BookOpen,
+};
+
+function getServiceTypeIcon(icon: string) {
+  return ICON_MAP[icon] || HelpCircle;
+}
+
+const WIZARD_STEPS_BASE = [{ title: 'Pilih Pelayanan' }];
+
+function buildStepSchema(stepIndex: number, config: ServiceTypeConfig) {
+  const stepConfig = config.steps[stepIndex];
+  if (!stepConfig) return null;
+
+  const requiredFields: string[] = [];
+  for (const section of stepConfig.sections) {
+    for (const field of section.fields) {
+      if (field.required) {
+        const key = field.dynamicField ? `dynamic_fields.${field.name}` : field.name;
+        requiredFields.push(key);
+      }
+    }
+  }
+  return requiredFields;
+}
+
+function getStepErrors(requiredFields: string[], data: FormData): Record<string, string> {
+  const errors: Record<string, string> = {};
+  for (const field of requiredFields) {
+    if (!data[field] || data[field].trim() === '') {
+      errors[field] = 'Field ini wajib diisi';
+    }
+  }
+  return errors;
+}
+
+function getStepFields(config: ServiceTypeConfig, stepIndex: number) {
+  const stepConfig = config.steps[stepIndex];
+  if (!stepConfig) return [];
+  return stepConfig.sections.flatMap((s) => s.fields);
+}
+
+function getReviewFields(config: ServiceTypeConfig, formData: FormData) {
+  const sections: { title: string; fields: { label: string; value: string | null | undefined }[] }[] = [];
+
+  for (const step of config.steps) {
+    for (const section of step.sections) {
+      const fields = section.fields
+        .map((f) => {
+          const key = f.dynamicField ? `dynamic_fields.${f.name}` : f.name;
+          return { label: f.label, value: formData[key] || null };
+        })
+        .filter((f) => f.value !== null);
+      if (fields.length > 0) {
+        sections.push({ title: section.title, fields });
+      }
+    }
+  }
+  return sections;
+}
 
 export default function NewCongregationServicePage() {
   const router = useRouter();
   const createService = useCreateCongregationService();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [formData, setFormData] = useState<FormData>({ service_type: '' });
+  const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
 
-  const [serviceType, setServiceType] = useState('');
-  const [applicantName, setApplicantName] = useState('');
-  const [address, setAddress] = useState('');
-  const [contact, setContact] = useState('');
-  const [serviceDate, setServiceDate] = useState<Date | undefined>(undefined);
-  const [description, setDescription] = useState('');
+  const selectedType = formData.service_type;
+  const config = selectedType ? SERVICE_TYPE_MAP[selectedType] : null;
 
-  const isValid = serviceType && applicantName && contact && description;
+  const wizardSteps = useMemo(() => {
+    if (!config) return WIZARD_STEPS_BASE;
+    return [
+      { title: 'Pilih Pelayanan' },
+      ...config.steps.map((s) => ({ title: s.title })),
+      { title: 'Review & Kirim' },
+    ];
+  }, [config]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isValid) return;
+  const updateField = useCallback((key: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    setStepErrors((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
+  const updateDateField = useCallback((key: string, date: Date | undefined) => {
+    updateField(key, date ? date.toISOString().split('T')[0] : '');
+  }, [updateField]);
+
+  const filteredTypes = useMemo(() => {
+    if (!searchQuery) return SERVICE_TYPES;
+    const q = searchQuery.toLowerCase();
+    return SERVICE_TYPES.filter(
+      (t) => t.label.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
+  const validateCurrentStep = useCallback(
+    (step: number) => {
+      if (!config) return true;
+      const stepConfigIndex = step - 1;
+      if (stepConfigIndex < 0 || stepConfigIndex >= config.steps.length) return true;
+
+      const requiredFields = buildStepSchema(stepConfigIndex, config);
+      if (!requiredFields) return true;
+
+      const errors = getStepErrors(requiredFields, formData);
+      setStepErrors(errors);
+      return Object.keys(errors).length === 0;
+    },
+    [config, formData]
+  );
+
+  const handleNext = useCallback(() => {
+    if (validateCurrentStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, wizardSteps.length - 1));
+    }
+  }, [currentStep, validateCurrentStep, wizardSteps.length]);
+
+  const handlePrev = useCallback(() => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
+    if (!config) return;
+
+    let allRequiredFields: string[] = [];
+    for (let i = 0; i < config.steps.length; i++) {
+      const fields = buildStepSchema(i, config);
+      if (fields) allRequiredFields = [...allRequiredFields, ...fields];
+    }
+    const allErrors = getStepErrors(allRequiredFields, formData);
+    setStepErrors(allErrors);
+
+    if (Object.keys(allErrors).length > 0) return;
+
+    const payload: Record<string, unknown> = {
+      service_type: formData.service_type,
+      applicant_name: formData.applicant_name || '',
+      contact: formData.contact || '',
+    };
+
+    const directFields = [
+      'applicant_gender', 'baptismal_name', 'birth_place', 'birth_date',
+      'address', 'phone', 'mobile_phone', 'neighborhood', 'region', 'parish',
+      'father_name', 'father_religion', 'mother_name', 'mother_religion',
+      'school', 'grade', 'occupation', 'family_card_number', 'service_date', 'description',
+    ];
+    for (const field of directFields) {
+      if (formData[field]) payload[field] = formData[field];
+    }
+
+    const dynamicFields: Record<string, string> = {};
+    for (const key of Object.keys(formData)) {
+      if (key.startsWith('dynamic_fields.') && formData[key]) {
+        dynamicFields[key.replace('dynamic_fields.', '')] = formData[key];
+      }
+    }
+    if (Object.keys(dynamicFields).length > 0) payload.dynamic_fields = dynamicFields;
 
     try {
-      await createService.mutateAsync({
-        service_type: serviceType,
-        applicant_name: applicantName,
-        address: address || undefined,
-        contact,
-        service_date: serviceDate ? format(serviceDate, 'yyyy-MM-dd') : undefined,
-        description,
-      });
-      router.push('/dashboard');
+      await createService.mutateAsync(payload as unknown as Parameters<typeof createService.mutateAsync>[0]);
+      router.push('/layanan-umat');
     } catch {
       // handled by hook
     }
-  };
+  }, [config, formData, createService, router]);
+
+  const hasServiceType = !!selectedType;
 
   return (
     <div className="space-y-6">
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <Link
+        href="/layanan-umat"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
         <ArrowLeft className="w-4 h-4" /> Kembali
       </Link>
 
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 rounded-xl bg-primary/10">
-          <Heart className="w-6 h-6 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Pelayanan Umat</h1>
-          <p className="text-muted-foreground mt-1">Ajukan permohonan pelayanan untuk jemaat</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Pelayanan Umat</h1>
+        <p className="text-muted-foreground mt-1">Ajukan permohonan pelayanan untuk jemaat</p>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-4">
           <CardTitle>Form Permohonan Pelayanan Umat</CardTitle>
-          <CardDescription>Lengkapi data permohonan pelayanan</CardDescription>
+          <CardDescription>
+            {config
+              ? `${config.label} — ${config.description}`
+              : 'Pilih jenis pelayanan terlebih dahulu'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-3 block">Jenis Pelayanan *</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {SERVICE_TYPES.map((t) => {
-                  const selected = serviceType === t.value;
+          <div className="mb-6">
+            <WizardProgress steps={wizardSteps} currentStep={currentStep} onStepClick={setCurrentStep} />
+          </div>
+
+          {/* Step 0: Pilih Pelayanan */}
+          {currentStep === 0 && (
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder="Cari jenis pelayanan..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {filteredTypes.map((t) => {
+                  const selected = selectedType === t.value;
+                  const Icon = getServiceTypeIcon(t.icon);
                   return (
                     <button
                       key={t.value}
                       type="button"
-                      onClick={() => setServiceType(t.value)}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border text-sm transition-all ${
+                      aria-pressed={selected}
+                      onClick={() => {
+                        setFormData({ service_type: t.value });
+                        setStepErrors({});
+                        setCurrentStep(1);
+                      }}
+                      className={cn(
+                        'flex flex-col items-center gap-2 p-4 rounded-xl border text-sm transition-all text-center',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                         selected
-                          ? 'bg-primary/10 border-primary text-primary ring-1 ring-primary'
-                          : 'bg-background border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                      }`}
+                          ? 'bg-primary/10 border-primary text-primary ring-2 ring-primary'
+                          : 'bg-background border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:shadow-sm'
+                      )}
                     >
-                      <Heart className="w-5 h-5" />
-                      <span className="font-medium text-xs text-center leading-tight">{t.label}</span>
+                      <Icon className={cn('w-7 h-7', t.theme)} />
+                      <span className="font-medium text-xs leading-tight whitespace-pre-line">
+                        {t.label}
+                      </span>
                     </button>
                   );
                 })}
+                {filteredTypes.length === 0 && (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    Tidak ada pelayanan yang sesuai dengan pencarian &quot;{searchQuery}&quot;
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end pt-4 border-t">
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={!hasServiceType}
+                >
+                  Selanjutnya
+                </Button>
               </div>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Input
-                id="applicant_name"
-                label="Nama Pemohon *"
-                placeholder="Nama lengkap pemohon"
-                value={applicantName}
-                onChange={(e) => setApplicantName(e.target.value)}
-                required
-              />
-              <Input
-                id="contact"
-                label="Kontak *"
-                placeholder="Nomor telepon / email"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                required
-              />
+          {/* Step 1..N: Form steps */}
+          {config && currentStep > 0 && currentStep <= config.steps.length && (
+            <div className="space-y-4">
+              {config.steps[currentStep - 1]?.description && (
+                <p className="text-sm text-muted-foreground">
+                  {config.steps[currentStep - 1].description}
+                </p>
+              )}
+              {config.steps[currentStep - 1]?.sections.map((section) => (
+                <FormSection
+                  key={section.id}
+                  title={section.title}
+                  defaultOpen={section.id === 'data_pribadi' || section.id === 'data_pemohon' || currentStep === 1}
+                >
+                  <DynamicFormFields
+                    fields={section.fields}
+                    formData={formData}
+                    errors={stepErrors}
+                    onChange={updateField}
+                    onDateChange={updateDateField}
+                    isDynamic={section.fields.some((f) => f.dynamicField)}
+                  />
+                </FormSection>
+              ))}
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <Button type="button" variant="outline" onClick={handlePrev}>
+                  Sebelumnya
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                >
+                  Selanjutnya
+                </Button>
+              </div>
             </div>
+          )}
 
-            <Input
-              id="address"
-              label="Alamat"
-              placeholder="Alamat lengkap"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
+          {/* Review & Submit */}
+          {config && currentStep === config.steps.length + 1 && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Periksa kembali data yang akan Anda kirimkan. Pastikan semua data sudah benar.
+              </p>
+              <OfficialDocumentPreview
+                title={config.label}
+                sections={getReviewFields(config, formData)}
+                applicantName={formData.applicant_name}
+              />
+              <div className="flex items-start gap-2.5 rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
+                <Info className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>
+                  <span className="font-medium text-foreground">Perhatian: </span>
+                  Data yang sudah dikirim akan diverifikasi oleh sekretariat. Pastikan semua data
+                  yang diisi sudah benar dan lengkap.
+                </p>
+              </div>
 
-            <DatePicker
-              label="Tanggal Pelayanan (opsional)"
-              value={serviceDate}
-              onChange={setServiceDate}
-            />
-
-            <Textarea
-              id="description"
-              label="Keterangan *"
-              placeholder="Jelaskan permohonan pelayanan..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              required
-            />
-
-            <div className="flex items-center gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => router.back()}>
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                loading={createService.isPending}
-                disabled={!isValid}
-              >
-                <Heart className="w-4 h-4 mr-2" />
-                Ajukan Pelayanan
-              </Button>
+              <div className="flex items-center justify-between pt-4 border-t">
+                <Button type="button" variant="outline" onClick={handlePrev}>
+                  Sebelumnya
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  loading={createService.isPending}
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Ajukan Pelayanan
+                </Button>
+              </div>
             </div>
-          </form>
+          )}
+
+          {/* No service type selected yet */}
+          {!config && currentStep === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Pilih jenis pelayanan di atas untuk memulai
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

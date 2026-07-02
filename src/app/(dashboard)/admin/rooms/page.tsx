@@ -9,11 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Plus, Pencil, Trash2, X, XCircle } from 'lucide-react';
 import type { Room } from '@/types';
 
 export default function AdminRoomsPage() {
-  const { data: roomsData, isLoading } = useRooms();
+  const [page, setPage] = useState(1);
+  const { data: roomsData, isLoading, isError, refetch } = useRooms({ page });
   const { data: categories } = useRoomCategories();
   const { data: facilities } = useRoomFacilities();
   const createRoom = useCreateRoom();
@@ -21,6 +23,7 @@ export default function AdminRoomsPage() {
   const updateRoom = useUpdateRoom(editingId || '');
   const deleteRoom = useDeleteRoom();
   const [showForm, setShowForm] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '', category_id: '', description: '', capacity: '',
     floor: '', building: '', status: 'available', is_active: true,
@@ -135,8 +138,9 @@ export default function AdminRoomsPage() {
                     <button
                       key={fac.id}
                       type="button"
+                      aria-pressed={formData.facilities.includes(fac.id)}
                       onClick={() => toggleFacility(fac.id)}
-                      className={`px-3 py-1.5 rounded-md text-sm border transition-colors ${
+                      className={`px-3 py-1.5 rounded-md text-sm border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                         formData.facilities.includes(fac.id)
                           ? 'bg-primary text-primary-foreground border-primary'
                           : 'bg-background text-foreground border-input hover:border-primary'
@@ -175,6 +179,16 @@ export default function AdminRoomsPage() {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
                 </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-8">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <XCircle className="w-8 h-8 text-destructive" />
+                      <p className="text-muted-foreground">Gagal memuat data ruangan</p>
+                      <Button variant="outline" size="sm" onClick={() => refetch()}>Muat Ulang</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : roomsData?.data?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Belum ada ruangan</TableCell>
@@ -201,7 +215,7 @@ export default function AdminRoomsPage() {
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => { if (confirm('Hapus ruangan ini?')) deleteRoom.mutate(room.id); }}
+                          onClick={() => setDeleteId(room.id)}
                           className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -215,6 +229,51 @@ export default function AdminRoomsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {roomsData?.meta && roomsData.meta.last_page > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-sm text-muted-foreground">
+            Halaman {roomsData.meta.current_page} dari {roomsData.meta.last_page} ({roomsData.meta.total} ruangan)
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={roomsData.meta.current_page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Sebelumnya
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={roomsData.meta.current_page >= roomsData.meta.last_page}
+              onClick={() => setPage((p) => Math.min(roomsData.meta!.last_page, p + 1))}
+            >
+              Selanjutnya
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Ruangan</DialogTitle>
+            <DialogDescription>Ruangan yang dihapus tidak dapat dikembalikan. Yakin ingin melanjutkan?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteId(null)}>Batal</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteRoom.isPending}
+              onClick={() => { if (deleteId) deleteRoom.mutate(deleteId); setDeleteId(null); }}
+            >
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

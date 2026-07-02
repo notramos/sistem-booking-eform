@@ -21,8 +21,8 @@ export const bookingsApi = {
   myBookings: (status?: string) =>
     apiClient.get<ApiResponse<Booking[]>>('/bookings/my', { params: status ? { status } : {} }),
 
-  pending: () =>
-    apiClient.get<PaginatedResponse<Booking>>('/bookings/pending'),
+  pending: (page?: number) =>
+    apiClient.get<PaginatedResponse<Booking>>('/bookings/pending', { params: page ? { page } : {} }),
 
   calendar: (start: string, end: string, roomId?: string) =>
     apiClient.get<ApiResponse<CalendarEvent[]>>('/bookings/calendar', { params: { start, end, room_id: roomId } }),

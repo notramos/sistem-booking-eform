@@ -7,11 +7,15 @@ import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import * as Popover from '@radix-ui/react-popover';
-import { useRef } from 'react';
 
-interface DatePickerProps {
-  value: Date | undefined;
-  onChange: (date: Date | undefined) => void;
+export interface DateRange {
+  from: Date | undefined;
+  to?: Date | undefined;
+}
+
+interface DateRangePickerProps {
+  value: DateRange | undefined;
+  onChange: (range: DateRange | undefined) => void;
   label?: string;
   fromDate?: Date;
   toDate?: Date;
@@ -19,11 +23,15 @@ interface DatePickerProps {
   error?: string;
 }
 
-export function DatePicker({
+export function DateRangePicker({
   value, onChange, label, fromDate, toDate,
-  placeholder = 'Pilih tanggal', error,
-}: DatePickerProps) {
-  const openRef = useRef(false);
+  placeholder = 'Pilih rentang tanggal', error,
+}: DateRangePickerProps) {
+  const displayText = () => {
+    if (!value?.from) return placeholder;
+    if (!value.to) return `${format(value.from, 'd MMM yyyy', { locale: id })} — ...`;
+    return `${format(value.from, 'd MMM yyyy', { locale: id })} — ${format(value.to, 'd MMM yyyy', { locale: id })}`;
+  };
 
   return (
     <div>
@@ -32,22 +40,20 @@ export function DatePicker({
           {label}
         </label>
       )}
-      <Popover.Root onOpenChange={(o) => { openRef.current = o; }}>
+      <Popover.Root>
         <Popover.Trigger asChild>
           <Button
             type="button"
             variant="outline"
             className={cn(
               'w-full justify-start text-left font-normal',
-              !value && 'text-muted-foreground',
+              !value?.from && 'text-muted-foreground',
               error && 'border-destructive focus-visible:ring-destructive'
             )}
           >
             <CalendarDays className="w-4 h-4 mr-2 shrink-0 text-muted-foreground" />
-            <span className="truncate">
-              {value ? format(value, 'EEEE, d MMMM yyyy', { locale: id }) : placeholder}
-            </span>
-            {value && (
+            <span className="truncate">{displayText()}</span>
+            {value?.from && (
               <span
                 className="ml-auto p-0.5 text-muted-foreground hover:text-foreground shrink-0 cursor-pointer"
                 onClick={(e) => {
@@ -68,11 +74,9 @@ export function DatePicker({
             className="z-50 w-auto rounded-lg border bg-popover p-3 shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2"
           >
             <DayPicker
-              mode="single"
+              mode="range"
               selected={value}
-              onSelect={(date) => {
-                onChange(date);
-              }}
+              onSelect={(range) => onChange(range)}
               locale={id}
               fromDate={fromDate}
               toDate={toDate}
@@ -94,36 +98,13 @@ export function DatePicker({
                 day: 'w-9 h-9 rounded-full flex items-center justify-center hover:bg-accent text-foreground cursor-pointer',
                 day_today: 'font-bold text-primary',
                 day_selected: 'bg-primary text-primary-foreground hover:bg-primary',
+                day_range_middle: 'bg-primary/20 text-foreground rounded-none',
+                day_range_end: 'bg-primary text-primary-foreground rounded-r-full',
+                day_range_start: 'bg-primary text-primary-foreground rounded-l-full',
                 day_outside: 'text-muted-foreground/40',
                 day_disabled: 'text-muted-foreground/30 cursor-not-allowed',
               }}
             />
-            <div className="flex gap-1 mt-2 pt-2 border-t">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-xs"
-                onClick={() => {
-                  onChange(new Date());
-                }}
-              >
-                Hari Ini
-              </Button>
-              {value && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-destructive"
-                  onClick={() => {
-                    onChange(undefined);
-                  }}
-                >
-                  Hapus
-                </Button>
-              )}
-            </div>
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>

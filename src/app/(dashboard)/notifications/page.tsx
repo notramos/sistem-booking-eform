@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Bell, BellRing, CheckCheck, CalendarDays, Clock } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { notificationsApi } from '@/lib/api/notifications'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -33,7 +34,11 @@ export default function NotificationsPage() {
   const markAllReadMutation = useMutation({
     mutationFn: () => notificationsApi.markAllAsRead(),
     onSuccess: () => {
+      toast.success('Semua notifikasi ditandai telah dibaca')
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal menandai notifikasi')
     },
   })
 
@@ -44,11 +49,11 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold text-foreground">Notifikasi</h1>
+          <p className="text-muted-foreground mt-1">
             {unreadCount > 0
-              ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
-              : 'No unread notifications'}
+              ? `Anda punya ${unreadCount} notifikasi belum dibaca`
+              : 'Tidak ada notifikasi belum dibaca'}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -60,7 +65,7 @@ export default function NotificationsPage() {
             disabled={markAllReadMutation.isPending}
           >
             <CheckCheck className="h-4 w-4" />
-            Mark all as read
+            Tandai semua dibaca
           </Button>
         )}
       </div>
@@ -69,10 +74,10 @@ export default function NotificationsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <BellRing className="h-5 w-5" />
-            Inbox
+            Kotak Masuk
           </CardTitle>
           <CardDescription>
-            All your notifications in one place
+            Semua notifikasi Anda dalam satu tempat
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">

@@ -8,8 +8,10 @@ import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { formatDate, formatTime } from '@/lib/utils';
+import { XCircle } from 'lucide-react';
 
 interface AuditLog {
   id: string;
@@ -59,19 +61,22 @@ export default function AdminAuditLogsPage() {
   const [entityType, setEntityType] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['audit-logs', action, entityType, startDate, endDate],
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['audit-logs', action, entityType, startDate, endDate, page],
     queryFn: async () => {
-      const params: Record<string, string | number | undefined> = {};
+      const params: Record<string, string | number | undefined> = { page };
       if (action) params.action = action;
       if (entityType) params.entity_type = entityType;
       if (startDate) params.start_date = format(startDate, 'yyyy-MM-dd');
       if (endDate) params.end_date = format(endDate, 'yyyy-MM-dd');
       const res = await auditLogsApi.list(params);
-      return res.data.data as AuditLog[];
+      return { logs: res.data.data as AuditLog[], meta: res.data.meta };
     },
   });
+
+  const logs = data?.logs ?? [];
 
   return (
     <div className="space-y-6">
@@ -116,12 +121,22 @@ export default function AdminAuditLogsPage() {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
                 </TableRow>
-              ) : data?.length === 0 ? (
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-8">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <XCircle className="w-8 h-8 text-destructive" />
+                      <p className="text-muted-foreground">Gagal memuat audit log</p>
+                      <Button variant="outline" size="sm" onClick={() => refetch()}>Muat Ulang</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : logs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Tidak ada audit logs</TableCell>
                 </TableRow>
               ) : (
-                data?.map((log) => (
+                logs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="font-medium">{log.user?.name || log.user_id}</TableCell>
                     <TableCell>
@@ -143,6 +158,32 @@ export default function AdminAuditLogsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {data?.meta && data.meta.last_page > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-sm text-muted-foreground">
+            Halaman {data.meta.current_page} dari {data.meta.last_page} ({data.meta.total} log)
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={data.meta.current_page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Sebelumnya
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={data.meta.current_page >= data.meta.last_page}
+              onClick={() => setPage((p) => Math.min(data.meta!.last_page, p + 1))}
+            >
+              Selanjutnya
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

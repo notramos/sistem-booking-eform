@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Plus, Pencil, Trash2, X, XCircle } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 interface MaintenanceSchedule {
@@ -34,13 +35,14 @@ export default function AdminMaintenancePage() {
   const { data: roomsData } = useRooms();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     room_id: '', title: '', description: '',
     start_date: '', end_date: '',
     start_time: '', end_time: '', is_all_day: false,
   });
 
-  const { data: schedules, isLoading } = useQuery({
+  const { data: schedules, isLoading, isError, refetch } = useQuery({
     queryKey: ['maintenance-schedules'],
     queryFn: async () => {
       const res = await maintenanceApi.list();
@@ -154,7 +156,7 @@ export default function AdminMaintenancePage() {
                   onChange={(e) => setFormData({ ...formData, is_all_day: e.target.checked })}
                   className="rounded border-input"
                 />
-                <label htmlFor="is_all_day" className="text-sm font-medium">Full Day</label>
+                <label htmlFor="is_all_day" className="text-sm font-medium">Sepanjang Hari</label>
               </div>
               {!formData.is_all_day && (
                 <>
@@ -190,6 +192,16 @@ export default function AdminMaintenancePage() {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
                 </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-8">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <XCircle className="w-8 h-8 text-destructive" />
+                      <p className="text-muted-foreground">Gagal memuat jadwal maintenance</p>
+                      <Button variant="outline" size="sm" onClick={() => refetch()}>Muat Ulang</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : schedules?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Belum ada jadwal maintenance</TableCell>
@@ -202,7 +214,7 @@ export default function AdminMaintenancePage() {
                     <TableCell>{formatDate(sched.start_date)}</TableCell>
                     <TableCell>{formatDate(sched.end_date)}</TableCell>
                     <TableCell>
-                      {sched.is_all_day ? 'Full Day' : `${sched.start_time || '-'} - ${sched.end_time || '-'}`}
+                      {sched.is_all_day ? 'Sepanjang Hari' : `${sched.start_time || '-'} - ${sched.end_time || '-'}`}
                     </TableCell>
                     <TableCell>{statusBadge(sched.status)}</TableCell>
                     <TableCell className="text-right">
@@ -214,7 +226,7 @@ export default function AdminMaintenancePage() {
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => { if (confirm('Hapus jadwal maintenance ini?')) deleteMutation.mutate(sched.id); }}
+                          onClick={() => setDeleteId(sched.id)}
                           className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -228,6 +240,25 @@ export default function AdminMaintenancePage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Jadwal Maintenance</DialogTitle>
+            <DialogDescription>Jadwal yang dihapus tidak dapat dikembalikan. Yakin ingin melanjutkan?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteId(null)}>Batal</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => { if (deleteId) deleteMutation.mutate(deleteId); setDeleteId(null); }}
+            >
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

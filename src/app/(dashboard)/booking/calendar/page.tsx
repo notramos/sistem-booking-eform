@@ -176,8 +176,9 @@ export default function CalendarPage() {
         {STATUS_OPTIONS.map((opt) => (
           <button
             key={opt.value}
+            aria-pressed={statusFilter === opt.value}
             onClick={() => setStatusFilter(opt.value)}
-            className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+            className={`px-3 py-1.5 text-sm rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
               statusFilter === opt.value
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-background text-muted-foreground border-border hover:border-primary/50'
@@ -287,7 +288,7 @@ export default function CalendarPage() {
           <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Disetujui
         </span>
         <span className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" /> Selesai
+          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Selesai
         </span>
         <span className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> Dibatalkan/Ditolak
@@ -382,11 +383,11 @@ function TooltipCell({ event }: { event: CalendarEvent }) {
       onMouseLeave={() => setShow(false)}
     >
       <div
-        className="w-2.5 h-2.5 rounded-full cursor-pointer ring-2 ring-white dark:ring-gray-900 hover:scale-125 transition-transform"
-        style={{ backgroundColor: event.backgroundColor || '#6b7280' }}
+        className="w-3.5 h-3.5 -m-0.5 rounded-full cursor-pointer ring-2 ring-white dark:ring-gray-900 hover:scale-125 transition-transform"
+        style={{ backgroundColor: event.backgroundColor || 'hsl(var(--muted-foreground))' }}
         onClick={(e) => {
           e.stopPropagation();
-          window.location.href = `/booking/${event.id}`;
+          setShow((prev) => !prev);
         }}
       />
       {show && (

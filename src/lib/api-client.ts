@@ -1,5 +1,15 @@
 import axios from 'axios';
 
+function getTokenFromCookie(): string | null {
+  if (typeof window === 'undefined') return null;
+  return (
+    document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('token='))
+      ?.split('=')[1] ?? null
+  );
+}
+
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api',
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -7,11 +17,9 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  const token = getTokenFromCookie();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });

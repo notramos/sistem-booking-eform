@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { User, Save, Camera, Lock, Upload } from 'lucide-react'
+import { User, Save, Camera, Lock } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { usersApi } from '@/lib/api/users'
-import { getInitials, cn } from '@/lib/utils'
+import { getInitials } from '@/lib/utils'
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -34,7 +35,11 @@ export default function ProfilePage() {
   const updateProfileMutation = useMutation({
     mutationFn: (data: typeof profile) => usersApi.profile.update(data),
     onSuccess: () => {
+      toast.success('Profil berhasil diperbarui')
       queryClient.invalidateQueries({ queryKey: ['auth'] })
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal memperbarui profil')
     },
   })
 
@@ -42,7 +47,11 @@ export default function ProfilePage() {
     mutationFn: (data: typeof passwords) =>
       usersApi.profile.changePassword(data.current_password, data.new_password, data.new_password_confirmation),
     onSuccess: () => {
+      toast.success('Password berhasil diubah')
       setPasswords({ current_password: '', new_password: '', new_password_confirmation: '' })
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal mengubah password')
     },
   })
 
@@ -53,7 +62,11 @@ export default function ProfilePage() {
       return usersApi.profile.uploadAvatar(formData)
     },
     onSuccess: () => {
+      toast.success('Avatar berhasil diunggah')
       queryClient.invalidateQueries({ queryKey: ['auth'] })
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal mengunggah avatar')
     },
   })
 
@@ -65,8 +78,8 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
-        <p className="text-sm text-muted-foreground">Manage your account information</p>
+        <h1 className="text-2xl font-bold text-foreground">Profil</h1>
+        <p className="text-muted-foreground mt-1">Kelola informasi akun Anda</p>
       </div>
 
       <Card>
@@ -110,9 +123,9 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <User className="h-5 w-5" />
-            Edit Profile
+            Edit Profil
           </CardTitle>
-          <CardDescription>Update your personal information</CardDescription>
+          <CardDescription>Perbarui informasi pribadi Anda</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -125,7 +138,7 @@ export default function ProfilePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">
-                  Name
+                  Nama
                 </label>
                 <Input
                   id="name"
@@ -135,7 +148,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="phone" className="text-sm font-medium">
-                  Phone
+                  Nomor Telepon
                 </label>
                 <Input
                   id="phone"
@@ -145,7 +158,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="department" className="text-sm font-medium">
-                  Department
+                  Departemen
                 </label>
                 <Input
                   id="department"
@@ -155,7 +168,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="position" className="text-sm font-medium">
-                  Position
+                  Jabatan
                 </label>
                 <Input
                   id="position"
@@ -170,11 +183,11 @@ export default function ProfilePage() {
               className="gap-2"
             >
               {updateProfileMutation.isPending ? (
-                'Saving...'
+                'Menyimpan...'
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  Save Changes
+                  Simpan Perubahan
                 </>
               )}
             </Button>
@@ -186,9 +199,9 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Lock className="h-5 w-5" />
-            Change Password
+            Ubah Password
           </CardTitle>
-          <CardDescription>Update your account password</CardDescription>
+          <CardDescription>Perbarui password akun Anda</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -201,7 +214,7 @@ export default function ProfilePage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <label htmlFor="current_password" className="text-sm font-medium">
-                  Current Password
+                  Password Saat Ini
                 </label>
                 <Input
                   id="current_password"
@@ -214,7 +227,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="new_password" className="text-sm font-medium">
-                  New Password
+                  Password Baru
                 </label>
                 <Input
                   id="new_password"
@@ -227,7 +240,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="new_password_confirmation" className="text-sm font-medium">
-                  Confirm New Password
+                  Konfirmasi Password Baru
                 </label>
                 <Input
                   id="new_password_confirmation"
@@ -249,11 +262,11 @@ export default function ProfilePage() {
               className="gap-2"
             >
               {changePasswordMutation.isPending ? (
-                'Updating...'
+                'Memperbarui...'
               ) : (
                 <>
                   <Lock className="h-4 w-4" />
-                  Update Password
+                  Perbarui Password
                 </>
               )}
             </Button>
