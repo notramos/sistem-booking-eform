@@ -19,7 +19,8 @@ function todayStr() {
 
 export default function DashboardPage() {
   const { isAdmin, isSekretariat } = useAuth();
-  const { data: myBookings, isLoading } = useMyBookings();
+  const { data: myBookingsData, isLoading } = useMyBookings(undefined, 1, undefined, 100);
+  const myBookings = myBookingsData?.data;
   const canApprove = isAdmin || isSekretariat;
   const { data: pendingData } = usePendingBookings(canApprove);
 

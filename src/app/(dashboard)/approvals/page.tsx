@@ -1,34 +1,42 @@
 'use client';
 
 import { useState } from 'react';
-import { usePendingBookings, useApproveBooking, useRejectBooking } from '@/hooks/useBookings';
+import { usePendingBookings, useApproveBooking, useRejectBooking, useSignBooking } from '@/hooks/useBookings';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { SignatureDialog } from '@/components/ui/signature-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { formatDate, formatTime } from '@/lib/utils';
-import { CheckCircle2, XCircle, CalendarDays, Clock, User, Loader2, ClipboardList } from 'lucide-react';
+import { formatDate, formatTime, getInitials } from '@/lib/utils';
+import { CheckCircle2, XCircle, CalendarDays, Clock, Users, Loader2, ClipboardList, Church } from 'lucide-react';
 
 export default function ApprovalsPage() {
-  const { hasAnyRole } = useAuth();
+  const { hasAnyRole, user } = useAuth();
   const [page, setPage] = useState(1);
   const { data: pendingData, isLoading, isError, refetch } = usePendingBookings(hasAnyRole(['sekretariat', 'admin']), page);
   const approveBooking = useApproveBooking();
   const rejectBooking = useRejectBooking();
+  const signBooking = useSignBooking();
 
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [confirmApproveId, setConfirmApproveId] = useState<string | null>(null);
   const [approveNotes, setApproveNotes] = useState('');
+  // Setelah setuju, tawarkan tanda tangan petugas langsung untuk booking ini.
+  const [signAfter, setSignAfter] = useState<{ id: string; title: string } | null>(null);
 
   const handleApprove = async () => {
     if (!confirmApproveId) return;
+    const target = bookings.find((b) => b.id === confirmApproveId);
     await approveBooking.mutateAsync({ id: confirmApproveId, notes: approveNotes || undefined });
     setConfirmApproveId(null);
     setApproveNotes('');
+    if (target) setSignAfter({ id: target.id, title: target.title });
   };
 
   const handleReject = async () => {
@@ -36,6 +44,12 @@ export default function ApprovalsPage() {
     await rejectBooking.mutateAsync({ id: rejectId, reason: rejectReason });
     setRejectId(null);
     setRejectReason('');
+  };
+
+  const handleSignAfter = async (dataUrl: string) => {
+    if (!signAfter) return;
+    await signBooking.mutateAsync({ id: signAfter.id, role: 'petugas', signature: dataUrl });
+    setSignAfter(null);
   };
 
   if (isLoading) {
@@ -65,12 +79,21 @@ export default function ApprovalsPage() {
   }
 
   const bookings = pendingData?.data ?? [];
+  const totalPending = pendingData?.meta?.total ?? bookings.length;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Persetujuan Booking</h1>
-        <p className="text-muted-foreground mt-1">Setujui atau tolak peminjaman ruangan</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Persetujuan Booking</h1>
+          <p className="text-muted-foreground mt-1">Setujui atau tolak peminjaman ruangan</p>
+        </div>
+        {totalPending > 0 && (
+          <Badge variant="secondary" className="gap-1 text-sm">
+            <ClipboardList className="w-3.5 h-3.5" />
+            {totalPending} menunggu
+          </Badge>
+        )}
       </div>
 
       {bookings.length === 0 ? (
@@ -86,35 +109,59 @@ export default function ApprovalsPage() {
       ) : (
         <div className="space-y-4">
           {bookings.map((booking) => (
-            <Card key={booking.id}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground">{booking.title}</h3>
-                    <p className="text-sm text-primary mt-0.5">{booking.room?.name}</p>
-                    <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <User className="w-4 h-4" />
-                        {booking.user?.name} ({booking.user?.department || '-'})
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <CalendarDays className="w-4 h-4" />
-                        {formatDate(booking.booking_date)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {formatDate(booking.start_time)} - {formatTime(booking.end_time)}
-                      </span>
+            <Card key={booking.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex flex-col sm:flex-row">
+                  <div className="flex-1 p-5">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback className="text-xs">
+                          {getInitials(booking.user?.name ?? '?')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-foreground">{booking.title}</h3>
+                          {booking.service_details && (
+                            <Badge variant="outline" className="gap-1 shrink-0">
+                              <Church className="w-3 h-3" /> Pelayanan Gereja
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-primary mt-0.5">{booking.room?.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {booking.user?.name}
+                          {booking.user?.department ? ` · ${booking.user.department}` : ''}
+                        </p>
+
+                        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <CalendarDays className="w-4 h-4" />
+                            {formatDate(booking.booking_date)}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="w-4 h-4" />
+                            {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
+                          </span>
+                          {booking.expected_attendees ? (
+                            <span className="flex items-center gap-1.5">
+                              <Users className="w-4 h-4" />
+                              {booking.expected_attendees} orang
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {booking.notes && (
+                          <p className="text-sm text-muted-foreground mt-2 italic">&ldquo;{booking.notes}&rdquo;</p>
+                        )}
+                      </div>
                     </div>
-                    {booking.notes && (
-                      <p className="text-sm text-muted-foreground mt-2 italic">&ldquo;{booking.notes}&rdquo;</p>
-                    )}
                   </div>
-                  <div className="flex gap-2 shrink-0">
+
+                  <div className="flex sm:flex-col gap-2 p-5 sm:border-l border-t sm:border-t-0 bg-muted/30 sm:justify-center shrink-0">
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                      className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => setConfirmApproveId(booking.id)}
                     >
                       <CheckCircle2 className="w-4 h-4 mr-1" /> Setujui
@@ -122,7 +169,7 @@ export default function ApprovalsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-destructive border-destructive/20 hover:bg-destructive/10"
+                      className="flex-1 sm:flex-none text-destructive border-destructive/20 hover:bg-destructive/10"
                       onClick={() => { setRejectId(booking.id); setRejectReason(''); }}
                     >
                       <XCircle className="w-4 h-4 mr-1" /> Tolak
@@ -202,6 +249,17 @@ export default function ApprovalsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Tanda tangan petugas setelah menyetujui */}
+      <SignatureDialog
+        open={!!signAfter}
+        onOpenChange={(open) => { if (!open) setSignAfter(null); }}
+        title="Tanda Tangani Dokumen"
+        description={signAfter ? `Booking "${signAfter.title}" telah disetujui. Tanda tangani sekarang sebagai petugas, atau lewati untuk menandatangani nanti.` : ''}
+        savedSignature={user?.signature}
+        onSubmit={handleSignAfter}
+        isPending={signBooking.isPending}
+      />
     </div>
   );
 }

@@ -159,6 +159,7 @@ export default function LayananUmatDetailPage() {
             submittedAt={service.created_at}
             status={service.status}
             showPrintButton
+            signaturePemohonUrl={service.signature_pemohon}
           />
 
           {service.notes && (

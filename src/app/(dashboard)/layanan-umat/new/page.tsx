@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useMemo, useCallback, type ComponentType } from 'react';
+import { useState, useMemo, useCallback, useRef, type ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreateCongregationService } from '@/hooks/useCongregationServices';
+import { useWilayah } from '@/hooks/useParish';
+import { useAuth } from '@/hooks/useAuth';
+import { SignaturePad, type SignaturePadHandle } from '@/components/ui/signature-pad';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,10 +13,10 @@ import { FormSection } from '@/components/ui/form-section';
 import { DynamicFormFields } from '@/components/ui/dynamic-form-fields';
 import { OfficialDocumentPreview } from '@/components/ui/official-document-preview';
 import { WizardProgress } from '@/components/ui/wizard-progress';
-import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen } from 'lucide-react';
+import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen, PenLine } from 'lucide-react';
 import Link from 'next/link';
 import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
-import type { ServiceTypeConfig } from '@/types';
+import type { ServiceTypeConfig, ServiceFieldConfig } from '@/types';
 import { cn } from '@/lib/utils';
 
 type FormData = Record<string, string>;
@@ -82,10 +85,39 @@ function getReviewFields(config: ServiceTypeConfig, formData: FormData) {
 export default function NewCongregationServicePage() {
   const router = useRouter();
   const createService = useCreateCongregationService();
+  const { data: wilayahList } = useWilayah();
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Opsi dropdown Lingkungan (neighborhood) & Wilayah (region) dari data master.
+  const areaOptions = useMemo(() => {
+    const wilayahOptions = (wilayahList ?? []).map((w) => ({ value: w.name, label: w.name }));
+    const lingkunganOptions = (wilayahList ?? []).flatMap((w) =>
+      w.lingkungan.map((l) => ({ value: l.name, label: l.name }))
+    );
+    return { wilayahOptions, lingkunganOptions };
+  }, [wilayahList]);
+
+  const injectAreaOptions = useCallback(
+    (fields: ServiceFieldConfig[]): ServiceFieldConfig[] =>
+      fields.map((f) => {
+        if (f.type !== 'select') return f;
+        if (f.name === 'neighborhood') return { ...f, options: areaOptions.lingkunganOptions };
+        if (f.name === 'region') return { ...f, options: areaOptions.wilayahOptions };
+        return f;
+      }),
+    [areaOptions]
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState<FormData>({ service_type: '' });
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
+
+  // Tanda tangan pemohon yang dibubuhkan langsung di form (default: dari profil bila ada).
+  const { user } = useAuth();
+  const profileSignature = user?.signature ?? null;
+  const [useProfileSignature, setUseProfileSignature] = useState(true);
+  const [drawnSignature, setDrawnSignature] = useState<string | null>(null);
+  const signaturePadRef = useRef<SignaturePadHandle>(null);
+  const signature = useProfileSignature ? profileSignature : drawnSignature;
 
   const selectedType = formData.service_type;
   const config = selectedType ? SERVICE_TYPE_MAP[selectedType] : null;
@@ -183,13 +215,19 @@ export default function NewCongregationServicePage() {
     }
     if (Object.keys(dynamicFields).length > 0) payload.dynamic_fields = dynamicFields;
 
+    // Tanda tangan pemohon: gambar dari pad (mode gambar) atau tanda tangan profil.
+    const signatureToSend = useProfileSignature
+      ? profileSignature
+      : (signaturePadRef.current?.getDataUrl() ?? null);
+    if (signatureToSend) payload.signature_pemohon = signatureToSend;
+
     try {
       await createService.mutateAsync(payload as unknown as Parameters<typeof createService.mutateAsync>[0]);
       router.push('/layanan-umat');
     } catch {
       // handled by hook
     }
-  }, [config, formData, createService, router]);
+  }, [config, formData, createService, router, useProfileSignature, profileSignature]);
 
   const hasServiceType = !!selectedType;
 
@@ -297,7 +335,7 @@ export default function NewCongregationServicePage() {
                   defaultOpen={section.id === 'data_pribadi' || section.id === 'data_pemohon' || currentStep === 1}
                 >
                   <DynamicFormFields
-                    fields={section.fields}
+                    fields={injectAreaOptions(section.fields)}
                     formData={formData}
                     errors={stepErrors}
                     onChange={updateField}
@@ -331,7 +369,52 @@ export default function NewCongregationServicePage() {
                 title={config.label}
                 sections={getReviewFields(config, formData)}
                 applicantName={formData.applicant_name}
+                signaturePemohonUrl={useProfileSignature ? profileSignature : undefined}
               />
+
+              {/* Tanda tangan pemohon */}
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <PenLine className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-medium text-foreground">Tanda Tangan Pemohon</h3>
+                </div>
+
+                {profileSignature && useProfileSignature ? (
+                  <div className="space-y-2">
+                    <div className="rounded-md border bg-white p-3 flex items-center justify-center max-w-xs">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={profileSignature} alt="Tanda tangan tersimpan" className="h-20 object-contain" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">Memakai tanda tangan tersimpan dari profil Anda.</p>
+                    <button
+                      type="button"
+                      onClick={() => setUseProfileSignature(false)}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Gambar tanda tangan baru
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-w-md">
+                    <SignaturePad ref={signaturePadRef} onChange={(has) => setDrawnSignature(has ? 'drawn' : null)} />
+                    {profileSignature && (
+                      <button
+                        type="button"
+                        onClick={() => { setUseProfileSignature(true); setDrawnSignature(null); }}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Gunakan tanda tangan tersimpan
+                      </button>
+                    )}
+                  </div>
+                )}
+                {!signature && (
+                  <p className="text-xs text-muted-foreground">
+                    Opsional — jika dikosongkan, dokumen tetap menampilkan nama Anda sebagai pemohon.
+                  </p>
+                )}
+              </div>
+
               <div className="flex items-start gap-2.5 rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
                 <Info className="w-4 h-4 mt-0.5 shrink-0" />
                 <p>

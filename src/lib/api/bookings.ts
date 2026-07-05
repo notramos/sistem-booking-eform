@@ -18,8 +18,18 @@ export const bookingsApi = {
 
   cancel: (id: string) => apiClient.delete<ApiResponse>(`/bookings/${id}`),
 
-  myBookings: (status?: string) =>
-    apiClient.get<ApiResponse<Booking[]>>('/bookings/my', { params: status ? { status } : {} }),
+  myBookings: (status?: string, page?: number, search?: string, perPage?: number) =>
+    apiClient.get<PaginatedResponse<Booking>>('/bookings/my', {
+      params: {
+        status: status || undefined,
+        page: page || undefined,
+        search: search || undefined,
+        per_page: perPage || undefined,
+      },
+    }),
+
+  sign: (id: string, data: { role: 'pemohon' | 'petugas'; signature: string }) =>
+    apiClient.post<ApiResponse<Booking>>(`/bookings/${id}/signature`, data),
 
   pending: (page?: number) =>
     apiClient.get<PaginatedResponse<Booking>>('/bookings/pending', { params: page ? { page } : {} }),
@@ -32,11 +42,4 @@ export const bookingsApi = {
 
   reject: (id: string, reason: string) =>
     apiClient.post<ApiResponse<Booking>>(`/bookings/${id}/reject`, { reason }),
-
-  serviceBooking: (data: {
-    room_id: string; booking_date: string; start_time: string; end_time: string;
-    service_type: string; contact: string;
-    dynamic_fields?: Record<string, string>;
-    equipment?: string[]; other_equipment?: string; notes?: string;
-  }) => apiClient.post<ApiResponse<Booking>>('/bookings/service', data),
 };

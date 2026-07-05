@@ -7,6 +7,10 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value || 
     request.headers.get('authorization')?.replace('Bearer ', '');
   
+  if (request.nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL(token ? '/dashboard' : '/login', request.url));
+  }
+
   const isPublicPath = publicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );

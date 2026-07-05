@@ -25,12 +25,12 @@ export function useBooking(id: string) {
   });
 }
 
-export function useMyBookings(status?: string) {
+export function useMyBookings(status?: string, page: number = 1, search?: string, perPage?: number) {
   return useQuery({
-    queryKey: ['my-bookings', status],
+    queryKey: ['my-bookings', status, page, search, perPage],
     queryFn: async () => {
-      const res = await bookingsApi.myBookings(status);
-      return res.data.data;
+      const res = await bookingsApi.myBookings(status, page, search, perPage);
+      return res.data;
     },
   });
 }
@@ -106,18 +106,18 @@ export function useApproveBooking() {
   });
 }
 
-export function useCreateServiceBooking() {
+export function useSignBooking() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Parameters<typeof bookingsApi.serviceBooking>[0]) => bookingsApi.serviceBooking(data),
+    mutationFn: ({ id, role, signature }: { id: string; role: 'pemohon' | 'petugas'; signature: string }) =>
+      bookingsApi.sign(id, { role, signature }),
     onSuccess: () => {
-      toast.success('Permohonan pelayanan gereja berhasil dikirim');
+      toast.success('Tanda tangan berhasil disimpan');
       qc.invalidateQueries({ queryKey: ['bookings'] });
       qc.invalidateQueries({ queryKey: ['my-bookings'] });
-      qc.invalidateQueries({ queryKey: ['calendar-events'] });
     },
     onError: (err: { message?: string }) => {
-      toast.error(err.message || 'Gagal mengirim permohonan pelayanan');
+      toast.error(err.message || 'Gagal menyimpan tanda tangan');
     },
   });
 }

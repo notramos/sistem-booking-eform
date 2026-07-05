@@ -1,23 +1,25 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { User, Save, Camera, Lock } from 'lucide-react'
+import { SignaturePad, type SignaturePadHandle } from '@/components/ui/signature-pad'
+import { User, Save, Camera, Lock, PenLine, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { usersApi } from '@/lib/api/users'
 import { getInitials } from '@/lib/utils'
 
 export default function ProfilePage() {
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
+  const { user, refreshUser } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const signaturePadRef = useRef<SignaturePadHandle>(null)
+  const [drawingSignature, setDrawingSignature] = useState(false)
+  const [hasDrawnSignature, setHasDrawnSignature] = useState(false)
 
   const [profile, setProfile] = useState({
     name: user?.name ?? '',
@@ -36,10 +38,23 @@ export default function ProfilePage() {
     mutationFn: (data: typeof profile) => usersApi.profile.update(data),
     onSuccess: () => {
       toast.success('Profil berhasil diperbarui')
-      queryClient.invalidateQueries({ queryKey: ['auth'] })
+      refreshUser()
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Gagal memperbarui profil')
+    },
+  })
+
+  const signatureMutation = useMutation({
+    mutationFn: (signature: string | null) => usersApi.profile.updateSignature(signature),
+    onSuccess: (_data, variables) => {
+      toast.success(variables ? 'Tanda tangan berhasil disimpan' : 'Tanda tangan berhasil dihapus')
+      setDrawingSignature(false)
+      setHasDrawnSignature(false)
+      refreshUser()
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal menyimpan tanda tangan')
     },
   })
 
@@ -63,7 +78,7 @@ export default function ProfilePage() {
     },
     onSuccess: () => {
       toast.success('Avatar berhasil diunggah')
-      queryClient.invalidateQueries({ queryKey: ['auth'] })
+      refreshUser()
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Gagal mengunggah avatar')
@@ -73,6 +88,11 @@ export default function ProfilePage() {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) uploadAvatarMutation.mutate(file)
+  }
+
+  const handleSaveSignature = () => {
+    const dataUrl = signaturePadRef.current?.getDataUrl()
+    if (dataUrl) signatureMutation.mutate(dataUrl)
   }
 
   return (
@@ -192,6 +212,56 @@ export default function ProfilePage() {
               )}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <PenLine className="h-5 w-5" />
+            Tanda Tangan
+          </CardTitle>
+          <CardDescription>
+            Simpan tanda tangan untuk mengisi dokumen booking secara otomatis
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {user?.signature && !drawingSignature ? (
+            <div className="space-y-3">
+              <div className="rounded-md border bg-white p-3 flex items-center justify-center max-w-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={user.signature} alt="Tanda tangan tersimpan" className="h-24 object-contain" />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setDrawingSignature(true)} className="gap-2">
+                  <PenLine className="h-4 w-4" /> Ganti
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => signatureMutation.mutate(null)}
+                  disabled={signatureMutation.isPending}
+                  className="gap-2 text-destructive border-destructive/20 hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" /> Hapus
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3 max-w-md">
+              <SignaturePad ref={signaturePadRef} onChange={setHasDrawnSignature} />
+              <div className="flex gap-2">
+                <Button onClick={handleSaveSignature} disabled={!hasDrawnSignature || signatureMutation.isPending} className="gap-2">
+                  <Save className="h-4 w-4" />
+                  {signatureMutation.isPending ? 'Menyimpan...' : 'Simpan Tanda Tangan'}
+                </Button>
+                {user?.signature && (
+                  <Button variant="ghost" onClick={() => { setDrawingSignature(false); setHasDrawnSignature(false); }}>
+                    Batal
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

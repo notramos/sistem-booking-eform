@@ -1,34 +1,40 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { OfficialDocumentPreview } from '@/components/ui/official-document-preview'
+import { SignatureDialog } from '@/components/ui/signature-dialog'
 import {
-  CalendarDays,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter,
+} from '@/components/ui/dialog'
+import {
   Clock,
-  User,
-  DoorOpen,
-  MapPin,
-  Tag,
   FileText,
   XCircle,
   CheckCircle2,
-  MessageSquare,
   ArrowLeft,
-  Church,
-  Phone,
+  PenLine,
+  Loader2,
 } from 'lucide-react'
-import { useBooking, useCancelBooking } from '@/hooks/useBookings'
+import { useBooking, useCancelBooking, useSignBooking } from '@/hooks/useBookings'
+import { useAuth } from '@/hooks/useAuth'
 import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { data: booking, isLoading, isError } = useBooking(id)
   const cancelMutation = useCancelBooking()
+  const signMutation = useSignBooking()
+  const { user, hasAnyRole } = useAuth()
+  const isStaff = hasAnyRole(['admin', 'sekretariat'])
+
+  const [showCancel, setShowCancel] = useState(false)
+  const [signRole, setSignRole] = useState<'pemohon' | 'petugas' | null>(null)
 
   if (isLoading) {
     return (
@@ -80,11 +86,52 @@ export default function BookingDetailPage() {
     )
   }
 
-  const handleCancel = () => {
-    if (confirm('Yakin ingin membatalkan booking ini?')) {
-      cancelMutation.mutate(booking.id)
-    }
+  const handleCancel = async () => {
+    await cancelMutation.mutateAsync(booking.id)
+    setShowCancel(false)
   }
+
+  const handleSaveSignature = async (dataUrl: string) => {
+    if (!signRole) return
+    await signMutation.mutateAsync({ id: booking.id, role: signRole, signature: dataUrl })
+    setSignRole(null)
+  }
+
+  const documentSections = [
+    {
+      title: 'Data Pemesanan',
+      fields: [
+        { label: 'Ruangan', value: booking.room?.name },
+        { label: 'Gedung/Lokasi', value: booking.room?.building },
+        { label: 'Tanggal', value: booking.booking_date },
+        { label: 'Waktu', value: `${formatTime(booking.start_time)} - ${formatTime(booking.end_time)}` },
+        { label: 'Jenis Kegiatan', value: booking.purpose_type },
+        { label: 'Jumlah Peserta', value: booking.expected_attendees ? String(booking.expected_attendees) : null },
+        { label: 'Kontak', value: booking.contact_person },
+        { label: 'Deskripsi', value: booking.description },
+        { label: 'Catatan', value: booking.notes },
+      ],
+    },
+    ...(booking.service_details
+      ? [
+          {
+            title: 'Detail Pelayanan Gereja',
+            fields: [
+              { label: 'Jenis Pelayanan', value: booking.service_details.service_type_label },
+              { label: 'Kontak', value: booking.service_details.contact },
+              { label: 'Perlengkapan', value: booking.service_details.equipment?.join(', ') || null },
+              ...Object.entries(booking.service_details.dynamic_fields || {}).map(([key, value]) => ({
+                label: key,
+                value: value ? String(value) : null,
+              })),
+            ],
+          },
+        ]
+      : []),
+  ].map((section) => ({
+    ...section,
+    fields: section.fields.filter((f) => f.value),
+  }))
 
   return (
     <div className="space-y-6">
@@ -111,140 +158,36 @@ export default function BookingDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Tag className="h-5 w-5" />
-                Informasi Booking
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex items-start gap-3">
-                  <DoorOpen className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Ruangan</p>
-                    <p className="text-sm text-muted-foreground">{booking.room?.name ?? '-'}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Lokasi</p>
-                    <p className="text-sm text-muted-foreground">
-                      {booking.room?.building ?? '-'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CalendarDays className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Tanggal</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(booking.booking_date)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Clock className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Waktu</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
-                    </p>
-                  </div>
-                </div>
-              </div>
+          <p className="text-sm text-muted-foreground no-print">
+            Dipesan oleh {booking.user?.name ?? '-'}
+          </p>
 
-              <Separator />
+          <OfficialDocumentPreview
+            title="Surat Peminjaman Ruangan"
+            sections={documentSections}
+            applicantName={booking.user?.name}
+            submittedAt={booking.created_at}
+            status={booking.status}
+            showPrintButton
+            signaturePemohonUrl={booking.signature_pemohon}
+            signaturePetugasUrl={booking.signature_petugas}
+            signerPetugasName={booking.signed_petugas_by}
+          />
 
-              <div className="flex items-start gap-3">
-                <User className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Dipesan oleh</p>
-                  <p className="text-sm text-muted-foreground">
-                    {booking.user?.name ?? '-'}
-                  </p>
-                </div>
-              </div>
-
-              {booking.purpose_type && (
-                <div className="flex items-start gap-3">
-                  <FileText className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Tujuan</p>
-                    <p className="text-sm text-muted-foreground">{booking.purpose_type}</p>
-                  </div>
-                </div>
-              )}
-
-              {booking.description && (
-                <div className="flex items-start gap-3">
-                  <MessageSquare className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Deskripsi</p>
-                    <p className="text-sm text-muted-foreground">{booking.description}</p>
-                  </div>
-                </div>
-              )}
-
-              {booking.notes && (
-                <div className="flex items-start gap-3">
-                  <FileText className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Catatan</p>
-                    <p className="text-sm text-muted-foreground">{booking.notes}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {booking.service_details && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Church className="h-5 w-5" />
-                  Detail Pelayanan Gereja
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Tag className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Jenis Pelayanan</p>
-                    <p className="text-sm text-muted-foreground">{booking.service_details.service_type_label}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Phone className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Kontak</p>
-                    <p className="text-sm text-muted-foreground">{booking.service_details.contact}</p>
-                  </div>
-                </div>
-                {booking.service_details.equipment?.length > 0 && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Perlengkapan</p>
-                      <p className="text-sm text-muted-foreground">{booking.service_details.equipment.join(', ')}</p>
-                    </div>
-                  </div>
-                )}
-                {booking.service_details.dynamic_fields && Object.keys(booking.service_details.dynamic_fields).length > 0 && (
-                  <div className="space-y-1.5 pt-1">
-                    {Object.entries(booking.service_details.dynamic_fields).map(([key, value]) => (
-                      <div key={key} className="flex justify-between items-start gap-4 text-sm">
-                        <span className="text-muted-foreground shrink-0">{key}</span>
-                        <span className="text-foreground font-medium text-right">{String(value)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          <div className="flex flex-wrap gap-3 no-print">
+            {user?.id === booking.user_id && !booking.signature_pemohon && (
+              <Button variant="outline" size="sm" onClick={() => setSignRole('pemohon')}>
+                <PenLine className="h-4 w-4 mr-2" />
+                Tanda Tangan Sebagai Pemohon
+              </Button>
+            )}
+            {isStaff && booking.status === 'approved' && !booking.signature_petugas && (
+              <Button variant="outline" size="sm" onClick={() => setSignRole('petugas')}>
+                <PenLine className="h-4 w-4 mr-2" />
+                Tanda Tangan Sebagai Petugas
+              </Button>
+            )}
+          </div>
 
           {booking.approval && (
             <Card>
@@ -283,7 +226,7 @@ export default function BookingDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {booking.logs.map((log: any, index: number) => (
+                  {booking.logs.map((log, index) => (
                     <div key={log.id ?? index} className="flex gap-3">
                       <div className="flex flex-col items-center">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full border">
@@ -328,17 +271,43 @@ export default function BookingDetailPage() {
                 <Button
                   variant="destructive"
                   className="w-full gap-2"
-                  onClick={handleCancel}
-                  disabled={cancelMutation.isPending}
+                  onClick={() => setShowCancel(true)}
                 >
                   <XCircle className="h-4 w-4" />
-                  {cancelMutation.isPending ? 'Membatalkan...' : 'Batalkan Booking'}
+                  Batalkan Booking
                 </Button>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <Dialog open={showCancel} onOpenChange={setShowCancel}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Batalkan Booking</DialogTitle>
+            <DialogDesc>
+              Tindakan ini tidak dapat diurungkan. Booking akan dibatalkan secara permanen.
+            </DialogDesc>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowCancel(false)}>Batal</Button>
+            <Button variant="destructive" onClick={handleCancel} disabled={cancelMutation.isPending}>
+              {cancelMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+              Ya, Batalkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <SignatureDialog
+        open={signRole !== null}
+        onOpenChange={(open) => { if (!open) setSignRole(null) }}
+        title={`Tanda Tangan Sebagai ${signRole === 'pemohon' ? 'Pemohon' : 'Petugas Sekretariat'}`}
+        savedSignature={user?.signature}
+        onSubmit={handleSaveSignature}
+        isPending={signMutation.isPending}
+      />
     </div>
   )
 }

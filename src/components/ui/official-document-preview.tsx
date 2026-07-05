@@ -22,6 +22,9 @@ interface OfficialDocumentPreviewProps {
   submittedAt?: string;
   status?: string;
   showPrintButton?: boolean;
+  signaturePemohonUrl?: string | null;
+  signaturePetugasUrl?: string | null;
+  signerPetugasName?: string | null;
 }
 
 function formatFieldValue(value: unknown): string {
@@ -45,6 +48,9 @@ export function OfficialDocumentPreview({
   submittedAt,
   status,
   showPrintButton = false,
+  signaturePemohonUrl,
+  signaturePetugasUrl,
+  signerPetugasName,
 }: OfficialDocumentPreviewProps) {
   const signDate = submittedAt ? formatDate(submittedAt, 'long') : formatDate(new Date().toISOString(), 'long');
 
@@ -117,14 +123,26 @@ export function OfficialDocumentPreview({
           <div className="flex justify-between gap-6">
             <div className="w-1/2 text-center text-sm">
               Pemohon
-              <div className="mt-12 border-b border-dotted border-black w-4/5 mx-auto pb-0.5">
+              <div className="mt-2 h-12 flex items-end justify-center">
+                {signaturePemohonUrl && (
+                  <img src={signaturePemohonUrl} alt="Tanda tangan pemohon" className="h-12 object-contain" />
+                )}
+              </div>
+              <div className="border-b border-dotted border-black w-4/5 mx-auto pb-0.5 min-h-[1.3em]">
                 {applicantName || ''}
               </div>
               <div className="text-xs mt-1">Nama jelas</div>
             </div>
             <div className="w-1/2 text-center text-sm">
               Petugas Sekretariat Paroki
-              <div className="mt-12 border-b border-dotted border-black w-4/5 mx-auto pb-0.5">&nbsp;</div>
+              <div className="mt-2 h-12 flex items-end justify-center">
+                {signaturePetugasUrl && (
+                  <img src={signaturePetugasUrl} alt="Tanda tangan petugas" className="h-12 object-contain" />
+                )}
+              </div>
+              <div className="border-b border-dotted border-black w-4/5 mx-auto pb-0.5 min-h-[1.3em]">
+                {signerPetugasName || ' '}
+              </div>
               <div className="text-xs mt-1">Nama jelas</div>
             </div>
           </div>

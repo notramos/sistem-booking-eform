@@ -34,5 +34,7 @@ export const usersApi = {
       apiClient.post<ApiResponse<{ avatar_url: string }>>('/profile/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       }),
+    updateSignature: (signature: string | null) =>
+      apiClient.put<ApiResponse<User>>('/profile/signature', { signature }),
   },
 };
