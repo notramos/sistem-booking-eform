@@ -67,11 +67,12 @@ export function OfficialDocumentPreview({
       <div className="print-area border rounded-lg bg-white text-black font-serif p-6 sm:p-8 space-y-5">
         {/* Kop surat */}
         <div className="flex items-center gap-4 border-b-2 border-black pb-3">
-          <div className="w-16 h-16 shrink-0 rounded-full bg-[#a8121f] text-white flex items-center justify-center text-center overflow-hidden">
-            <span className="text-[7px] font-bold leading-tight p-1">
-              PAROKI HARAPAN INDAH · SANTO ALBERTUS AGUNG · BEKASI
-            </span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/img/albertus-logo.png"
+            alt="Logo Paroki Santo Albertus Agung"
+            className="w-16 h-16 shrink-0 object-contain"
+          />
           <div className="flex-1 text-center">
             <div className="text-lg font-bold tracking-wide">PAROKI HARAPAN INDAH</div>
             <div className="text-base font-bold">SANTO ALBERTUS AGUNG</div>
@@ -118,7 +119,7 @@ export function OfficialDocumentPreview({
         </div>
 
         {/* Tanda tangan */}
-        <div className="pt-4 space-y-6">
+        <div className="print-signature-block pt-4 space-y-6">
           <div className="text-right text-sm">Bekasi, {signDate}</div>
           <div className="flex justify-between gap-6">
             <div className="w-1/2 text-center text-sm">
@@ -128,10 +129,10 @@ export function OfficialDocumentPreview({
                   <img src={signaturePemohonUrl} alt="Tanda tangan pemohon" className="h-12 object-contain" />
                 )}
               </div>
-              <div className="border-b border-dotted border-black w-4/5 mx-auto pb-0.5 min-h-[1.3em]">
-                {applicantName || ''}
+              <div className="border-b border-dotted border-black w-4/5 mx-auto" />
+              <div className="w-4/5 mx-auto pt-0.5 min-h-[1.3em] font-semibold">
+                {applicantName || ' '}
               </div>
-              <div className="text-xs mt-1">Nama jelas</div>
             </div>
             <div className="w-1/2 text-center text-sm">
               Petugas Sekretariat Paroki
@@ -140,10 +141,10 @@ export function OfficialDocumentPreview({
                   <img src={signaturePetugasUrl} alt="Tanda tangan petugas" className="h-12 object-contain" />
                 )}
               </div>
-              <div className="border-b border-dotted border-black w-4/5 mx-auto pb-0.5 min-h-[1.3em]">
+              <div className="border-b border-dotted border-black w-4/5 mx-auto" />
+              <div className="w-4/5 mx-auto pt-0.5 min-h-[1.3em] font-semibold">
                 {signerPetugasName || ' '}
               </div>
-              <div className="text-xs mt-1">Nama jelas</div>
             </div>
           </div>
         </div>

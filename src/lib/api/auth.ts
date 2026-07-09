@@ -1,9 +1,11 @@
-import apiClient from '@/lib/api-client';
+import apiClient, { ensureCsrfCookie } from '@/lib/api-client';
 import type { ApiResponse, User } from '@/types';
 
 export const authApi = {
-  login: (email: string, password: string) =>
-    apiClient.post<ApiResponse<{ user: User; token: string }>>('/auth/login', { email, password }),
+  login: async (email: string, password: string) => {
+    await ensureCsrfCookie();
+    return apiClient.post<ApiResponse<{ user: User }>>('/auth/login', { email, password });
+  },
 
   logout: () => apiClient.post('/auth/logout'),
 

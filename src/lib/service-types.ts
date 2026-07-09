@@ -341,7 +341,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
   },
   {
     value: 'surat_keterangan_perkawinan',
-    label: 'Surat Ket. Lingkungan\nuntuk Perkawinan',
+    label: 'Surat Ket. Lingkungan untuk Perkawinan',
     description: 'Permohonan surat keterangan untuk pemberkatan nikah',
     icon: 'Heart',
     theme: 'text-rose-600',
@@ -496,7 +496,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
   },
   {
     value: 'laporan_kematian_yusup',
-    label: 'Laporan Kematian\n(Pem. S. Yusup)',
+    label: 'Laporan Kematian (Pem. S. Yusup)',
     description: 'Laporan kematian dengan detail pemakaman Santo Yusup',
     icon: 'Cross',
     theme: 'text-gray-700',

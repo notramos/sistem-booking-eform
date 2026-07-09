@@ -18,7 +18,7 @@ const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ALL_ROLES },
   { href: '/my-bookings', label: 'Booking Saya', icon: BookOpen, roles: ALL_ROLES },
   { href: '/rooms', label: 'Ruangan', icon: DoorOpen, roles: ALL_ROLES },
-  { href: '/booking/calendar', label: 'Kalender', icon: CalendarDays, roles: ALL_ROLES },
+  { href: '/booking/calendar', label: 'Kalender Booking', icon: CalendarDays, roles: ALL_ROLES },
   { href: '/notifications', label: 'Notifikasi', icon: Bell, roles: ALL_ROLES },
 
   { section: 'Permohonan Pelayanan', roles: ALL_ROLES },
@@ -68,7 +68,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src="/logo-paroki.png"
+                src="/img/albertus-logo.png"
                 alt="Logo Paroki Santo Albertus Agung"
                 className="w-full h-full object-contain p-0.5"
                 onError={() => setLogoError(true)}

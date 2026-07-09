@@ -6,24 +6,89 @@ import { useParams } from 'next/navigation'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { OfficialDocumentPreview } from '@/components/ui/official-document-preview'
+import { Spinner } from '@/components/ui/spinner'
 import { SignatureDialog } from '@/components/ui/signature-dialog'
+import { StatusStepper, type StepperStep } from '@/components/detail/StatusStepper'
+import { ActivityTimeline, type TimelineItem } from '@/components/detail/ActivityTimeline'
+import { DetailFields, type DetailGroup } from '@/components/detail/DetailFields'
+import { DocumentPreviewDialog } from '@/components/detail/DocumentPreviewDialog'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Clock,
-  FileText,
-  XCircle,
-  CheckCircle2,
-  ArrowLeft,
-  PenLine,
-  Loader2,
+  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, PenLine,
+  MapPin, CalendarDays, Users, User as UserIcon,
 } from 'lucide-react'
 import { useBooking, useCancelBooking, useSignBooking } from '@/hooks/useBookings'
 import { useAuth } from '@/hooks/useAuth'
 import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
+
+const PURPOSE_LABELS: Record<string, string> = {
+  ibadah: 'Ibadah & Persekutuan',
+  acara_keluarga: 'Acara Keluarga',
+  latihan_musik: 'Latihan Musik',
+  pembinaan: 'Pembinaan',
+  rapat: 'Rapat Pelayanan',
+  seminar: 'Seminar & Training',
+  publik: 'Acara Publik',
+}
+
+const LOG_LABELS: Record<string, string> = {
+  created: 'Booking diajukan',
+  approved: 'Booking disetujui',
+  rejected: 'Booking ditolak',
+  cancelled: 'Booking dibatalkan',
+  completed: 'Booking selesai',
+  updated: 'Booking diperbarui',
+}
+
+function bookingSteps(status: string): StepperStep[] {
+  if (status === 'cancelled') {
+    return [
+      { label: 'Diajukan', state: 'done' },
+      { label: 'Dibatalkan', state: 'rejected' },
+    ]
+  }
+  if (status === 'rejected') {
+    return [
+      { label: 'Diajukan', state: 'done' },
+      { label: 'Ditinjau', state: 'done' },
+      { label: 'Ditolak', state: 'rejected' },
+    ]
+  }
+  return [
+    { label: 'Diajukan', state: 'done' },
+    { label: 'Ditinjau', state: status === 'pending' ? 'current' : 'done' },
+    { label: 'Disetujui', state: status === 'pending' ? 'todo' : status === 'approved' ? 'current' : 'done' },
+    { label: 'Selesai', state: status === 'completed' ? 'done' : 'todo' },
+  ]
+}
+
+function logIcon(action: string) {
+  if (action === 'created') return <FileText className="h-4 w-4" />
+  if (['approved', 'confirmed', 'completed'].includes(action)) return <CheckCircle2 className="h-4 w-4" />
+  if (['cancelled', 'rejected'].includes(action)) return <XCircle className="h-4 w-4" />
+  return <Clock className="h-4 w-4" />
+}
+
+function logTone(action: string): TimelineItem['tone'] {
+  if (['approved', 'confirmed', 'completed'].includes(action)) return 'success'
+  if (['cancelled', 'rejected'].includes(action)) return 'danger'
+  if (action === 'created') return 'default'
+  return 'muted'
+}
+
+function SignatureStatus({ label, signed }: { label: string; signed: boolean }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`inline-flex items-center gap-1.5 font-medium ${signed ? 'text-green-600' : 'text-muted-foreground'}`}>
+        <span className={`h-2 w-2 rounded-full ${signed ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+        {signed ? 'Sudah' : 'Belum'}
+      </span>
+    </div>
+  )
+}
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -37,37 +102,7 @@ export default function BookingDetailPage() {
   const [signRole, setSignRole] = useState<'pemohon' | 'petugas' | null>(null)
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-96" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-48" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-5 w-1/2" />
-              </CardContent>
-            </Card>
-          </div>
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-full" />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    )
+    return <Spinner size="lg" center label="Memuat detail booking..." />
   }
 
   if (isError || !booking) {
@@ -97,44 +132,79 @@ export default function BookingDetailPage() {
     setSignRole(null)
   }
 
-  const documentSections = [
+  // ---- Data untuk tampilan web ----
+  const detailGroups: DetailGroup[] = [
     {
-      title: 'Data Pemesanan',
+      title: 'Informasi Kegiatan',
       fields: [
-        { label: 'Ruangan', value: booking.room?.name },
-        { label: 'Gedung/Lokasi', value: booking.room?.building },
-        { label: 'Tanggal', value: booking.booking_date },
-        { label: 'Waktu', value: `${formatTime(booking.start_time)} - ${formatTime(booking.end_time)}` },
-        { label: 'Jenis Kegiatan', value: booking.purpose_type },
-        { label: 'Jumlah Peserta', value: booking.expected_attendees ? String(booking.expected_attendees) : null },
+        { label: 'Judul', value: booking.title },
+        { label: 'Jenis Kegiatan', value: booking.purpose_type ? (PURPOSE_LABELS[booking.purpose_type] ?? booking.purpose_type) : null },
+        { label: 'Jumlah Peserta', value: booking.expected_attendees ? `${booking.expected_attendees} orang` : null },
         { label: 'Kontak', value: booking.contact_person },
         { label: 'Deskripsi', value: booking.description },
         { label: 'Catatan', value: booking.notes },
       ],
     },
+    {
+      title: 'Ruangan & Waktu',
+      fields: [
+        { label: 'Ruangan', value: booking.room?.name },
+        { label: 'Gedung / Lokasi', value: booking.room?.building },
+        { label: 'Tanggal', value: booking.booking_date ? formatDate(booking.booking_date, 'full') : null },
+        { label: 'Waktu', value: `${formatTime(booking.start_time)} – ${formatTime(booking.end_time)}` },
+      ],
+    },
     ...(booking.service_details
-      ? [
-          {
-            title: 'Detail Pelayanan Gereja',
-            fields: [
-              { label: 'Jenis Pelayanan', value: booking.service_details.service_type_label },
-              { label: 'Kontak', value: booking.service_details.contact },
-              { label: 'Perlengkapan', value: booking.service_details.equipment?.join(', ') || null },
-              ...Object.entries(booking.service_details.dynamic_fields || {}).map(([key, value]) => ({
-                label: key,
-                value: value ? String(value) : null,
-              })),
-            ],
-          },
-        ]
+      ? [{
+          title: 'Detail Pelayanan Gereja',
+          fields: [
+            { label: 'Jenis Pelayanan', value: booking.service_details.service_type_label },
+            { label: 'Kontak', value: booking.service_details.contact },
+            { label: 'Perlengkapan', value: booking.service_details.equipment?.join(', ') || null },
+            ...Object.entries(booking.service_details.dynamic_fields || {}).map(([key, value]) => ({
+              label: key,
+              value: value ? String(value) : null,
+            })),
+          ],
+        }]
       : []),
-  ].map((section) => ({
-    ...section,
-    fields: section.fields.filter((f) => f.value),
-  }))
+  ]
+
+  // Dokumen resmi (bukti dokumen) — dari grup detail yang sama, field kosong dibuang
+  const documentSections = detailGroups
+    .map((g) => ({
+      title: g.title ?? '',
+      fields: g.fields
+        .map((f) => ({ label: f.label, value: f.value as string | null | undefined }))
+        .filter((f) => f.value),
+    }))
+    .filter((section) => section.fields.length > 0)
+
+  // Timeline riwayat
+  const sortedLogs = [...(booking.logs ?? [])].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  )
+  const timelineItems: TimelineItem[] = sortedLogs.length > 0
+    ? sortedLogs.map((log) => ({
+        icon: logIcon(log.action),
+        title: LOG_LABELS[log.action] ?? log.action.charAt(0).toUpperCase() + log.action.slice(1),
+        description: log.description,
+        meta: `${formatDate(log.created_at, 'long')} · ${log.user?.name ?? 'Sistem'}`,
+        tone: logTone(log.action),
+      }))
+    : [{
+        icon: <FileText className="h-4 w-4" />,
+        title: 'Booking diajukan',
+        meta: `${formatDate(booking.created_at, 'long')} · ${booking.user?.name ?? '-'}`,
+        tone: 'default',
+      }]
+
+  const canSignPemohon = user?.id === booking.user_id && !booking.signature_pemohon
+  const canSignPetugas = isStaff && booking.status === 'approved' && !booking.signature_petugas
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <Link
           href="/my-bookings"
@@ -143,138 +213,129 @@ export default function BookingDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           Kembali ke Booking Saya
         </Link>
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold text-foreground">{booking.title}</h1>
-            <p className="text-muted-foreground mt-1">
-              Detail dan status booking
-            </p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              {booking.room?.name && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{booking.room.name}</span>}
+              <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{formatDate(booking.booking_date, 'long')}</span>
+              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{formatTime(booking.start_time)}–{formatTime(booking.end_time)}</span>
+            </div>
           </div>
-          <Badge className={getStatusColor(booking.status)}>
+          <Badge className={`${getStatusColor(booking.status)} shrink-0 px-3 py-1 text-sm`}>
             {getStatusLabel(booking.status)}
           </Badge>
         </div>
       </div>
 
+      {/* Status stepper */}
+      <Card>
+        <CardContent className="py-5">
+          <StatusStepper steps={bookingSteps(booking.status)} />
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-3">
+        {/* Kolom utama: versi web */}
         <div className="space-y-6 lg:col-span-2">
-          <p className="text-sm text-muted-foreground no-print">
-            Dipesan oleh {booking.user?.name ?? '-'}
-          </p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-5 w-5 text-primary" /> Detail Pemesanan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DetailFields groups={detailGroups} />
+            </CardContent>
+          </Card>
 
-          <OfficialDocumentPreview
-            title="Surat Peminjaman Ruangan"
-            sections={documentSections}
-            applicantName={booking.user?.name}
-            submittedAt={booking.created_at}
-            status={booking.status}
-            showPrintButton
-            signaturePemohonUrl={booking.signature_pemohon}
-            signaturePetugasUrl={booking.signature_petugas}
-            signerPetugasName={booking.signed_petugas_by}
-          />
-
-          <div className="flex flex-wrap gap-3 no-print">
-            {user?.id === booking.user_id && !booking.signature_pemohon && (
-              <Button variant="outline" size="sm" onClick={() => setSignRole('pemohon')}>
-                <PenLine className="h-4 w-4 mr-2" />
-                Tanda Tangan Sebagai Pemohon
-              </Button>
-            )}
-            {isStaff && booking.status === 'approved' && !booking.signature_petugas && (
-              <Button variant="outline" size="sm" onClick={() => setSignRole('petugas')}>
-                <PenLine className="h-4 w-4 mr-2" />
-                Tanda Tangan Sebagai Petugas
-              </Button>
-            )}
-          </div>
-
-          {booking.approval && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <CheckCircle2 className="h-5 w-5" />
-                  Informasi Persetujuan
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{booking.approval.action}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    oleh {booking.approval.approver?.name ?? '-'}
-                  </span>
-                </div>
-                {booking.approval.notes && (
-                  <p className="text-sm text-muted-foreground">
-                    {booking.approval.notes}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {formatDate(booking.approval.created_at)}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {booking.logs && booking.logs.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Clock className="h-5 w-5" />
-                  Riwayat Aktivitas
-                </CardTitle>
+          {booking.status === 'rejected' && booking.reject_reason && (
+            <Card className="border-red-200 bg-red-50/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-red-700">Alasan Penolakan</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {booking.logs.map((log, index) => (
-                    <div key={log.id ?? index} className="flex gap-3">
-                      <div className="flex flex-col items-center">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full border">
-                          {log.action === 'created' ? (
-                            <CheckCircle2 className="h-4 w-4 text-primary" />
-                          ) : log.action === 'approved' || log.action === 'confirmed' ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          ) : log.action === 'cancelled' || log.action === 'rejected' ? (
-                            <XCircle className="h-4 w-4 text-destructive" />
-                          ) : (
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-                        {booking.logs && index < booking.logs.length - 1 && (
-                          <div className="h-full w-px bg-border" />
-                        )}
-                      </div>
-                      <div className="flex-1 pb-4">
-                        <p className="text-sm font-medium capitalize">{log.action}</p>
-                        {log.description && (
-                          <p className="text-sm text-muted-foreground">{log.description}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(log.created_at)} - {log.user?.name ?? 'Sistem'}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-sm text-red-700/90">{booking.reject_reason}</p>
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Clock className="h-5 w-5 text-primary" /> Riwayat Aktivitas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ActivityTimeline items={timelineItems} />
+            </CardContent>
+          </Card>
         </div>
 
+        {/* Sidebar: ringkasan + aksi */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Aksi</CardTitle>
+              <CardTitle className="text-base">Ringkasan</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Status</span>
+                <Badge className={getStatusColor(booking.status)}>{getStatusLabel(booking.status)}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Diajukan</span>
+                <span className="font-medium">{formatDate(booking.created_at, 'long')}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground">Pemohon</span>
+                <span className="inline-flex items-center gap-1.5 font-medium">
+                  <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />{booking.user?.name ?? '-'}
+                </span>
+              </div>
+              {booking.expected_attendees != null && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Peserta</span>
+                  <span className="inline-flex items-center gap-1.5 font-medium">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />{booking.expected_attendees} orang
+                  </span>
+                </div>
+              )}
+              <div className="border-t pt-3 space-y-2">
+                <SignatureStatus label="TTD Pemohon" signed={!!booking.signature_pemohon} />
+                <SignatureStatus label="TTD Petugas" signed={!!booking.signature_petugas} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Aksi</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              <DocumentPreviewDialog
+                title="Surat Peminjaman Ruangan"
+                sections={documentSections}
+                applicantName={booking.user?.name}
+                submittedAt={booking.created_at}
+                status={booking.status}
+                signaturePemohonUrl={booking.signature_pemohon}
+                signaturePetugasUrl={booking.signature_petugas}
+                signerPetugasName={booking.signed_petugas_by}
+              />
+              {canSignPemohon && (
+                <Button variant="outline" className="w-full gap-2" onClick={() => setSignRole('pemohon')}>
+                  <PenLine className="h-4 w-4" /> Tanda Tangan Pemohon
+                </Button>
+              )}
+              {canSignPetugas && (
+                <Button variant="outline" className="w-full gap-2" onClick={() => setSignRole('petugas')}>
+                  <PenLine className="h-4 w-4" /> Tanda Tangan Petugas
+                </Button>
+              )}
               {booking.is_cancellable && (
-                <Button
-                  variant="destructive"
-                  className="w-full gap-2"
-                  onClick={() => setShowCancel(true)}
-                >
-                  <XCircle className="h-4 w-4" />
-                  Batalkan Booking
+                <Button variant="destructive" className="w-full gap-2" onClick={() => setShowCancel(true)}>
+                  <XCircle className="h-4 w-4" /> Batalkan Booking
                 </Button>
               )}
             </CardContent>
@@ -292,8 +353,7 @@ export default function BookingDetailPage() {
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShowCancel(false)}>Batal</Button>
-            <Button variant="destructive" onClick={handleCancel} disabled={cancelMutation.isPending}>
-              {cancelMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+            <Button variant="destructive" onClick={handleCancel} loading={cancelMutation.isPending}>
               Ya, Batalkan
             </Button>
           </DialogFooter>

@@ -175,6 +175,30 @@ export interface CalendarEvent {
   };
 }
 
+export interface Slot {
+  start_time: string;
+  end_time: string;
+  title?: string;
+  status?: string;
+}
+
+export interface RoomRecommendation {
+  room: Room;
+  fits: boolean;
+  has_free_slot: boolean;
+  fully_booked: boolean;
+  booked_slots: Slot[];
+  free_slots: Slot[];
+}
+
+export interface DayAvailability {
+  room_id: string;
+  date: string;
+  operating_hours: { open: string; close: string };
+  booked_slots: Slot[];
+  free_slots: Slot[];
+}
+
 export interface ReportFilter {
   start_date?: string;
   end_date?: string;

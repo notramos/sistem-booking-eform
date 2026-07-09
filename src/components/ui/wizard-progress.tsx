@@ -14,9 +14,25 @@ interface WizardProgressProps {
 }
 
 export function WizardProgress({ steps, currentStep, onStepClick }: WizardProgressProps) {
+  const currentTitle = steps[currentStep]?.title ?? '';
+  const progressPct = steps.length > 1 ? (currentStep / (steps.length - 1)) * 100 : 0;
+
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between">
+      {/* Versi ringkas untuk layar kecil — stepper penuh bisa terlalu padat bila step banyak */}
+      <div className="sm:hidden space-y-2">
+        <p className="text-sm font-medium text-foreground">
+          Langkah {currentStep + 1} dari {steps.length}: <span className="text-primary">{currentTitle}</span>
+        </p>
+        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="hidden sm:flex items-center justify-between">
         {steps.map((step, index) => {
           const isCompleted = index < currentStep;
           const isActive = index === currentStep;

@@ -6,12 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Spinner } from '@/components/ui/spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { TooltipCell } from '@/components/booking/TooltipCell';
 import { useCalendarEvents } from '@/hooks/useBookings';
 import { useRooms } from '@/hooks/useRooms';
+import { useHolidays } from '@/hooks/useHolidays';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Plus, CalendarDays, Filter, Clock, MapPin, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CalendarDays, Filter, Clock, MapPin, Eye, CalendarPlus } from 'lucide-react';
 import { getStatusColor, getStatusLabel } from '@/lib/utils';
+import { BOOKING_MIN_ADVANCE_DAYS, BOOKING_MAX_ADVANCE_DAYS } from '@/lib/constants';
 import type { CalendarEvent } from '@/types';
 
 const DAY_NAMES = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
@@ -76,11 +83,25 @@ export default function CalendarPage() {
   const monthStart = formatLocalDate(new Date(year, month, 1));
   const monthEnd = formatLocalDate(new Date(year, month + 1, 0));
 
-  const { data: rawEvents } = useCalendarEvents(yearStart, yearEnd, selectedRoomId || undefined);
+  const { data: rawEvents, isLoading, isError, refetch } = useCalendarEvents(yearStart, yearEnd, selectedRoomId || undefined);
   const { data: roomsData } = useRooms({ per_page: 100, sort_by: 'name' });
+  const holidays = useHolidays(year);
 
   const events = (rawEvents as CalendarEvent[] | undefined) ?? [];
   const rooms = roomsData?.data ?? [];
+
+  // Rentang tanggal yang boleh dibooking (H+7 s/d H+30), untuk mute sel & gating tombol.
+  const minDateStr = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + BOOKING_MIN_ADVANCE_DAYS);
+    return formatLocalDate(d);
+  }, [today]);
+  const maxDateStr = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + BOOKING_MAX_ADVANCE_DAYS);
+    return formatLocalDate(d);
+  }, [today]);
+  const isBookableDate = (dateStr: string) => dateStr >= minDateStr && dateStr <= maxDateStr;
 
   const filteredEvents = useMemo(() => {
     if (statusFilter === 'all') return events;
@@ -142,7 +163,7 @@ export default function CalendarPage() {
           <h1 className="text-2xl font-bold text-foreground">Kalender Booking</h1>
           <p className="text-muted-foreground mt-1">Lihat jadwal peminjaman ruangan</p>
         </div>
-        <Link href="/rooms">
+        <Link href={`/booking/new?date=${minDateStr}`}>
           <Button>
             <Plus className="w-4 h-4 mr-2" /> Booking Baru
           </Button>
@@ -173,20 +194,7 @@ export default function CalendarPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        {STATUS_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            aria-pressed={statusFilter === opt.value}
-            onClick={() => setStatusFilter(opt.value)}
-            className={`px-3 py-1.5 text-sm rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-              statusFilter === opt.value
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background text-muted-foreground border-border hover:border-primary/50'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
+        <SegmentedControl options={STATUS_OPTIONS} value={statusFilter} onChange={setStatusFilter} />
         <div className="ml-auto flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
           <select
@@ -225,57 +233,85 @@ export default function CalendarPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Day headers */}
-          <div className="grid grid-cols-7 mb-1">
-            {DAY_NAMES.map((name) => (
-              <div key={name} className="text-center text-xs font-medium text-muted-foreground py-2">
-                {name}
+          {isLoading ? (
+            <Spinner size="lg" center label="Memuat jadwal..." />
+          ) : isError ? (
+            <ErrorState message="Gagal memuat jadwal kalender." onRetry={() => refetch()} />
+          ) : (
+            <>
+              {/* Day headers */}
+              <div className="grid grid-cols-7 mb-1">
+                {DAY_NAMES.map((name) => (
+                  <div key={name} className="text-center text-xs font-medium text-muted-foreground py-2">
+                    {name}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Day cells */}
-          <div className="grid grid-cols-7 border-t border-l border-border">
-            {days.map((dayNum, idx) => {
-              if (dayNum === null) {
-                return <div key={`empty-${idx}`} className="border-r border-b border-border p-1.5 min-h-[100px] bg-muted/20" />;
-              }
+              {/* Day cells */}
+              <div className="grid grid-cols-7 border-t border-l border-border">
+                {days.map((dayNum, idx) => {
+                  if (dayNum === null) {
+                    return <div key={`empty-${idx}`} className="border-r border-b border-border p-1.5 min-h-[100px] bg-muted/20" />;
+                  }
 
-              const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-              const dayEvents = eventsByDate.get(dateStr) ?? [];
-              const isToday = isSameDay(new Date(year, month, dayNum), today);
-              const isSelected = selectedDate === dateStr;
-              const maxDots = 4;
-              const visibleEvents = dayEvents.slice(0, maxDots);
-              const overflow = dayEvents.length - maxDots;
+                  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                  const dayEvents = eventsByDate.get(dateStr) ?? [];
+                  const isToday = isSameDay(new Date(year, month, dayNum), today);
+                  const isSelected = selectedDate === dateStr;
+                  const dow = new Date(year, month, dayNum).getDay();
+                  const holiday = holidays.get(dateStr);
+                  const isRed = dow === 0 || !!holiday; // Minggu atau libur nasional = tanggal merah
+                  const bookable = isBookableDate(dateStr);
+                  const maxDots = 4;
+                  const visibleEvents = dayEvents.slice(0, maxDots);
+                  const overflow = dayEvents.length - maxDots;
 
-              return (
-                <div
-                  key={dateStr}
-                  className={`relative border-r border-b border-border p-1.5 min-h-[100px] transition-colors ${
-                    isSelected ? 'bg-primary/5' : isToday ? 'bg-accent/40' : 'hover:bg-accent/20'
-                  } cursor-pointer`}
-                  onClick={() => setSelectedDate(dateStr)}
-                >
-                  <div className={`text-xs font-medium mb-1.5 w-6 h-6 flex items-center justify-center rounded-full ${
-                    isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
-                  }`}>
-                    {dayNum}
-                  </div>
-                  <div className="space-y-0.5">
-                    {visibleEvents.map((event) => (
-                      <TooltipCell key={event.id} event={event} />
-                    ))}
-                    {overflow > 0 && (
-                      <span className="text-xs text-muted-foreground font-medium ml-1">
-                        +{overflow} lainnya
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  return (
+                    <div
+                      key={dateStr}
+                      title={holiday?.name}
+                      className={`relative border-r border-b border-border p-1.5 min-h-[100px] transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-primary/5'
+                          : isToday
+                            ? 'bg-accent/40'
+                            : isRed
+                              ? 'bg-red-50/60 dark:bg-red-950/20 hover:bg-red-50'
+                              : 'hover:bg-accent/20'
+                      } ${!bookable ? 'opacity-60' : ''}`}
+                      onClick={() => setSelectedDate(dateStr)}
+                    >
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
+                          isToday
+                            ? 'bg-primary text-primary-foreground'
+                            : isRed
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-foreground'
+                        }`}>
+                          {dayNum}
+                        </div>
+                        {holiday && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" aria-hidden />
+                        )}
+                      </div>
+                      <div className="space-y-0.5">
+                        {visibleEvents.map((event) => (
+                          <TooltipCell key={event.id} event={event} />
+                        ))}
+                        {overflow > 0 && (
+                          <span className="text-xs text-muted-foreground font-medium ml-1">
+                            +{overflow} lainnya
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -293,19 +329,28 @@ export default function CalendarPage() {
         <span className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> Dibatalkan/Ditolak
         </span>
-        <span className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-gray-400 inline-block" /> Perbaikan
-        </span>
       </div>
 
       {/* Agenda Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">
-            {selectedDate
-              ? `Agenda — ${new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(selectedDate + 'T00:00:00'))}`
-              : 'Agenda — Pilih tanggal untuk melihat jadwal'}
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-base">
+              {selectedDate
+                ? `Agenda — ${new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(selectedDate + 'T00:00:00'))}${holidays.get(selectedDate) ? ` · ${holidays.get(selectedDate)!.name}` : ''}`
+                : 'Agenda — Pilih tanggal untuk melihat jadwal'}
+            </CardTitle>
+            {selectedDate && isBookableDate(selectedDate) && (
+              <Button size="sm" onClick={() => router.push(`/booking/new?date=${selectedDate}`)}>
+                <CalendarPlus className="w-4 h-4 mr-1.5" /> Booking di tanggal ini
+              </Button>
+            )}
+          </div>
+          {selectedDate && !isBookableDate(selectedDate) && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Tanggal ini di luar rentang pemesanan (H+{BOOKING_MIN_ADVANCE_DAYS} s/d H+{BOOKING_MAX_ADVANCE_DAYS} dari hari ini).
+            </p>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           {selectedDate && eventsOnSelectedDate.length > 0 ? (
@@ -357,64 +402,12 @@ export default function CalendarPage() {
               </Table>
             </ScrollArea>
           ) : selectedDate ? (
-            <div className="py-12 text-center">
-              <CalendarDays className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Tidak ada jadwal pada tanggal ini</p>
-            </div>
+            <EmptyState icon={CalendarDays} title="Tidak ada jadwal pada tanggal ini" />
           ) : (
-            <div className="py-12 text-center">
-              <CalendarDays className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Klik tanggal pada kalender untuk melihat jadwal</p>
-            </div>
+            <EmptyState icon={CalendarDays} title="Klik tanggal pada kalender untuk melihat jadwal" />
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function TooltipCell({ event }: { event: CalendarEvent }) {
-  const [show, setShow] = useState(false);
-
-  return (
-    <div
-      className="relative inline-block"
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-    >
-      <div
-        className="w-3.5 h-3.5 -m-0.5 rounded-full cursor-pointer ring-2 ring-white dark:ring-gray-900 hover:scale-125 transition-transform"
-        style={{ backgroundColor: event.backgroundColor || 'hsl(var(--muted-foreground))' }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setShow((prev) => !prev);
-        }}
-      />
-      {show && (
-        <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 min-w-[180px]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="bg-popover text-popover-foreground rounded-lg border shadow-lg p-3 text-xs space-y-1.5">
-            <p className="font-semibold text-sm">{event.title}</p>
-            <p className="text-muted-foreground">
-              {event.start_time} - {event.end_time}
-            </p>
-            <p className="text-muted-foreground flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {event.room}
-            </p>
-            <Badge className={getStatusColor(event.status)}>
-              {event.extendedProps?.status_label ?? getStatusLabel(event.status)}
-            </Badge>
-            <Link
-              href={`/booking/${event.id}`}
-              className="block text-center text-primary hover:underline pt-1"
-            >
-              Lihat Detail
-            </Link>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

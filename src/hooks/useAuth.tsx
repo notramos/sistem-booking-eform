@@ -26,28 +26,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function getCookie(name: string): string | undefined {
-  return document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(name + '='))
-    ?.split('=')[1];
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Sesi disimpan di cookie session HttpOnly (tak bisa dibaca/di-cek dari JS),
+  // jadi satu-satunya cara tahu status login adalah benar-benar bertanya ke backend.
   const fetchUser = useCallback(async () => {
     try {
-      const token = getCookie('token');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
       const res = await authApi.getUser();
       setUser(res.data.data);
     } catch {
-      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       setUser(null);
     } finally {
       setLoading(false);
@@ -55,23 +44,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // fetchUser juga diekspos sebagai refreshUser() untuk dipanggil imperatif
+    // di tempat lain (mis. profile/page.tsx) — pola fetch-on-mount ini disengaja.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUser();
   }, [fetchUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authApi.login(email, password);
-    const { user: userData, token } = res.data.data;
-    document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
-    setUser(userData);
+    setUser(res.data.data.user);
   }, []);
 
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
-    } catch {
-      // ignore
     } finally {
-      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       setUser(null);
     }
   }, []);

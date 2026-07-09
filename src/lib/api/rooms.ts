@@ -1,5 +1,5 @@
 import apiClient from '@/lib/api-client';
-import type { ApiResponse, PaginatedResponse, Room, RoomCategory, RoomFacility, CalendarEvent } from '@/types';
+import type { ApiResponse, PaginatedResponse, Room, RoomCategory, RoomFacility, RoomRecommendation, DayAvailability } from '@/types';
 
 export const roomsApi = {
   list: (params?: Record<string, string | number | boolean | undefined>) =>
@@ -19,6 +19,12 @@ export const roomsApi = {
 
   availability: (id: string, date: string, startTime: string, endTime: string) =>
     apiClient.get<ApiResponse<{ available: boolean }>>(`/rooms/${id}/availability`, { params: { date, start_time: startTime, end_time: endTime } }),
+
+  recommendations: (date: string, attendees: number) =>
+    apiClient.get<ApiResponse<RoomRecommendation[]>>('/rooms/recommendations', { params: { date, attendees } }),
+
+  dayAvailability: (id: string, date: string) =>
+    apiClient.get<ApiResponse<DayAvailability>>(`/rooms/${id}/day-availability`, { params: { date } }),
 
   uploadImage: (id: string, formData: FormData) =>
     apiClient.post<ApiResponse>(`/rooms/${id}/images`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),

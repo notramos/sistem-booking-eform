@@ -6,8 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Pagination } from '@/components/ui/pagination';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { CalendarDays, Clock, MapPin, XCircle, Calendar, Search, PenLine } from 'lucide-react';
@@ -38,6 +40,12 @@ export default function MyBookingsPage() {
     setPage(1);
   };
 
+  const handleCancel = async () => {
+    if (!cancelId) return;
+    await cancelBooking.mutateAsync(cancelId);
+    setCancelId(null);
+  };
+
   const statuses = [
     { value: '', label: 'Semua' },
     { value: 'pending', label: 'Menunggu' },
@@ -62,22 +70,7 @@ export default function MyBookingsPage() {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {statuses.map((s) => (
-            <button
-              key={s.value}
-              aria-pressed={statusFilter === s.value}
-              onClick={() => handleStatusFilter(s.value)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                statusFilter === s.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl options={statuses} value={statusFilter} onChange={handleStatusFilter} />
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -90,11 +83,7 @@ export default function MyBookingsPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-xl" />
-          ))}
-        </div>
+        <Spinner size="lg" center label="Memuat booking..." />
       ) : bookings?.length === 0 ? (
         <EmptyState
           icon={Calendar}
@@ -129,17 +118,17 @@ export default function MyBookingsPage() {
                       <p className="text-sm text-muted-foreground mt-1">{booking.room?.name}</p>
 
                       <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <CalendarDays className="w-4 h-4" />
+                        <span className="flex items-center gap-1.5">
+                          <CalendarDays className="h-3.5 w-3.5" />
                           {formatDate(booking.booking_date)}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
                           {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
                         </span>
                         {booking.room?.building && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5" />
                             {booking.room.building}
                           </span>
                         )}
@@ -168,31 +157,7 @@ export default function MyBookingsPage() {
         </div>
       )}
 
-      {meta && meta.last_page > 1 && (
-        <div className="flex items-center justify-between pt-2">
-          <p className="text-sm text-muted-foreground">
-            Halaman {meta.current_page} dari {meta.last_page} ({meta.total} booking)
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={meta.current_page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Sebelumnya
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={meta.current_page >= meta.last_page}
-              onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
-            >
-              Selanjutnya
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination meta={meta} onPageChange={setPage} itemLabel="booking" />
 
       <Dialog open={!!cancelId} onOpenChange={(open) => { if (!open) setCancelId(null); }}>
         <DialogContent>
@@ -204,8 +169,8 @@ export default function MyBookingsPage() {
             <Button variant="ghost" onClick={() => setCancelId(null)}>Batal</Button>
             <Button
               variant="destructive"
-              disabled={cancelBooking.isPending}
-              onClick={() => { if (cancelId) cancelBooking.mutate(cancelId); setCancelId(null); }}
+              loading={cancelBooking.isPending}
+              onClick={handleCancel}
             >
               Ya, Batalkan
             </Button>

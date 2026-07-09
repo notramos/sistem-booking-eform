@@ -2,7 +2,28 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roomsApi } from '@/lib/api/rooms';
-import type { Room } from '@/types';
+
+export function useRoomRecommendations(date?: string, attendees?: number) {
+  return useQuery({
+    queryKey: ['room-recommendations', date, attendees],
+    queryFn: async () => {
+      const res = await roomsApi.recommendations(date!, attendees!);
+      return res.data.data;
+    },
+    enabled: !!date && !!attendees && attendees > 0,
+  });
+}
+
+export function useDayAvailability(roomId?: string, date?: string) {
+  return useQuery({
+    queryKey: ['room-day-availability', roomId, date],
+    queryFn: async () => {
+      const res = await roomsApi.dayAvailability(roomId!, date!);
+      return res.data.data;
+    },
+    enabled: !!roomId && !!date,
+  });
+}
 
 export function useRooms(params?: Record<string, string | number | boolean | undefined>) {
   return useQuery({

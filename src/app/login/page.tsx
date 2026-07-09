@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
-import { Eye, EyeOff, Church } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 const loginSchema = z.object({
@@ -38,15 +38,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen relative flex items-center justify-center px-4 py-10">
+      {/* Background panti imam */}
+      <div className="absolute inset-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/img/altar-bg.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-slate-900/60" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
-            <Church className="w-8 h-8 text-primary-foreground" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-4 shadow-lg p-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/albertus-logo.png" alt="Logo Paroki Santo Albertus Agung" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">E-Albertus</h1>
-          <p className="text-muted-foreground mt-1">Sistem Peminjaman Ruangan Gereja</p>
-          <p className="text-sm text-muted-foreground/60">Gereja Albertus Agung</p>
+          <h1 className="text-2xl font-bold text-white drop-shadow">E-Albertus</h1>
+          <p className="text-white/80 mt-1 drop-shadow">Sistem Peminjaman Ruangan Gereja</p>
+          <p className="text-sm text-white/60 drop-shadow">Gereja Albertus Agung</p>
         </div>
 
         <Card className="shadow-lg">
@@ -104,7 +116,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground/40 mt-8">
+        <p className="text-center text-xs text-white/50 mt-8 drop-shadow">
           &copy; {new Date().getFullYear()} Gereja Albertus Agung
         </p>
       </div>

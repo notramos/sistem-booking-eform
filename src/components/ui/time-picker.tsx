@@ -36,13 +36,22 @@ interface TimePickerProps {
   label?: string;
   error?: string;
   placeholder?: string;
+  /** Batasi daftar jam (mis. jam operasional 06:00–22:00). Format 'HH:MM'. */
+  minTime?: string;
+  maxTime?: string;
 }
 
 export function TimePicker({
   value, onChange, label, error,
   placeholder = 'Pilih jam',
+  minTime, maxTime,
 }: TimePickerProps) {
   const [open, setOpen] = useState(false);
+
+  const times = useMemo(
+    () => TIMES.filter((t) => (!minTime || t >= minTime) && (!maxTime || t <= maxTime)),
+    [minTime, maxTime]
+  );
 
   return (
     <div>
@@ -92,7 +101,7 @@ export function TimePicker({
               Pilih waktu
             </p>
             <TimeList
-              values={TIMES}
+              values={times}
               selected={value}
               onSelect={(v) => {
                 onChange(v);
@@ -106,7 +115,10 @@ export function TimePicker({
                 size="sm"
                 className="text-xs"
                 onClick={() => {
-                  onChange(nearestTime(new Date()));
+                  let t = nearestTime(new Date());
+                  if (minTime && t < minTime) t = minTime;
+                  if (maxTime && t > maxTime) t = maxTime;
+                  onChange(t);
                   setOpen(false);
                 }}
               >

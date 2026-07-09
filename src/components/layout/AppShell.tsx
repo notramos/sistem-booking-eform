@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -19,23 +19,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background p-6 space-y-4">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-32 w-full rounded-xl" />
-        <Skeleton className="h-32 w-full rounded-xl" />
-      </div>
-    );
-  }
-  if (!user) return null;
+  // Sudah pasti tidak ada sesi (bukan sedang loading) — akan redirect ke /login,
+  // jangan sempat menampilkan shell dashboard sebelum pindah halaman.
+  if (!loading && !user) return null;
 
   return (
     <div className="min-h-screen bg-background">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="md:pl-64">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="p-4 sm:p-6">{children}</main>
+        <main className="p-4 sm:p-6">
+          {loading ? <Spinner size="lg" center label="Memuat..." /> : children}
+        </main>
       </div>
     </div>
   );

@@ -12,12 +12,16 @@ interface TimeRangePickerProps {
   endError?: string;
   startPlaceholder?: string;
   endPlaceholder?: string;
+  /** Batasi kedua picker ke rentang jam operasional. Format 'HH:MM'. */
+  minTime?: string;
+  maxTime?: string;
 }
 
 export function TimeRangePicker({
   start, end, onStartChange, onEndChange, label,
   startError, endError,
   startPlaceholder, endPlaceholder,
+  minTime, maxTime,
 }: TimeRangePickerProps) {
   return (
     <div>
@@ -33,6 +37,8 @@ export function TimeRangePicker({
             onChange={onStartChange}
             placeholder={startPlaceholder || 'Mulai'}
             error={startError}
+            minTime={minTime}
+            maxTime={maxTime}
           />
         </div>
         <span className="text-muted-foreground text-sm shrink-0 mt-1.5">—</span>
@@ -42,6 +48,8 @@ export function TimeRangePicker({
             onChange={onEndChange}
             placeholder={endPlaceholder || 'Selesai'}
             error={endError}
+            minTime={minTime}
+            maxTime={maxTime}
           />
         </div>
       </div>

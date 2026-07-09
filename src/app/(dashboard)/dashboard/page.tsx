@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { useMyBookings, usePendingBookings, useCalendarEvents } from '@/hooks/useBookings';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils';
@@ -19,7 +20,7 @@ function todayStr() {
 
 export default function DashboardPage() {
   const { isAdmin, isSekretariat } = useAuth();
-  const { data: myBookingsData, isLoading } = useMyBookings(undefined, 1, undefined, 100);
+  const { data: myBookingsData, isLoading, isError, refetch } = useMyBookings(undefined, 1, undefined, 100);
   const myBookings = myBookingsData?.data;
   const canApprove = isAdmin || isSekretariat;
   const { data: pendingData } = usePendingBookings(canApprove);
@@ -137,6 +138,8 @@ export default function DashboardPage() {
           <CardContent>
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Memuat...</div>
+            ) : isError ? (
+              <ErrorState message="Gagal memuat booking mendatang." onRetry={() => refetch()} />
             ) : upcomingBookings?.length === 0 ? (
               <EmptyState
                 icon={CalendarDays}

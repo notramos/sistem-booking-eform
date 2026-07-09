@@ -7,8 +7,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Pagination } from '@/components/ui/pagination';
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { SERVICE_TYPE_MAP } from '@/lib/service-types';
 import { CalendarDays, Heart, User } from 'lucide-react';
@@ -54,28 +56,10 @@ export default function LayananUmatPage() {
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {statuses.map((s) => (
-          <button
-            key={s.value}
-            onClick={() => handleStatusFilter(s.value)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              statusFilter === s.value
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl options={statuses} value={statusFilter} onChange={handleStatusFilter} />
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-xl" />
-          ))}
-        </div>
+        <Spinner size="lg" center label="Memuat permohonan..." />
       ) : services.length === 0 ? (
         <EmptyState
           icon={Heart}
@@ -124,31 +108,7 @@ export default function LayananUmatPage() {
         </div>
       )}
 
-      {meta && meta.last_page > 1 && (
-        <div className="flex items-center justify-between pt-2">
-          <p className="text-sm text-muted-foreground">
-            Halaman {meta.current_page} dari {meta.last_page} ({meta.total} permohonan)
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={meta.current_page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Sebelumnya
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={meta.current_page >= meta.last_page}
-              onClick={() => setPage((p) => Math.min(meta.last_page, p + 1))}
-            >
-              Selanjutnya
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination meta={meta} onPageChange={setPage} itemLabel="permohonan" />
     </div>
   );
 }

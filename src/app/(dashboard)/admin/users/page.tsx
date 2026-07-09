@@ -22,7 +22,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -215,11 +215,7 @@ export default function AdminUsersPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-6 space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
+            <Spinner size="lg" center label="Memuat data pengguna..." />
           ) : isError ? (
             <div className="flex flex-col items-center gap-4 text-center py-12">
               <XCircle className="w-12 h-12 text-destructive" />

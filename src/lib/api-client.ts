@@ -1,28 +1,20 @@
 import axios from 'axios';
 
-function getTokenFromCookie(): string | null {
-  if (typeof window === 'undefined') return null;
-  return (
-    document.cookie
-      .split('; ')
-      .find((row) => row.startsWith('token='))
-      ?.split('=')[1] ?? null
-  );
-}
-
+// Auth memakai cookie session HttpOnly Sanctum (SPA mode) — token tidak lagi
+// disimpan/dikirim manual dari JS. Browser otomatis menyertakan cookie session
+// selama `withCredentials`/`withXSRFToken` aktif dan origin terdaftar di CORS.
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api',
   headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
   withCredentials: true,
+  withXSRFToken: true,
 });
 
-apiClient.interceptors.request.use((config) => {
-  const token = getTokenFromCookie();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// Sama dengan publicPaths di middleware.ts — cookie session HttpOnly tak bisa
+// dicek dari JS, jadi useAuth SELALU memanggil /auth/user saat mount (termasuk
+// di halaman ini sendiri). 401 di sini wajar (belum login), bukan sesi habis —
+// tanpa guard ini, redirect ke '/login' saat SUDAH di '/login' memicu reload tanpa henti.
+const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password'];
 
 apiClient.interceptors.response.use(
   (response) => response,
@@ -30,8 +22,9 @@ apiClient.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
 
-      if (status === 401) {
-        if (typeof window !== 'undefined') {
+      if (status === 401 && typeof window !== 'undefined') {
+        const onPublicPath = PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p));
+        if (!onPublicPath) {
           window.location.href = '/login';
         }
       }
@@ -46,5 +39,15 @@ apiClient.interceptors.response.use(
     return Promise.reject({ status: 0, message: 'Network error', errors: {} });
   }
 );
+
+/**
+ * Ambil cookie XSRF-TOKEN dari endpoint bawaan Sanctum sebelum login/logout —
+ * wajib untuk alur SPA-cookie (bukan bearer token). Endpoint ini ada di root
+ * ("/sanctum/csrf-cookie"), bukan di bawah prefix "/api".
+ */
+export async function ensureCsrfCookie(): Promise<void> {
+  const apiRoot = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api').replace(/\/api\/?$/, '');
+  await axios.get(`${apiRoot}/sanctum/csrf-cookie`, { withCredentials: true });
+}
 
 export default apiClient;

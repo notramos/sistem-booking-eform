@@ -25,6 +25,10 @@ export function DatePicker({
 }: DatePickerProps) {
   const openRef = useRef(false);
 
+  const now = new Date();
+  const clampedToday = fromDate && now < fromDate ? fromDate : toDate && now > toDate ? toDate : now;
+  const isTodayOutOfRange = !!fromDate && now < fromDate;
+
   return (
     <div>
       {label && (
@@ -105,10 +109,10 @@ export function DatePicker({
                 size="sm"
                 className="text-xs"
                 onClick={() => {
-                  onChange(new Date());
+                  onChange(clampedToday);
                 }}
               >
-                Hari Ini
+                {isTodayOutOfRange ? 'Tanggal Terdekat' : 'Hari Ini'}
               </Button>
               {value && (
                 <Button

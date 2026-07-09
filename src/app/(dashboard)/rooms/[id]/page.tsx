@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { Separator } from "@/components/ui/separator";
 import { ErrorState } from "@/components/ui/error-state";
 import Link from "next/link";
@@ -49,18 +49,7 @@ export default function RoomDetailPage() {
   }, [room?.bookings]);
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-          <Skeleton className="h-48 w-full" />
-        </div>
-      </div>
-    );
+    return <Spinner size="lg" center label="Memuat detail ruangan..." />;
   }
 
   if (isError) {
@@ -261,13 +250,13 @@ export default function RoomDetailPage() {
                   Booking Ruangan
                 </h3>
               </div>
-              <Link href={`/booking/new?roomId=${room.id}`}>
+              <Link href="/booking/calendar">
                 <Button
                   className="w-full"
                   disabled={room.status !== "available"}
                 >
                   <Calendar className="w-4 h-4 mr-2" />
-                  Booking Ruangan
+                  Booking Lewat Kalender
                 </Button>
               </Link>
               {room.status !== "available" && (
