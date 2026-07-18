@@ -1,15 +1,16 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, LogOut, User as UserIcon, ChevronDown, Menu, Plus, CheckCheck } from 'lucide-react';
+import { Bell, LogOut, User as UserIcon, ChevronDown, Menu, CheckCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { notificationsApi } from '@/lib/api/notifications';
-import { getInitials, getRoleLabel, formatDate } from '@/lib/utils';
+import {
+  useNotifications, useUnreadNotificationCount, useMarkNotificationRead, useMarkAllNotificationsRead,
+} from '@/hooks/useNotifications';
+import { getNotificationMeta, getNotificationTitle, getNotificationHref } from '@/lib/notifications';
+import { getInitials, getRoleLabel, formatRelativeTime } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,45 +20,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const NOTIF_LABELS: Record<string, string> = {
-  booking_created: 'Booking baru diajukan',
-  booking_approved: 'Booking disetujui',
-  booking_rejected: 'Booking ditolak',
-  booking_cancelled: 'Booking dibatalkan',
-  booking_reminder: 'Pengingat booking',
-  congregation_service_created: 'Permohonan pelayanan baru',
-};
-
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const qc = useQueryClient();
 
-  const { data: unreadData } = useQuery({
-    queryKey: ['unread-notifications'],
-    queryFn: async () => {
-      const res = await notificationsApi.unreadCount();
-      return res.data.data;
-    },
-    refetchInterval: 60_000,
-  });
-
-  const { data: recentNotifs } = useQuery({
-    queryKey: ['recent-notifications'],
-    queryFn: async () => {
-      const res = await notificationsApi.list({ per_page: 5 });
-      return res.data.data;
-    },
-    refetchInterval: 60_000,
-  });
+  const { data: unreadData } = useUnreadNotificationCount();
+  const { data: recentData } = useNotifications({ per_page: 5 });
+  const recentNotifs = recentData?.data ?? [];
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
 
   const unreadCount = unreadData?.unread_count ?? 0;
-
-  const handleMarkAllRead = async () => {
-    await notificationsApi.markAllAsRead();
-    qc.invalidateQueries({ queryKey: ['unread-notifications'] });
-    qc.invalidateQueries({ queryKey: ['recent-notifications'] });
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -86,13 +59,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <Link href="/rooms">
-            <Button size="sm" className="gap-1.5">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Booking Baru</span>
-            </Button>
-          </Link>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
@@ -110,7 +76,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 <p className="text-sm font-semibold">Notifikasi</p>
                 {unreadCount > 0 && (
                   <button
-                    onClick={handleMarkAllRead}
+                    onClick={() => markAllRead.mutate()}
+                    disabled={markAllRead.isPending}
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     <CheckCheck className="w-3.5 h-3.5" /> Tandai semua dibaca
@@ -118,29 +85,36 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 )}
               </div>
               <div className="max-h-80 overflow-y-auto">
-                {!recentNotifs || recentNotifs.length === 0 ? (
+                {recentNotifs.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">Belum ada notifikasi</p>
                 ) : (
-                  recentNotifs.map((n) => (
-                    <Link
-                      key={n.id}
-                      href="/notifications"
-                      className={`block px-3 py-2.5 border-b last:border-b-0 hover:bg-accent transition-colors ${!n.read_at ? 'bg-accent/40' : ''}`}
-                    >
-                      <div className="flex items-start gap-2">
-                        {!n.read_at && <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />}
-                        <div className={`min-w-0 ${n.read_at ? 'pl-3.5' : ''}`}>
-                          <p className="text-sm font-medium truncate">
-                            {NOTIF_LABELS[n.data?.type] ?? n.data?.title ?? 'Notifikasi'}
-                          </p>
-                          {n.data?.room_name && (
-                            <p className="text-xs text-muted-foreground truncate">{n.data.room_name}</p>
-                          )}
-                          <p className="text-xs text-muted-foreground/60 mt-0.5">{formatDate(n.created_at)}</p>
+                  recentNotifs.map((n) => {
+                    const meta = getNotificationMeta(n);
+                    const Icon = meta.icon;
+                    const href = getNotificationHref(n) ?? '/notifications';
+                    return (
+                      <Link
+                        key={n.id}
+                        href={href}
+                        onClick={() => !n.read_at && markRead.mutate(n.id)}
+                        className={`block px-3 py-2.5 border-b last:border-b-0 hover:bg-accent transition-colors ${!n.read_at ? 'bg-accent/40' : ''}`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Icon className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${meta.tone}`} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">
+                              {getNotificationTitle(n)}
+                            </p>
+                            {n.data?.room_name && (
+                              <p className="text-xs text-muted-foreground truncate">{n.data.room_name}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground/60 mt-0.5">{formatRelativeTime(n.created_at)}</p>
+                          </div>
+                          {!n.read_at && <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />}
                         </div>
-                      </div>
-                    </Link>
-                  ))
+                      </Link>
+                    );
+                  })
                 )}
               </div>
               <Link

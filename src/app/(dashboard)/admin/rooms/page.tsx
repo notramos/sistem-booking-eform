@@ -168,9 +168,9 @@ export default function AdminRoomsPage() {
                 <TableHead>Nama</TableHead>
                 <TableHead>Kategori</TableHead>
                 <TableHead>Kapasitas</TableHead>
-                <TableHead>Gedung</TableHead>
+                <TableHead className="hidden md:table-cell">Gedung</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Aktif</TableHead>
+                <TableHead className="hidden md:table-cell">Aktif</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -199,9 +199,9 @@ export default function AdminRoomsPage() {
                     <TableCell className="font-medium">{room.name}</TableCell>
                     <TableCell>{room.category?.name || '-'}</TableCell>
                     <TableCell>{room.capacity}</TableCell>
-                    <TableCell>{room.building || '-'} {room.floor ? `(Lt.${room.floor})` : ''}</TableCell>
+                    <TableCell className="hidden md:table-cell">{room.building || '-'} {room.floor ? `(Lt.${room.floor})` : ''}</TableCell>
                     <TableCell>{roomStatusBadge(room.status)}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Badge variant={room.is_active ? 'success' : 'default'}>
                         {room.is_active ? 'Aktif' : 'Nonaktif'}
                       </Badge>

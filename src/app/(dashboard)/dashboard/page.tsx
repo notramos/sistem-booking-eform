@@ -177,7 +177,7 @@ export default function DashboardPage() {
             <CardDescription>Fitur utama E-Albertus</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link href="/rooms" className="p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-accent transition-colors text-center">
                 <DoorOpen className="w-8 h-8 mx-auto text-primary mb-2" />
                 <p className="text-sm font-medium text-foreground">Cari Ruangan</p>

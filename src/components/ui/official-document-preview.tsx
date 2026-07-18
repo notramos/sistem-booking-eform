@@ -66,7 +66,7 @@ export function OfficialDocumentPreview({
 
       <div className="print-area border rounded-lg bg-white text-black font-serif p-6 sm:p-8 space-y-5">
         {/* Kop surat */}
-        <div className="flex items-center gap-4 border-b-2 border-black pb-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 border-b-2 border-black pb-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/img/albertus-logo.png"

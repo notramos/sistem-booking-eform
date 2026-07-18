@@ -6,11 +6,10 @@
 export const OPERATING_HOURS = { open: '06:00', close: '22:00' } as const;
 
 /**
- * Rentang hari-maju booking ruangan. Mirror dari config/booking.php
- * ('min_advance_days' / 'max_advance_days') di backend.
+ * Jarak minimal hari-maju booking ruangan. Mirror dari config/booking.php
+ * ('min_advance_days') di backend — tidak ada batas atas.
  */
 export const BOOKING_MIN_ADVANCE_DAYS = 7;
-export const BOOKING_MAX_ADVANCE_DAYS = 30;
 
 /**
  * Pilihan durasi (bulan) untuk booking rutin — mirror validasi backend

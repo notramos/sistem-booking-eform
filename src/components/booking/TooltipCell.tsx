@@ -7,24 +7,30 @@ import { MapPin } from 'lucide-react';
 import { getStatusColor, getStatusLabel } from '@/lib/utils';
 import type { CalendarEvent } from '@/types';
 
-/** Dot event pada sel kalender, menampilkan detail singkat saat hover/klik. */
+/** Chip event pada sel kalender (bar berwarna + label singkat), menampilkan detail saat hover/klik. */
 export function TooltipCell({ event }: { event: CalendarEvent }) {
   const [show, setShow] = useState(false);
+  const color = event.backgroundColor || 'hsl(var(--muted-foreground))';
 
   return (
     <div
-      className="relative inline-block"
+      className="relative"
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
     >
       <div
-        className="w-3.5 h-3.5 -m-0.5 rounded-full cursor-pointer ring-2 ring-white dark:ring-gray-900 hover:scale-125 transition-transform"
-        style={{ backgroundColor: event.backgroundColor || 'hsl(var(--muted-foreground))' }}
+        className="flex items-center gap-1 rounded px-1 py-0.5 cursor-pointer hover:brightness-95 dark:hover:brightness-125 transition-[filter]"
+        style={{ backgroundColor: `color-mix(in srgb, ${color} 18%, transparent)` }}
         onClick={(e) => {
           e.stopPropagation();
           setShow((prev) => !prev);
         }}
-      />
+      >
+        <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: color }} aria-hidden />
+        <span className="text-[10px] font-medium leading-tight truncate" style={{ color }}>
+          {event.start_time} {event.title}
+        </span>
+      </div>
       {show && (
         <div
           className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50 min-w-[180px]"

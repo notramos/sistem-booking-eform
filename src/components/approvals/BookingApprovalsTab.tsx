@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   usePendingBookings, useApproveBooking, useRejectBooking, useSignBooking,
   useStartReview, useReviseBooking,
@@ -20,6 +22,7 @@ import { formatDate, formatTime, getInitials, getStatusColor, getStatusLabel } f
 import { CheckCircle2, XCircle, CalendarDays, Clock, Users, ClipboardList, Church, RotateCcw, PlayCircle } from 'lucide-react';
 
 export function BookingApprovalsTab() {
+  const router = useRouter();
   const { hasAnyRole, isAdmin, isSekretariat, user } = useAuth();
   const [page, setPage] = useState(1);
   const { data: pendingData, isLoading, isError, refetch } = usePendingBookings(hasAnyRole(['sekretariat', 'admin']), page);
@@ -157,12 +160,18 @@ export function BookingApprovalsTab() {
                   </div>
 
                   <div className="flex sm:flex-col gap-2 p-5 sm:border-l border-t sm:border-t-0 bg-muted/30 sm:justify-center shrink-0">
+                    <Link
+                      href={`/booking/${booking.id}`}
+                      className="hidden sm:block text-center text-xs text-muted-foreground hover:text-primary underline-offset-2 hover:underline mb-1"
+                    >
+                      Lihat Detail
+                    </Link>
                     {isSekretariat && booking.status === 'pending' && (
                       <Button
                         size="sm"
                         variant="outline"
                         className="flex-1 sm:flex-none"
-                        onClick={() => startReview.mutate(booking.id)}
+                        onClick={() => startReview.mutate(booking.id, { onSuccess: () => router.push(`/booking/${booking.id}`) })}
                         disabled={startReview.isPending}
                       >
                         <PlayCircle className="w-4 h-4 mr-1" /> Mulai Review

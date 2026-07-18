@@ -136,10 +136,17 @@ export interface Notification {
     title?: string;
     room_name?: string;
     booking_date?: string;
+    end_booking_date?: string;
     start_time?: string;
     end_time?: string;
     reason?: string;
     booker_name?: string;
+    occurrence_count?: number;
+    skipped_count?: number;
+    congregation_service_id?: string;
+    service_type_label?: string;
+    applicant_name?: string;
+    contact?: string;
     type: string;
   };
   read_at: string | null;

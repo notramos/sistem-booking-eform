@@ -71,38 +71,37 @@ export default function LayananUmatPage() {
           {services.map((service) => {
             const typeConfig = SERVICE_TYPE_MAP[service.service_type];
             return (
-              <Card key={service.id}>
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        href={`/layanan-umat/${service.id}`}
-                        className="font-semibold text-foreground hover:text-primary transition-colors"
-                      >
-                        {typeConfig?.label ?? service.service_type}
-                      </Link>
-                      <p className="text-sm text-muted-foreground mt-1">{service.applicant_name}</p>
+              <Link key={service.id} href={`/layanan-umat/${service.id}`}>
+                <Card className="hover:shadow-md hover:border-primary/50 transition-all cursor-pointer">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground">
+                          {typeConfig?.label ?? service.service_type}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">{service.applicant_name}</p>
 
-                      <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                        {isStaff && (
+                        <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
+                          {isStaff && (
+                            <span className="flex items-center gap-1">
+                              <User className="w-4 h-4" />
+                              {service.user?.name ?? '-'}
+                            </span>
+                          )}
                           <span className="flex items-center gap-1">
-                            <User className="w-4 h-4" />
-                            {service.user?.name ?? '-'}
+                            <CalendarDays className="w-4 h-4" />
+                            {formatDate(service.created_at)}
                           </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <CalendarDays className="w-4 h-4" />
-                          {formatDate(service.created_at)}
-                        </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <Badge className={getStatusColor(service.status)}>
-                      {getStatusLabel(service.status)}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                      <Badge className={getStatusColor(service.status)}>
+                        {getStatusLabel(service.status)}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>

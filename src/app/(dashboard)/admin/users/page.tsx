@@ -229,7 +229,7 @@ export default function AdminUsersPage() {
                   <TableHead>Nama</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Departemen</TableHead>
+                  <TableHead className="hidden md:table-cell">Departemen</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
                         "-"
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden md:table-cell text-muted-foreground">
                       {user.department || "-"}
                     </TableCell>
                     <TableCell>

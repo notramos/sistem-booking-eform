@@ -111,7 +111,7 @@ export default function AdminAuditLogsPage() {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Aksi</TableHead>
-                <TableHead>Tipe Entity</TableHead>
+                <TableHead className="hidden md:table-cell">Tipe Entity</TableHead>
                 <TableHead>Deskripsi</TableHead>
                 <TableHead>Waktu</TableHead>
               </TableRow>
@@ -144,7 +144,7 @@ export default function AdminAuditLogsPage() {
                         {log.action}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <span className="text-sm text-muted-foreground">{log.entity_type.replace(/_/g, ' ')}</span>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">{log.description || '-'}</TableCell>

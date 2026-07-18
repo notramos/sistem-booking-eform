@@ -116,7 +116,7 @@ export default function RoomDetailPage() {
                 {room.description || "Tidak ada deskripsi"}
               </p>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="w-4 h-4 text-primary" />
                   <span className="text-muted-foreground">
@@ -273,7 +273,7 @@ export default function RoomDetailPage() {
                 <CardTitle>Foto Ruangan</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {room.images.map((img) => (
                     <img
                       key={img.id}

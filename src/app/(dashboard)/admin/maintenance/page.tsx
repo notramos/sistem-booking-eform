@@ -180,9 +180,8 @@ export default function AdminMaintenancePage() {
               <TableRow>
                 <TableHead>Ruangan</TableHead>
                 <TableHead>Judul</TableHead>
-                <TableHead>Tanggal Mulai</TableHead>
-                <TableHead>Tanggal Selesai</TableHead>
-                <TableHead>Waktu</TableHead>
+                <TableHead>Periode</TableHead>
+                <TableHead className="hidden md:table-cell">Waktu</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
@@ -190,11 +189,11 @@ export default function AdminMaintenancePage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Memuat...</TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8">
+                  <TableCell colSpan={6} className="py-8">
                     <div className="flex flex-col items-center gap-3 text-center">
                       <XCircle className="w-8 h-8 text-destructive" />
                       <p className="text-muted-foreground">Gagal memuat jadwal maintenance</p>
@@ -204,16 +203,15 @@ export default function AdminMaintenancePage() {
                 </TableRow>
               ) : schedules?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Belum ada jadwal maintenance</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Belum ada jadwal maintenance</TableCell>
                 </TableRow>
               ) : (
                 schedules?.map((sched) => (
                   <TableRow key={sched.id}>
                     <TableCell className="font-medium">{sched.room?.name || sched.room_id}</TableCell>
                     <TableCell>{sched.title}</TableCell>
-                    <TableCell>{formatDate(sched.start_date)}</TableCell>
-                    <TableCell>{formatDate(sched.end_date)}</TableCell>
-                    <TableCell>
+                    <TableCell>{formatDate(sched.start_date)} – {formatDate(sched.end_date)}</TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {sched.is_all_day ? 'Sepanjang Hari' : `${sched.start_time || '-'} - ${sched.end_time || '-'}`}
                     </TableCell>
                     <TableCell>{statusBadge(sched.status)}</TableCell>

@@ -18,6 +18,21 @@ export function formatTime(time: string): string {
   return time.substring(0, 5);
 }
 
+/** Waktu relatif singkat ("baru saja", "5 menit lalu", "2 hari lalu"), fallback ke tanggal absolut setelah 7 hari. */
+export function formatRelativeTime(date: string | Date): string {
+  const d = new Date(date);
+  const diffSeconds = Math.round((Date.now() - d.getTime()) / 1000);
+
+  if (diffSeconds < 60) return 'baru saja';
+  const diffMinutes = Math.round(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes} menit lalu`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} jam lalu`;
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays < 7) return `${diffDays} hari lalu`;
+  return formatDate(d);
+}
+
 export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',

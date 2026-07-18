@@ -24,7 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { RoomRecommendationList } from '@/components/booking/RoomRecommendationList';
 import { BookedSlotsTimeline } from '@/components/booking/BookedSlotsTimeline';
-import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS, BOOKING_MAX_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS } from '@/lib/constants';
+import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { CalendarDays, ArrowLeft, Users, Repeat, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -57,9 +57,7 @@ function dateBounds() {
   t.setHours(0, 0, 0, 0);
   const min = new Date(t);
   min.setDate(min.getDate() + BOOKING_MIN_ADVANCE_DAYS);
-  const max = new Date(t);
-  max.setDate(max.getDate() + BOOKING_MAX_ADVANCE_DAYS);
-  return { min, max };
+  return { min };
 }
 
 const bookingSchema = z.object({
@@ -75,21 +73,13 @@ const bookingSchema = z.object({
   expectedAttendees: z.string().optional(),
   notes: z.string().optional(),
 }).superRefine((data, ctx) => {
-  const { min, max } = dateBounds();
+  const { min } = dateBounds();
 
   if (data.bookingDate < min) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['bookingDate'],
       message: `Booking minimal H+${BOOKING_MIN_ADVANCE_DAYS} (paling cepat ${format(min, 'd MMM yyyy', { locale: idLocale })})`,
-    });
-  }
-
-  if (data.bookingType === 'reguler' && data.bookingDate > max) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['bookingDate'],
-      message: `Tanggal maksimal H+${BOOKING_MAX_ADVANCE_DAYS} dari hari ini`,
     });
   }
 
@@ -158,8 +148,8 @@ export default function NewBookingPage() {
 
   const dateStr = watchedDate ? format(watchedDate, 'yyyy-MM-dd') : undefined;
 
-  // Batas tanggal yang boleh dipesan (H+7 s/d H+30), mengikuti backend.
-  const { min: minDate, max: maxDate } = useMemo(() => dateBounds(), []);
+  // Batas tanggal yang boleh dipesan (minimal H+7, tidak ada batas atas), mengikuti backend.
+  const { min: minDate } = useMemo(() => dateBounds(), []);
 
   const { data: recommendations, isFetching: loadingRecommendations } = useRoomRecommendations(dateStr, debouncedAttendees);
   const { data: selectedRoom } = useRoom(selectedRoomId || '');
@@ -176,12 +166,12 @@ export default function NewBookingPage() {
   useEffect(() => {
     if (!preDate || editId) return;
     const parsed = new Date(preDate + 'T00:00:00');
-    const clamped = parsed < minDate ? minDate : parsed > maxDate ? maxDate : parsed;
+    const clamped = parsed < minDate ? minDate : parsed;
     setValue('bookingDate', clamped);
     if (clamped.getTime() !== parsed.getTime()) {
       toast.info(`Tanggal pada tautan di luar rentang pemesanan, disesuaikan ke ${format(clamped, 'd MMMM yyyy', { locale: idLocale })}.`);
     }
-  }, [preDate, editId, minDate, maxDate, setValue]);
+  }, [preDate, editId, minDate, setValue]);
 
   // Mode edit & ajukan ulang: isi form dengan data booking yang sedang direvisi.
   useEffect(() => {
@@ -449,7 +439,6 @@ export default function NewBookingPage() {
                       value={field.value}
                       onChange={field.onChange}
                       fromDate={minDate}
-                      toDate={watchedBookingType === 'rutin' ? undefined : maxDate}
                     />
                   )}
                 />
@@ -530,7 +519,7 @@ export default function NewBookingPage() {
                           <div
                             key={entry.date}
                             className={cn(
-                              'flex flex-wrap items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-xs',
+                              'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border px-2.5 py-1.5 text-xs',
                               blocked ? 'border-red-200 bg-red-50' : 'border-border'
                             )}
                           >
@@ -555,15 +544,17 @@ export default function NewBookingPage() {
 
                             {blocked ? (
                               activeReplacementFor === entry.date ? (
-                                <div className="flex flex-col items-end gap-1">
+                                <div className="flex flex-col items-stretch sm:items-end gap-1">
                                   <div className="flex items-center gap-1.5">
-                                    <DatePicker
-                                      value={entry.replacementAttempt ? new Date(entry.replacementAttempt + 'T00:00:00') : undefined}
-                                      onChange={(d) => handlePickReplacement(entry.date, d)}
-                                      fromDate={startOfMonth(original) < minDate ? minDate : startOfMonth(original)}
-                                      toDate={endOfMonth(original)}
-                                      placeholder="Klik untuk pilih tanggal"
-                                    />
+                                    <div className="flex-1 sm:flex-none sm:w-auto">
+                                      <DatePicker
+                                        value={entry.replacementAttempt ? new Date(entry.replacementAttempt + 'T00:00:00') : undefined}
+                                        onChange={(d) => handlePickReplacement(entry.date, d)}
+                                        fromDate={startOfMonth(original) < minDate ? minDate : startOfMonth(original)}
+                                        toDate={endOfMonth(original)}
+                                        placeholder="Klik untuk pilih tanggal"
+                                      />
+                                    </div>
                                     {entry.replacementChecking && <Spinner size="sm" />}
                                   </div>
                                   {entry.replacementError && (
@@ -571,7 +562,7 @@ export default function NewBookingPage() {
                                   )}
                                 </div>
                               ) : (
-                                <Button type="button" size="sm" variant="outline" onClick={() => setActiveReplacementFor(entry.date)}>
+                                <Button type="button" size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setActiveReplacementFor(entry.date)}>
                                   Pilih tanggal lain
                                 </Button>
                               )

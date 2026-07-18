@@ -9,7 +9,7 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import {
   LayoutDashboard, CalendarDays, DoorOpen, BookOpen, CheckSquare,
-  Users, BarChart3, Settings, ClipboardList, Building2, Shield, Bell, Heart,
+  Users, BarChart3, Settings, ClipboardList, Building2, Shield, Bell, Heart, Database,
 } from 'lucide-react';
 
 const ALL_ROLES = ['admin', 'sekretariat', 'jemaat'];
@@ -26,6 +26,7 @@ const menuItems = [
 
   { section: 'Sekretariat', roles: ['sekretariat', 'admin'] },
   { href: '/approvals', label: 'Persetujuan', icon: CheckSquare, roles: ['sekretariat', 'admin'] },
+  { href: '/admin/data', label: 'Data Booking & Pelayanan', icon: Database, roles: ['sekretariat', 'admin'] },
   { href: '/admin/reports', label: 'Laporan', icon: BarChart3, roles: ['sekretariat', 'admin'] },
 
   { section: 'Administrasi', roles: ['admin'] },
