@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Android signing key & PWABuilder packages — NEVER publish (keystore password inside)
+.secrets/
+public/apk/
