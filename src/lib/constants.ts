@@ -33,6 +33,18 @@ export const AUTH_HINT_COOKIE_NAME = 'auth_hint';
 export const TATA_TERTIB_STORAGE_KEY = 'tata_tertib_accepted';
 
 /**
+ * Kunci localStorage penanda notifikasi download APK sudah ditutup (sekali per
+ * browser — lihat ApkDownloadBanner.tsx).
+ */
+export const APK_BANNER_DISMISSED_KEY = 'apk_banner_dismissed';
+
+/**
+ * Path file APK Android (hasil build PWABuilder) — taruh file .apk di
+ * public/downloads/ dengan nama ini setelah di-generate dari URL production.
+ */
+export const APK_DOWNLOAD_PATH = '/downloads/e-albertus.apk';
+
+/**
  * PLACEHOLDER — isi teks tata tertib resmi di sini. Satu tempat, mudah diganti
  * tanpa menyentuh komponen dialog.
  */
