@@ -1,11 +1,11 @@
 'use client';
 
-import { Check, X } from 'lucide-react';
+import { Check, X, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface StepperStep {
   label: string;
-  state: 'done' | 'current' | 'todo' | 'rejected';
+  state: 'done' | 'current' | 'todo' | 'rejected' | 'revision';
 }
 
 /**
@@ -26,6 +26,7 @@ export function StatusStepper({ steps }: { steps: StepperStep[] }) {
                   step.state === 'done' && 'border-green-500 bg-green-500 text-white',
                   step.state === 'current' && 'border-primary bg-primary text-primary-foreground ring-4 ring-primary/15',
                   step.state === 'rejected' && 'border-red-500 bg-red-500 text-white',
+                  step.state === 'revision' && 'border-orange-500 bg-orange-500 text-white',
                   step.state === 'todo' && 'border-border bg-muted text-muted-foreground'
                 )}
               >
@@ -33,6 +34,8 @@ export function StatusStepper({ steps }: { steps: StepperStep[] }) {
                   <Check className="h-4 w-4" />
                 ) : step.state === 'rejected' ? (
                   <X className="h-4 w-4" />
+                ) : step.state === 'revision' ? (
+                  <RotateCcw className="h-4 w-4" />
                 ) : (
                   i + 1
                 )}

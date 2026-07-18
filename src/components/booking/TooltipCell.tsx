@@ -42,7 +42,7 @@ export function TooltipCell({ event }: { event: CalendarEvent }) {
               {event.extendedProps?.status_label ?? getStatusLabel(event.status)}
             </Badge>
             <Link
-              href={`/booking/${event.id}`}
+              href={`/booking/${event.booking_id ?? event.id}`}
               className="block text-center text-primary hover:underline pt-1"
             >
               Lihat Detail

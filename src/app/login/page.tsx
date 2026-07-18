@@ -116,7 +116,14 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-white/50 mt-8 drop-shadow">
+        <p className="text-center text-sm text-white/80 mt-6 drop-shadow">
+          Belum punya akun?{' '}
+          <Link href="/register" className="text-white font-medium hover:underline">
+            Daftar
+          </Link>
+        </p>
+
+        <p className="text-center text-xs text-white/50 mt-4 drop-shadow">
           &copy; {new Date().getFullYear()} Gereja Albertus Agung
         </p>
       </div>

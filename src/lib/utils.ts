@@ -21,6 +21,10 @@ export function formatTime(time: string): string {
 export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    sekretariat_review: 'bg-sky-100 text-sky-800 border-sky-200',
+    revision_sekretariat: 'bg-orange-100 text-orange-800 border-orange-200',
+    admin_review: 'bg-purple-100 text-purple-800 border-purple-200',
+    revision_admin: 'bg-orange-100 text-orange-800 border-orange-200',
     approved: 'bg-green-100 text-green-800 border-green-200',
     rejected: 'bg-red-100 text-red-800 border-red-200',
     cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
@@ -31,7 +35,11 @@ export function getStatusColor(status: string): string {
 
 export function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
-    pending: 'Menunggu',
+    pending: 'Menunggu Review',
+    sekretariat_review: 'Ditinjau Sekretariat',
+    revision_sekretariat: 'Perlu Revisi (Sekretariat)',
+    admin_review: 'Ditinjau Admin',
+    revision_admin: 'Perlu Revisi (Admin)',
     approved: 'Disetujui',
     rejected: 'Ditolak',
     cancelled: 'Dibatalkan',

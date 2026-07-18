@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { usePendingBookings, useApproveBooking, useRejectBooking, useSignBooking } from '@/hooks/useBookings';
+import {
+  usePendingBookings, useApproveBooking, useRejectBooking, useSignBooking,
+  useStartReview, useReviseBooking,
+} from '@/hooks/useBookings';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,21 +16,25 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Pagination } from '@/components/ui/pagination';
 import { SignatureDialog } from '@/components/ui/signature-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { formatDate, formatTime, getInitials } from '@/lib/utils';
-import { CheckCircle2, XCircle, CalendarDays, Clock, Users, ClipboardList, Church } from 'lucide-react';
+import { formatDate, formatTime, getInitials, getStatusColor, getStatusLabel } from '@/lib/utils';
+import { CheckCircle2, XCircle, CalendarDays, Clock, Users, ClipboardList, Church, RotateCcw, PlayCircle } from 'lucide-react';
 
 export function BookingApprovalsTab() {
-  const { hasAnyRole, user } = useAuth();
+  const { hasAnyRole, isAdmin, isSekretariat, user } = useAuth();
   const [page, setPage] = useState(1);
   const { data: pendingData, isLoading, isError, refetch } = usePendingBookings(hasAnyRole(['sekretariat', 'admin']), page);
   const approveBooking = useApproveBooking();
   const rejectBooking = useRejectBooking();
   const signBooking = useSignBooking();
+  const startReview = useStartReview();
+  const reviseBooking = useReviseBooking();
 
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [confirmApproveId, setConfirmApproveId] = useState<string | null>(null);
   const [approveNotes, setApproveNotes] = useState('');
+  const [reviseId, setReviseId] = useState<string | null>(null);
+  const [reviseReason, setReviseReason] = useState('');
   // Setelah setuju, tawarkan tanda tangan petugas langsung untuk booking ini.
   const [signAfter, setSignAfter] = useState<{ id: string; title: string } | null>(null);
 
@@ -39,7 +46,9 @@ export function BookingApprovalsTab() {
     await approveBooking.mutateAsync({ id: confirmApproveId, notes: approveNotes || undefined });
     setConfirmApproveId(null);
     setApproveNotes('');
-    if (target) setSignAfter({ id: target.id, title: target.title });
+    // Approve oleh admin selalu final (approved) — approve oleh sekretariat hanya
+    // meneruskan ke tahap admin, jadi TTD petugas belum relevan di titik itu.
+    if (target && isAdmin) setSignAfter({ id: target.id, title: target.title });
   };
 
   const handleReject = async () => {
@@ -47,6 +56,13 @@ export function BookingApprovalsTab() {
     await rejectBooking.mutateAsync({ id: rejectId, reason: rejectReason });
     setRejectId(null);
     setRejectReason('');
+  };
+
+  const handleRevise = async () => {
+    if (!reviseId || !reviseReason.trim()) return;
+    await reviseBooking.mutateAsync({ id: reviseId, reason: reviseReason });
+    setReviseId(null);
+    setReviseReason('');
   };
 
   const handleSignAfter = async (dataUrl: string) => {
@@ -106,6 +122,9 @@ export function BookingApprovalsTab() {
                               <Church className="w-3 h-3" /> Pelayanan Gereja
                             </Badge>
                           )}
+                          <Badge className={`${getStatusColor(booking.status)} shrink-0 text-xs`}>
+                            {getStatusLabel(booking.status)}
+                          </Badge>
                         </div>
                         <p className="text-sm text-primary mt-0.5">{booking.room?.name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -138,12 +157,31 @@ export function BookingApprovalsTab() {
                   </div>
 
                   <div className="flex sm:flex-col gap-2 p-5 sm:border-l border-t sm:border-t-0 bg-muted/30 sm:justify-center shrink-0">
+                    {isSekretariat && booking.status === 'pending' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 sm:flex-none"
+                        onClick={() => startReview.mutate(booking.id)}
+                        disabled={startReview.isPending}
+                      >
+                        <PlayCircle className="w-4 h-4 mr-1" /> Mulai Review
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => setConfirmApproveId(booking.id)}
                     >
                       <CheckCircle2 className="w-4 h-4 mr-1" /> Setujui
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 sm:flex-none"
+                      onClick={() => { setReviseId(booking.id); setReviseReason(''); }}
+                    >
+                      <RotateCcw className="w-4 h-4 mr-1" /> Revisi
                     </Button>
                     <Button
                       size="sm"
@@ -198,6 +236,26 @@ export function BookingApprovalsTab() {
             <Button variant="ghost" onClick={() => { setRejectId(null); setRejectReason(''); }}>Batal</Button>
             <Button variant="destructive" onClick={handleReject} disabled={!rejectReason.trim()} loading={rejectBooking.isPending}>
               Tolak Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Revisi */}
+      <Dialog open={!!reviseId} onOpenChange={(open) => { if (!open) { setReviseId(null); setReviseReason(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Minta Revisi</DialogTitle>
+            <DialogDescription>Booking akan dikembalikan ke pemohon untuk diperbaiki. Pemohon akan mendapat notifikasi.</DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <label className="text-sm font-medium text-foreground mb-1 block">Alasan Revisi *</label>
+            <Textarea rows={3} placeholder="Jelaskan apa yang perlu diperbaiki..." value={reviseReason} onChange={(e) => setReviseReason(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setReviseId(null); setReviseReason(''); }}>Batal</Button>
+            <Button onClick={handleRevise} disabled={!reviseReason.trim()} loading={reviseBooking.isPending}>
+              Minta Revisi
             </Button>
           </DialogFooter>
         </DialogContent>

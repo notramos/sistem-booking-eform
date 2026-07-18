@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
@@ -10,11 +10,13 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { TooltipCell } from '@/components/booking/TooltipCell';
 import { useCalendarEvents } from '@/hooks/useBookings';
 import { useRooms } from '@/hooks/useRooms';
 import { useHolidays } from '@/hooks/useHolidays';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Plus, CalendarDays, Filter, Clock, MapPin, Eye, CalendarPlus } from 'lucide-react';
 import { getStatusColor, getStatusLabel } from '@/lib/utils';
@@ -73,6 +75,7 @@ export default function CalendarPage() {
   const today = useMemo(() => new Date(), []);
   const [currentDate, setCurrentDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -280,7 +283,17 @@ export default function CalendarPage() {
                               ? 'bg-red-50/60 dark:bg-red-950/20 hover:bg-red-50'
                               : 'hover:bg-accent/20'
                       } ${!bookable ? 'opacity-60' : ''}`}
-                      onClick={() => setSelectedDate(dateStr)}
+                      onClick={() => {
+                        setSelectedDate(dateStr);
+                        if (!bookable) {
+                          if (dateStr < minDateStr) {
+                            toast.info(`Tanggal ini terlalu dekat. Booking minimal H+${BOOKING_MIN_ADVANCE_DAYS} (mulai ${new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(minDateStr + 'T00:00:00'))}).`);
+                          } else {
+                            toast.info(`Tanggal ini terlalu jauh. Booking maksimal H+${BOOKING_MAX_ADVANCE_DAYS} dari hari ini.`);
+                          }
+                        }
+                        setSheetOpen(true);
+                      }}
                     >
                       <div className="flex items-center gap-1 mb-1">
                         <div className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
@@ -331,30 +344,31 @@ export default function CalendarPage() {
         </span>
       </div>
 
-      {/* Agenda Table */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-3">
-            <CardTitle className="text-base">
+      {/* Agenda — panel geser dari kanan, muncul saat tanggal diklik */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>
               {selectedDate
                 ? `Agenda — ${new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(selectedDate + 'T00:00:00'))}${holidays.get(selectedDate) ? ` · ${holidays.get(selectedDate)!.name}` : ''}`
-                : 'Agenda — Pilih tanggal untuk melihat jadwal'}
-            </CardTitle>
-            {selectedDate && isBookableDate(selectedDate) && (
-              <Button size="sm" onClick={() => router.push(`/booking/new?date=${selectedDate}`)}>
-                <CalendarPlus className="w-4 h-4 mr-1.5" /> Booking di tanggal ini
-              </Button>
-            )}
-          </div>
+                : 'Agenda'}
+            </SheetTitle>
+            <SheetClose onClick={() => setSheetOpen(false)} />
+          </SheetHeader>
+
+          {selectedDate && isBookableDate(selectedDate) && (
+            <Button onClick={() => router.push(`/booking/new?date=${selectedDate}`)}>
+              <CalendarPlus className="w-4 h-4 mr-1.5" /> Booking di tanggal ini
+            </Button>
+          )}
           {selectedDate && !isBookableDate(selectedDate) && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               Tanggal ini di luar rentang pemesanan (H+{BOOKING_MIN_ADVANCE_DAYS} s/d H+{BOOKING_MAX_ADVANCE_DAYS} dari hari ini).
             </p>
           )}
-        </CardHeader>
-        <CardContent className="p-0">
+
           {selectedDate && eventsOnSelectedDate.length > 0 ? (
-            <ScrollArea className="max-h-[400px]">
+            <ScrollArea className="flex-1">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -362,7 +376,7 @@ export default function CalendarPage() {
                     <TableHead>Ruangan</TableHead>
                     <TableHead>Judul</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="w-16"></TableHead>
+                    <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -391,7 +405,7 @@ export default function CalendarPage() {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => router.push(`/booking/${event.id}`)}
+                          onClick={() => router.push(`/booking/${event.booking_id ?? event.id}`)}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -406,8 +420,8 @@ export default function CalendarPage() {
           ) : (
             <EmptyState icon={CalendarDays} title="Klik tanggal pada kalender untuk melihat jadwal" />
           )}
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

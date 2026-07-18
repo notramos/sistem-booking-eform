@@ -17,8 +17,8 @@ export const roomsApi = {
   schedules: (id: string, start: string, end: string) =>
     apiClient.get<ApiResponse<{ id: string; title: string; booking_date: string; start_time: string; end_time: string; status: string }[]>>(`/rooms/${id}/schedules`, { params: { start, end } }),
 
-  availability: (id: string, date: string, startTime: string, endTime: string) =>
-    apiClient.get<ApiResponse<{ available: boolean }>>(`/rooms/${id}/availability`, { params: { date, start_time: startTime, end_time: endTime } }),
+  availability: (id: string, date: string, startTime: string, endTime: string, excludeBookingId?: string) =>
+    apiClient.get<ApiResponse<{ available: boolean }>>(`/rooms/${id}/availability`, { params: { date, start_time: startTime, end_time: endTime, exclude_booking_id: excludeBookingId } }),
 
   recommendations: (date: string, attendees: number) =>
     apiClient.get<ApiResponse<RoomRecommendation[]>>('/rooms/recommendations', { params: { date, attendees } }),

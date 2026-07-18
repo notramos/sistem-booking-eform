@@ -74,6 +74,30 @@ export function useCreateBooking() {
   });
 }
 
+export function usePreviewRecurringBooking() {
+  return useMutation({
+    mutationFn: (data: Parameters<typeof bookingsApi.previewRecurring>[0]) => bookingsApi.previewRecurring(data),
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal memeriksa jadwal rutin');
+    },
+  });
+}
+
+export function useCreateRecurringBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof bookingsApi.createRecurring>[0]) => bookingsApi.createRecurring(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['my-bookings'] });
+      qc.invalidateQueries({ queryKey: ['calendar-events'] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal mengajukan booking rutin');
+    },
+  });
+}
+
 export function useCancelBooking() {
   const qc = useQueryClient();
   return useMutation({
@@ -135,6 +159,55 @@ export function useRejectBooking() {
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Gagal menolak booking');
+    },
+  });
+}
+
+export function useStartReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => bookingsApi.startReview(id),
+    onSuccess: () => {
+      toast.success('Review dimulai');
+      qc.invalidateQueries({ queryKey: ['pending-bookings'] });
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal memulai review');
+    },
+  });
+}
+
+export function useReviseBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => bookingsApi.revise(id, reason),
+    onSuccess: () => {
+      toast.success('Revisi diminta, pemohon akan diberi tahu');
+      qc.invalidateQueries({ queryKey: ['pending-bookings'] });
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['my-bookings'] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal meminta revisi');
+    },
+  });
+}
+
+export function useUpdateBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof bookingsApi.update>[1] }) =>
+      bookingsApi.update(id, data),
+    onSuccess: () => {
+      toast.success('Booking berhasil diperbarui');
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['my-bookings'] });
+      qc.invalidateQueries({ queryKey: ['pending-bookings'] });
+      qc.invalidateQueries({ queryKey: ['calendar-events'] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal memperbarui booking');
     },
   });
 }

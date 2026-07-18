@@ -14,6 +14,7 @@ import { OfficialDocumentPreview } from '@/components/ui/official-document-previ
 import { WizardProgress } from '@/components/ui/wizard-progress';
 import { WizardFooter } from '@/components/ui/wizard-footer';
 import { SignatureDialog } from '@/components/ui/signature-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen, PenLine, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
@@ -119,6 +120,7 @@ export default function NewCongregationServicePage() {
   const profileSignature = user?.signature ?? null;
   const [signature, setSignature] = useState<string | null>(profileSignature);
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
 
   const selectedType = formData.service_type;
   const config = selectedType ? SERVICE_TYPE_MAP[selectedType] : null;
@@ -395,11 +397,19 @@ export default function NewCongregationServicePage() {
                 </p>
               </div>
 
+              <Checkbox
+                id="consent-layanan-umat"
+                checked={consentChecked}
+                onChange={(e) => setConsentChecked(e.target.checked)}
+                label="Saya menyatakan bahwa data yang diisi sudah benar dan bersedia bertanggung jawab atas pengajuan ini."
+              />
+
               <WizardFooter
                 onPrev={handlePrev}
                 onNext={handleSubmit}
                 nextLabel="Ajukan Pelayanan"
                 nextLoading={createService.isPending}
+                nextDisabled={!consentChecked}
                 nextIcon={Heart}
               />
             </div>

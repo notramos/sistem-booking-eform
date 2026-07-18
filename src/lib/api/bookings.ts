@@ -13,7 +13,25 @@ export const bookingsApi = {
     expected_attendees?: number; notes?: string;
   }) => apiClient.post<ApiResponse<Booking>>('/bookings', data),
 
-  update: (id: string, data: Partial<Pick<Booking, 'title' | 'description' | 'start_time' | 'end_time' | 'notes'>>) =>
+  previewRecurring: (data: {
+    room_id: string; first_date: string; start_time: string; end_time: string;
+    pattern: 'weekly' | 'monthly'; duration_months: number;
+  }) => apiClient.post<ApiResponse<{
+    dates: { date: string; available: boolean; reason: 'conflict' | 'maintenance' | null }[];
+  }>>('/bookings/recurring/preview', data),
+
+  createRecurring: (data: {
+    room_id: string; title: string; description?: string; dates: string[];
+    start_time: string; end_time: string; purpose_type?: string;
+    expected_attendees?: number; notes?: string;
+    pattern: 'weekly' | 'monthly';
+  }) => apiClient.post<ApiResponse<{
+    booking: Booking;
+    skipped: { date: string; reason: 'conflict' | 'maintenance' }[];
+    skipped_count: number;
+  }>>('/bookings/recurring', data),
+
+  update: (id: string, data: Partial<Pick<Booking, 'title' | 'description' | 'room_id' | 'booking_date' | 'start_time' | 'end_time' | 'notes'>>) =>
     apiClient.put<ApiResponse<Booking>>(`/bookings/${id}`, data),
 
   cancel: (id: string) => apiClient.delete<ApiResponse>(`/bookings/${id}`),
@@ -42,4 +60,10 @@ export const bookingsApi = {
 
   reject: (id: string, reason: string) =>
     apiClient.post<ApiResponse<Booking>>(`/bookings/${id}/reject`, { reason }),
+
+  startReview: (id: string) =>
+    apiClient.post<ApiResponse<Booking>>(`/bookings/${id}/start-review`),
+
+  revise: (id: string, reason: string) =>
+    apiClient.post<ApiResponse<Booking>>(`/bookings/${id}/revise`, { reason }),
 };

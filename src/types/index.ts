@@ -55,7 +55,16 @@ export interface RoomImage {
   sort_order: number;
 }
 
-export type BookingStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'completed';
+export type BookingStatus =
+  | 'pending'
+  | 'sekretariat_review'
+  | 'revision_sekretariat'
+  | 'admin_review'
+  | 'revision_admin'
+  | 'approved'
+  | 'rejected'
+  | 'cancelled'
+  | 'completed';
 
 export interface Booking {
   id: string;
@@ -80,9 +89,12 @@ export interface Booking {
   signature_petugas?: string | null;
   signature_petugas_at?: string | null;
   signed_petugas_by?: string | null;
+  booking_type?: 'reguler' | 'rutin';
+  recurring_pattern?: 'weekly' | 'monthly' | null;
+  recurring_dates?: string[] | null;
   user?: User;
   room?: Room;
-  approval?: BookingApproval;
+  approvals?: BookingApproval[];
   logs?: BookingLog[];
   service_details?: {
     service_type_label: string;
@@ -96,8 +108,9 @@ export interface Booking {
 export interface BookingApproval {
   id: string;
   booking_id: string;
+  stage: 'sekretariat' | 'admin';
   approver_id: string;
-  action: 'approved' | 'rejected';
+  action: 'approved' | 'rejected' | 'revision';
   notes: string | null;
   approver?: User;
   created_at: string;
@@ -154,7 +167,10 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface CalendarEvent {
+  /** Unik per kemunculan (booking_id::tanggal untuk booking rutin) — dipakai untuk key, bukan navigasi. */
   id: string;
+  /** ID booking sesungguhnya (dipakai untuk navigasi ke /booking/{id}) — sama untuk semua kemunculan booking rutin. */
+  booking_id?: string;
   title: string;
   room: string;
   room_id: string;
@@ -172,6 +188,7 @@ export interface CalendarEvent {
     type: 'booking' | 'maintenance';
     status_label?: string;
     description?: string;
+    is_recurring?: boolean;
   };
 }
 

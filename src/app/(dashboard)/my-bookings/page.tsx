@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useMyBookings, useCancelBooking } from '@/hooks/useBookings';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useMyBookings } from '@/hooks/useBookings';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,22 +11,42 @@ import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils';
-import { CalendarDays, Clock, MapPin, XCircle, Calendar, Search, PenLine } from 'lucide-react';
+import { formatDate, formatTime, getStatusColor, getStatusLabel, cn } from '@/lib/utils';
+import { CalendarDays, Clock, MapPin, Calendar, Search, PenLine, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
+import type { Booking } from '@/types';
+
+function needsResubmitOf(booking: Booking) {
+  return ['revision_sekretariat', 'revision_admin'].includes(booking.status);
+}
+
+function needsSignatureOf(booking: Booking) {
+  return booking.status === 'approved' && !booking.signature_pemohon;
+}
+
+function latestRevisionOf(booking: Booking) {
+  return [...(booking.approvals ?? [])]
+    .filter((a) => a.action === 'revision')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+}
 
 export default function MyBookingsPage() {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [cancelId, setCancelId] = useState<string | null>(null);
   const { data, isLoading } = useMyBookings(statusFilter || undefined, page, search || undefined);
-  const cancelBooking = useCancelBooking();
 
-  const bookings = data?.data;
   const meta = data?.meta;
+
+  // Kartu yang butuh tindakan pemohon (revisi lalu tanda tangan) ditaruh paling atas
+  // di halaman yang sedang tampil, sisanya mempertahankan urutan asli dari API.
+  const bookings = useMemo(() => {
+    const list = data?.data ?? [];
+    const priority = (b: Booking) => (needsResubmitOf(b) ? 0 : needsSignatureOf(b) ? 1 : 2);
+    return [...list].sort((a, b) => priority(a) - priority(b));
+  }, [data]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,15 +61,13 @@ export default function MyBookingsPage() {
     setPage(1);
   };
 
-  const handleCancel = async () => {
-    if (!cancelId) return;
-    await cancelBooking.mutateAsync(cancelId);
-    setCancelId(null);
-  };
-
   const statuses = [
     { value: '', label: 'Semua' },
     { value: 'pending', label: 'Menunggu' },
+    { value: 'sekretariat_review', label: 'Ditinjau Sekretariat' },
+    { value: 'admin_review', label: 'Ditinjau Admin' },
+    { value: 'revision_sekretariat', label: 'Revisi (Sekretariat)' },
+    { value: 'revision_admin', label: 'Revisi (Admin)' },
     { value: 'approved', label: 'Disetujui' },
     { value: 'rejected', label: 'Ditolak' },
     { value: 'cancelled', label: 'Dibatalkan' },
@@ -84,72 +103,78 @@ export default function MyBookingsPage() {
 
       {isLoading ? (
         <Spinner size="lg" center label="Memuat booking..." />
-      ) : bookings?.length === 0 ? (
+      ) : bookings.length === 0 ? (
         <EmptyState
           icon={Calendar}
           title="Belum ada booking"
           action={{ label: 'Booking Sekarang', href: '/rooms' }}
         />
       ) : (
-        <div className="space-y-3">
-          {bookings?.map((booking) => {
-            const needsSignature = booking.status === 'approved' && !booking.signature_pemohon;
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {bookings.map((booking) => {
+            const needsSignature = needsSignatureOf(booking);
+            const needsResubmit = needsResubmitOf(booking);
+            const needsAction = needsResubmit || needsSignature;
+            const revision = needsResubmit ? latestRevisionOf(booking) : undefined;
+
             return (
-              <Card key={booking.id}>
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Link
-                          href={`/booking/${booking.id}`}
-                          className="font-semibold text-foreground hover:text-primary transition-colors"
-                        >
-                          {booking.title}
-                        </Link>
-                        {booking.service_details && (
-                          <Badge variant="outline" className="shrink-0">Pelayanan Gereja</Badge>
-                        )}
-                        {needsSignature && (
-                          <Badge variant="outline" className="shrink-0 gap-1 text-amber-700 border-amber-300 bg-amber-50">
-                            <PenLine className="w-3 h-3" /> Perlu tanda tangan
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">{booking.room?.name}</p>
-
-                      <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                          <CalendarDays className="h-3.5 w-3.5" />
-                          {formatDate(booking.booking_date)}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <Clock className="h-3.5 w-3.5" />
-                          {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
-                        </span>
-                        {booking.room?.building && (
-                          <span className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5" />
-                            {booking.room.building}
-                          </span>
-                        )}
-                      </div>
+              <Card
+                key={booking.id}
+                onClick={() => router.push(`/booking/${booking.id}`)}
+                className={cn(
+                  'flex flex-col cursor-pointer transition-all hover:shadow-md hover:border-primary/50',
+                  needsResubmit && 'border-l-4 border-l-orange-400',
+                  !needsResubmit && needsSignature && 'border-l-4 border-l-amber-400'
+                )}
+              >
+                <CardContent className="p-5 flex flex-1 flex-col">
+                  {needsAction && (
+                    <div className={cn(
+                      'mb-2 flex items-center gap-1.5 text-xs font-medium',
+                      needsResubmit ? 'text-orange-700' : 'text-amber-700'
+                    )}>
+                      {needsResubmit ? <RotateCcw className="w-3.5 h-3.5" /> : <PenLine className="w-3.5 h-3.5" />}
+                      {needsResubmit ? 'Perlu Revisi' : 'Perlu Tanda Tangan'}
                     </div>
+                  )}
 
-                    <div className="flex items-start gap-2 ml-4 shrink-0">
-                      <Badge className={getStatusColor(booking.status)}>
-                        {getStatusLabel(booking.status)}
-                      </Badge>
-                      {booking.is_cancellable && (
-                        <button
-                          onClick={() => setCancelId(booking.id)}
-                          className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                          title="Batalkan booking"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-foreground truncate">{booking.title}</h3>
+                    <Badge className={cn(getStatusColor(booking.status), 'shrink-0')}>
+                      {getStatusLabel(booking.status)}
+                    </Badge>
                   </div>
+
+                  {booking.service_details && (
+                    <Badge variant="outline" className="mt-1.5 self-start">Pelayanan Gereja</Badge>
+                  )}
+                  {booking.booking_type === 'rutin' && (
+                    <Badge variant="outline" className="mt-1.5 self-start">
+                      Rutin · {booking.recurring_dates?.length ?? 0} tanggal
+                    </Badge>
+                  )}
+
+                  <p className="flex items-center gap-1.5 text-sm text-muted-foreground mt-2">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" /> {booking.room?.name}
+                  </p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {booking.booking_type === 'rutin' && booking.recurring_dates && booking.recurring_dates.length > 1
+                        ? `${formatDate(booking.recurring_dates[0])} – ${formatDate(booking.recurring_dates[booking.recurring_dates.length - 1])}`
+                        : formatDate(booking.booking_date)}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
+                    </span>
+                  </div>
+
+                  {revision?.notes && (
+                    <div className="mt-3 rounded-md border border-orange-200 bg-orange-50 p-2.5 text-xs text-orange-700">
+                      <p className="line-clamp-2">{revision.notes}</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -158,25 +183,6 @@ export default function MyBookingsPage() {
       )}
 
       <Pagination meta={meta} onPageChange={setPage} itemLabel="booking" />
-
-      <Dialog open={!!cancelId} onOpenChange={(open) => { if (!open) setCancelId(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Batalkan Booking</DialogTitle>
-            <DialogDescription>Booking yang dibatalkan tidak dapat dikembalikan. Yakin ingin melanjutkan?</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setCancelId(null)}>Batal</Button>
-            <Button
-              variant="destructive"
-              loading={cancelBooking.isPending}
-              onClick={handleCancel}
-            >
-              Ya, Batalkan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

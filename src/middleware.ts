@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { SESSION_COOKIE_NAME } from '@/lib/constants';
+import { AUTH_HINT_COOKIE_NAME } from '@/lib/constants';
 
-const publicPaths = ['/login', '/forgot-password', '/reset-password'];
+const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 export function middleware(request: NextRequest) {
-  // Cookie session HttpOnly tetap terbaca di sini karena middleware Next.js
-  // jalan di server/edge, bukan browser JS — HttpOnly hanya memblokir document.cookie.
-  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value ||
+  // Cookie HttpOnly tetap terbaca di sini karena middleware Next.js jalan di
+  // server/edge, bukan browser JS — HttpOnly hanya memblokir document.cookie.
+  // Pakai auth_hint (bukan cookie sesi Sanctum), karena cookie sesi SELALU ada
+  // walau sudah logout (sesi anonim) — auth_hint eksplisit di-set/dihapus oleh
+  // AuthController saat login/logout, jadi sinyal yang akurat.
+  const token = request.cookies.get(AUTH_HINT_COOKIE_NAME)?.value ||
     request.headers.get('authorization')?.replace('Bearer ', '');
 
   if (request.nextUrl.pathname === '/') {

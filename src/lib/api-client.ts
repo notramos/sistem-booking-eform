@@ -14,7 +14,7 @@ const apiClient = axios.create({
 // dicek dari JS, jadi useAuth SELALU memanggil /auth/user saat mount (termasuk
 // di halaman ini sendiri). 401 di sini wajar (belum login), bukan sesi habis —
 // tanpa guard ini, redirect ke '/login' saat SUDAH di '/login' memicu reload tanpa henti.
-const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password'];
+const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 apiClient.interceptors.response.use(
   (response) => response,
