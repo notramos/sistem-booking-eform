@@ -19,14 +19,14 @@ export const authApi = {
       token, email, password, password_confirmation: passwordConfirmation,
     }),
 
-  registerStart: (email: string) =>
-    apiClient.post<ApiResponse>('/auth/register/start', { email }),
+  registerStart: (phone: string) =>
+    apiClient.post<ApiResponse>('/auth/register/start', { phone }),
 
-  registerVerify: (email: string, code: string) =>
-    apiClient.post<ApiResponse<{ verification_token: string }>>('/auth/register/verify', { email, code }),
+  registerVerify: (phone: string, code: string) =>
+    apiClient.post<ApiResponse<{ verification_token: string }>>('/auth/register/verify', { phone, code }),
 
   registerComplete: async (data: {
-    email: string; verification_token: string; name: string;
+    phone: string; verification_token: string; email: string; name: string;
     password: string; password_confirmation: string;
     wilayah_id?: string; lingkungan_id?: string; parish?: string;
   }) => {

@@ -6,7 +6,7 @@ import { authApi } from '@/lib/api/auth';
 
 export function useRegisterStart() {
   return useMutation({
-    mutationFn: (email: string) => authApi.registerStart(email),
+    mutationFn: (phone: string) => authApi.registerStart(phone),
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Gagal mengirim kode verifikasi');
     },
@@ -15,7 +15,7 @@ export function useRegisterStart() {
 
 export function useRegisterVerify() {
   return useMutation({
-    mutationFn: ({ email, code }: { email: string; code: string }) => authApi.registerVerify(email, code),
+    mutationFn: ({ phone, code }: { phone: string; code: string }) => authApi.registerVerify(phone, code),
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Kode verifikasi salah');
     },

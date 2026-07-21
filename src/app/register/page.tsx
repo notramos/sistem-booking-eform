@@ -15,10 +15,10 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/com
 import Link from 'next/link';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
-const emailSchema = z.object({
-  email: z.string().email('Format email tidak valid'),
+const phoneSchema = z.object({
+  phone: z.string().regex(/^(\+62|62|0)8[1-9][0-9]{6,10}$/, 'Format nomor WhatsApp tidak valid. Gunakan format 08xxx atau +62xxx.'),
 });
-type EmailForm = z.infer<typeof emailSchema>;
+type PhoneForm = z.infer<typeof phoneSchema>;
 
 const codeSchema = z.object({
   code: z.string().length(6, 'Kode verifikasi harus 6 digit').regex(/^\d+$/, 'Kode verifikasi harus berupa angka'),
@@ -26,6 +26,7 @@ const codeSchema = z.object({
 type CodeForm = z.infer<typeof codeSchema>;
 
 const profileSchema = z.object({
+  email: z.string().email('Format email tidak valid'),
   name: z.string().min(3, 'Nama minimal 3 karakter').max(255),
   password: z.string().min(8, 'Password minimal 8 karakter'),
   passwordConfirmation: z.string(),
@@ -46,7 +47,7 @@ export default function RegisterPage() {
   const { data: wilayahList } = useWilayah();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [verificationToken, setVerificationToken] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -55,7 +56,7 @@ export default function RegisterPage() {
   const registerVerify = useRegisterVerify();
   const registerComplete = useRegisterComplete();
 
-  const emailForm = useForm<EmailForm>({ resolver: zodResolver(emailSchema) });
+  const phoneForm = useForm<PhoneForm>({ resolver: zodResolver(phoneSchema) });
   const codeForm = useForm<CodeForm>({ resolver: zodResolver(codeSchema) });
   const profileForm = useForm<ProfileForm>({ resolver: zodResolver(profileSchema) });
 
@@ -78,22 +79,22 @@ export default function RegisterPage() {
     }, 1000);
   };
 
-  const onSubmitEmail = async (data: EmailForm) => {
+  const onSubmitPhone = async (data: PhoneForm) => {
     try {
-      await registerStart.mutateAsync(data.email);
-      setEmail(data.email);
+      await registerStart.mutateAsync(data.phone);
+      setPhone(data.phone);
       startCooldown();
       setStep(2);
     } catch (err: unknown) {
       const e = err as { message?: string };
-      emailForm.setError('root', { message: e?.message || 'Gagal mengirim kode verifikasi' });
+      phoneForm.setError('root', { message: e?.message || 'Gagal mengirim kode verifikasi' });
     }
   };
 
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     try {
-      await registerStart.mutateAsync(email);
+      await registerStart.mutateAsync(phone);
       startCooldown();
     } catch {
       // toast sudah ditampilkan oleh hook
@@ -102,7 +103,7 @@ export default function RegisterPage() {
 
   const onSubmitCode = async (data: CodeForm) => {
     try {
-      const res = await registerVerify.mutateAsync({ email, code: data.code });
+      const res = await registerVerify.mutateAsync({ phone, code: data.code });
       setVerificationToken(res.data.data.verification_token);
       setStep(3);
     } catch (err: unknown) {
@@ -114,8 +115,9 @@ export default function RegisterPage() {
   const onSubmitProfile = async (data: ProfileForm) => {
     try {
       await registerComplete.mutateAsync({
-        email,
+        phone,
         verification_token: verificationToken,
+        email: data.email,
         name: data.name,
         password: data.password,
         password_confirmation: data.passwordConfirmation,
@@ -156,28 +158,28 @@ export default function RegisterPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-center">
-              {step === 1 && 'Daftar dengan Email'}
-              {step === 2 && 'Verifikasi Email'}
+              {step === 1 && 'Daftar dengan Nomor WhatsApp'}
+              {step === 2 && 'Verifikasi WhatsApp'}
               {step === 3 && 'Lengkapi Profil'}
             </CardTitle>
             <CardDescription className="text-center">
-              {step === 1 && 'Masukkan email Anda untuk memulai pendaftaran'}
-              {step === 2 && `Kode verifikasi telah dikirim ke ${email}`}
+              {step === 1 && 'Masukkan nomor WhatsApp Anda untuk memulai pendaftaran'}
+              {step === 2 && `Kode verifikasi telah dikirim ke WhatsApp ${phone}`}
               {step === 3 && 'Isi data diri untuk menyelesaikan pendaftaran'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {step === 1 && (
-              <form onSubmit={emailForm.handleSubmit(onSubmitEmail)} className="space-y-4">
-                {emailForm.formState.errors.root && (
+              <form onSubmit={phoneForm.handleSubmit(onSubmitPhone)} className="space-y-4">
+                {phoneForm.formState.errors.root && (
                   <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
-                    {emailForm.formState.errors.root.message}
+                    {phoneForm.formState.errors.root.message}
                   </div>
                 )}
                 <div>
-                  <Input id="email" label="Email" type="email" placeholder="nama@email.com" {...emailForm.register('email')} />
-                  {emailForm.formState.errors.email && (
-                    <p className="text-destructive text-xs mt-1">{emailForm.formState.errors.email.message}</p>
+                  <Input id="phone" label="Nomor WhatsApp" type="tel" placeholder="08xxxxxxxxxx" {...phoneForm.register('phone')} />
+                  {phoneForm.formState.errors.phone && (
+                    <p className="text-destructive text-xs mt-1">{phoneForm.formState.errors.phone.message}</p>
                   )}
                 </div>
                 <Button type="submit" loading={registerStart.isPending} className="w-full">
@@ -222,7 +224,7 @@ export default function RegisterPage() {
                   onClick={() => setStep(1)}
                   className="w-full flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" /> Ganti email
+                  <ArrowLeft className="w-3.5 h-3.5" /> Ganti nomor
                 </button>
               </form>
             )}
@@ -234,6 +236,13 @@ export default function RegisterPage() {
                     {profileForm.formState.errors.root.message}
                   </div>
                 )}
+                <div>
+                  <Input id="email" label="Email" type="email" placeholder="nama@email.com" {...profileForm.register('email')} />
+                  {profileForm.formState.errors.email && (
+                    <p className="text-destructive text-xs mt-1">{profileForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+
                 <div>
                   <Input id="name" label="Nama Lengkap" placeholder="Nama Anda" {...profileForm.register('name')} />
                   {profileForm.formState.errors.name && (
