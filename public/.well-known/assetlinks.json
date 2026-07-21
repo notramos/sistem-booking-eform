@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "id.web.santoalbertus.app.twa",
+        "sha256_cert_fingerprints": ["C0:2F:14:2D:6A:73:18:6A:A6:EA:A4:67:2E:22:EB:DA:34:D8:41:A6:CF:0A:BE:B5:BE:7C:55:4D:46:E4:14:CB"]
+      }
+    }]
