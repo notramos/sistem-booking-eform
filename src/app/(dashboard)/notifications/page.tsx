@@ -72,7 +72,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Notifikasi</h1>
           <p className="text-muted-foreground mt-1">
@@ -106,7 +106,7 @@ export default function NotificationsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="h-[600px]">
+          <ScrollArea className="h-[70vh] max-h-[600px]">
             {isLoading ? (
               <Spinner size="lg" center />
             ) : notifications.length === 0 ? (

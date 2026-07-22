@@ -220,7 +220,7 @@ export default function CalendarPage() {
                 {legendOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setLegendOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border bg-popover text-popover-foreground shadow-lg p-3 space-y-2 text-sm">
+                    <div className="absolute right-0 top-full mt-1 z-50 w-56 max-w-[calc(100vw-2rem)] rounded-lg border bg-popover text-popover-foreground shadow-lg p-3 space-y-2 text-sm">
                       <p className="font-medium text-xs text-muted-foreground mb-1">Keterangan</p>
                       <span className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Booking Disetujui

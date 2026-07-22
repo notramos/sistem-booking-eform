@@ -238,7 +238,7 @@ export default function AdminUsersPage() {
                 {usersData?.data?.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground truncate max-w-[180px]">
                       {user.email}
                     </TableCell>
                     <TableCell>
@@ -259,16 +259,16 @@ export default function AdminUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => openEdit(user)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => setToggleTarget(user)}
-                          className={`p-1.5 rounded-lg transition-colors ${
+                          className={`p-2 rounded-lg transition-colors ${
                             user.is_active
                               ? "text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                               : "text-muted-foreground hover:text-green-600 hover:bg-green-50"
