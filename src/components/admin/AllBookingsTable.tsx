@@ -64,12 +64,12 @@ export function AllBookingsTable() {
     <div className="space-y-4">
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
             <Select
               label="Status"
               value={status}
               onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-              className="w-48"
+              className="w-full"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -79,7 +79,7 @@ export function AllBookingsTable() {
               label="Ruangan"
               value={roomId}
               onChange={(e) => { setRoomId(e.target.value); setPage(1); }}
-              className="w-56"
+              className="w-full"
             >
               <option value="">Semua Ruangan</option>
               {rooms.map((room) => (
@@ -90,12 +90,14 @@ export function AllBookingsTable() {
             </Select>
             <DatePicker label="Dari Tanggal" value={dateFrom} onChange={(d) => { setDateFrom(d); setPage(1); }} />
             <DatePicker label="Sampai Tanggal" value={dateTo} onChange={(d) => { setDateTo(d); setPage(1); }} />
-            {hasFilters && (
+          </div>
+          {hasFilters && (
+            <div className="mt-3">
               <Button variant="ghost" size="sm" onClick={resetFilters}>
                 <X className="w-4 h-4 mr-1" /> Reset
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
