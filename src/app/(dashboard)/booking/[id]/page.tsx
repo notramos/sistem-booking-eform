@@ -475,7 +475,7 @@ export default function BookingDetailPage() {
                   <Pencil className="h-4 w-4" /> Edit & Ajukan Ulang
                 </Link>
               )}
-              {booking.is_cancellable && (
+              {(isOwner || isStaff) && booking.is_cancellable && (
                 <Button variant="destructive" className="w-full gap-2" onClick={() => setShowCancel(true)}>
                   <XCircle className="h-4 w-4" /> Batalkan Booking
                 </Button>
