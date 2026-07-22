@@ -258,7 +258,7 @@ export default function CalendarPage() {
               <div className="grid grid-cols-7 border-t border-l border-border">
                 {days.map((dayNum, idx) => {
                   if (dayNum === null) {
-                    return <div key={`empty-${idx}`} className="border-r border-b border-border p-1.5 min-h-[88px] bg-muted/20" />;
+                    return <div key={`empty-${idx}`} className="border-r border-b border-border p-1.5 min-h-[64px] sm:min-h-[88px] bg-muted/20" />;
                   }
 
                   const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
@@ -277,7 +277,7 @@ export default function CalendarPage() {
                     <div
                       key={dateStr}
                       title={holiday?.name}
-                      className={`relative border-r border-b border-border p-1.5 min-h-[88px] transition-colors cursor-pointer ${
+                      className={`relative border-r border-b border-border p-1.5 min-h-[64px] sm:min-h-[88px] transition-colors cursor-pointer ${
                         isSelected
                           ? 'bg-primary/10 hover:bg-primary/20'
                           : isToday
@@ -306,7 +306,25 @@ export default function CalendarPage() {
                       }`}>
                         {dayNum}
                       </div>
-                      <div className="space-y-0.5 pt-0.5 pr-6">
+                      {/* Mobile: cuma indikator titik (teks event tidak muat di lebar sel ~48px) — tap tanggal buka agenda di Sheet. */}
+                      {dayEvents.length > 0 && (
+                        <div className="flex flex-wrap gap-0.5 pt-6 sm:hidden">
+                          {dayEvents.slice(0, 4).map((event) => (
+                            <span
+                              key={event.id}
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: event.backgroundColor || 'hsl(var(--muted-foreground))' }}
+                              aria-hidden
+                            />
+                          ))}
+                          {dayEvents.length > 4 && (
+                            <span className={`text-[9px] leading-none ${isRed ? 'text-neutral-300' : 'text-muted-foreground'}`}>
+                              +{dayEvents.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className="hidden sm:block space-y-0.5 pt-0.5 pr-6">
                         {visibleEvents.map((event) => (
                           <TooltipCell key={event.id} event={event} />
                         ))}
