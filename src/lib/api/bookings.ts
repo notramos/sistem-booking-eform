@@ -46,9 +46,6 @@ export const bookingsApi = {
       },
     }),
 
-  sign: (id: string, data: { role: 'pemohon' | 'petugas'; signature: string }) =>
-    apiClient.post<ApiResponse<Booking>>(`/bookings/${id}/signature`, data),
-
   pending: (page?: number) =>
     apiClient.get<PaginatedResponse<Booking>>('/bookings/pending', { params: page ? { page } : {} }),
 

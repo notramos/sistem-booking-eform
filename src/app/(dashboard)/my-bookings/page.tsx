@@ -12,16 +12,12 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, formatTime, getStatusColor, getStatusLabel, cn } from '@/lib/utils';
-import { CalendarDays, Clock, MapPin, Calendar, Search, PenLine, RotateCcw } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Calendar, Search, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import type { Booking } from '@/types';
 
 function needsResubmitOf(booking: Booking) {
   return ['revision_sekretariat', 'revision_admin'].includes(booking.status);
-}
-
-function needsSignatureOf(booking: Booking) {
-  return booking.status === 'approved' && !booking.signature_pemohon;
 }
 
 function latestRevisionOf(booking: Booking) {
@@ -44,7 +40,7 @@ export default function MyBookingsPage() {
   // di halaman yang sedang tampil, sisanya mempertahankan urutan asli dari API.
   const bookings = useMemo(() => {
     const list = data?.data ?? [];
-    const priority = (b: Booking) => (needsResubmitOf(b) ? 0 : needsSignatureOf(b) ? 1 : 2);
+    const priority = (b: Booking) => (needsResubmitOf(b) ? 0 : 1);
     return [...list].sort((a, b) => priority(a) - priority(b));
   }, [data]);
 
@@ -112,9 +108,7 @@ export default function MyBookingsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {bookings.map((booking) => {
-            const needsSignature = needsSignatureOf(booking);
             const needsResubmit = needsResubmitOf(booking);
-            const needsAction = needsResubmit || needsSignature;
             const revision = needsResubmit ? latestRevisionOf(booking) : undefined;
 
             return (
@@ -123,18 +117,14 @@ export default function MyBookingsPage() {
                 onClick={() => router.push(`/booking/${booking.id}`)}
                 className={cn(
                   'flex flex-col cursor-pointer transition-all hover:shadow-md hover:border-primary/50',
-                  needsResubmit && 'border-l-4 border-l-orange-400',
-                  !needsResubmit && needsSignature && 'border-l-4 border-l-amber-400'
+                  needsResubmit && 'border-l-4 border-l-orange-400'
                 )}
               >
                 <CardContent className="p-5 flex flex-1 flex-col">
-                  {needsAction && (
-                    <div className={cn(
-                      'mb-2 flex items-center gap-1.5 text-xs font-medium',
-                      needsResubmit ? 'text-orange-700' : 'text-amber-700'
-                    )}>
-                      {needsResubmit ? <RotateCcw className="w-3.5 h-3.5" /> : <PenLine className="w-3.5 h-3.5" />}
-                      {needsResubmit ? 'Perlu Revisi' : 'Perlu Tanda Tangan'}
+                  {needsResubmit && (
+                    <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-orange-700">
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Perlu Revisi
                     </div>
                   )}
 

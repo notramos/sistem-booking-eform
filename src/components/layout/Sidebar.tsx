@@ -12,7 +12,10 @@ import {
   Users, BarChart3, Settings, ClipboardList, Building2, Shield, Bell, Heart, Database,
 } from 'lucide-react';
 
-const ALL_ROLES = ['admin', 'sekretariat', 'jemaat'];
+const ALL_ROLES = ['umat', 'sekretariat', 'p2', 'pastor', 'it_admin'];
+// P2, Pastor, IT Admin sederajat (wewenang penuh) — bedanya cuma IT Admin yang
+// bisa kelola user internal, jadi "Kelola User" dipisah pakai role list sendiri.
+const FULL_ACCESS_ROLES = ['p2', 'pastor', 'it_admin'];
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ALL_ROLES },
@@ -24,17 +27,17 @@ const menuItems = [
   { section: 'Permohonan Pelayanan', roles: ALL_ROLES },
   { href: '/layanan-umat', label: 'Pelayanan Umat', icon: Heart, roles: ALL_ROLES },
 
-  { section: 'Sekretariat', roles: ['sekretariat', 'admin'] },
-  { href: '/approvals', label: 'Persetujuan', icon: CheckSquare, roles: ['sekretariat', 'admin'] },
-  { href: '/admin/data', label: 'Data Booking & Pelayanan', icon: Database, roles: ['sekretariat', 'admin'] },
-  { href: '/admin/reports', label: 'Laporan', icon: BarChart3, roles: ['sekretariat', 'admin'] },
+  { section: 'Sekretariat', roles: ['sekretariat', ...FULL_ACCESS_ROLES] },
+  { href: '/approvals', label: 'Persetujuan', icon: CheckSquare, roles: ['sekretariat', ...FULL_ACCESS_ROLES] },
+  { href: '/admin/data', label: 'Data Booking & Pelayanan', icon: Database, roles: ['sekretariat', ...FULL_ACCESS_ROLES] },
+  { href: '/admin/reports', label: 'Laporan', icon: BarChart3, roles: ['sekretariat', ...FULL_ACCESS_ROLES] },
 
-  { section: 'Administrasi', roles: ['admin'] },
-  { href: '/admin/users', label: 'Kelola User', icon: Users, roles: ['admin'] },
-  { href: '/admin/rooms', label: 'Kelola Ruangan', icon: Building2, roles: ['admin'] },
-  { href: '/admin/categories', label: 'Kategori & Fasilitas', icon: Settings, roles: ['admin'] },
-  { href: '/admin/maintenance', label: 'Jadwal Perbaikan', icon: ClipboardList, roles: ['admin'] },
-  { href: '/admin/audit-logs', label: 'Audit Log', icon: Shield, roles: ['admin'] },
+  { section: 'Administrasi', roles: FULL_ACCESS_ROLES },
+  { href: '/admin/users', label: 'Kelola User', icon: Users, roles: ['it_admin'] },
+  { href: '/admin/rooms', label: 'Kelola Ruangan', icon: Building2, roles: FULL_ACCESS_ROLES },
+  { href: '/admin/categories', label: 'Kategori & Fasilitas', icon: Settings, roles: FULL_ACCESS_ROLES },
+  { href: '/admin/maintenance', label: 'Jadwal Perbaikan', icon: ClipboardList, roles: FULL_ACCESS_ROLES },
+  { href: '/admin/audit-logs', label: 'Audit Log', icon: Shield, roles: FULL_ACCESS_ROLES },
 ];
 
 interface SidebarProps {

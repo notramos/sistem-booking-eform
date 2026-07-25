@@ -7,22 +7,20 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
-import { SignatureDialog } from '@/components/ui/signature-dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { StatusStepper, type StepperStep } from '@/components/detail/StatusStepper'
 import { ActivityTimeline, type TimelineItem } from '@/components/detail/ActivityTimeline'
 import { DetailFields, type DetailGroup } from '@/components/detail/DetailFields'
-import { DocumentPreviewDialog } from '@/components/detail/DocumentPreviewDialog'
 import { RoomReallocationCard } from '@/components/booking/RoomReallocationCard'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, PenLine, RotateCcw, PlayCircle, Pencil,
+  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, RotateCcw, PlayCircle, Pencil,
   MapPin, CalendarDays, Users, User as UserIcon,
 } from 'lucide-react'
 import {
-  useBooking, useCancelBooking, useSignBooking,
+  useBooking, useCancelBooking,
   useApproveBooking, useRejectBooking, useReviseBooking, useStartReview,
 } from '@/hooks/useBookings'
 import { useAuth } from '@/hooks/useAuth'
@@ -96,32 +94,18 @@ function logTone(action: string): TimelineItem['tone'] {
   return 'muted'
 }
 
-function SignatureStatus({ label, signed }: { label: string; signed: boolean }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={`inline-flex items-center gap-1.5 font-medium ${signed ? 'text-green-600' : 'text-muted-foreground'}`}>
-        <span className={`h-2 w-2 rounded-full ${signed ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
-        {signed ? 'Sudah' : 'Belum'}
-      </span>
-    </div>
-  )
-}
-
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { data: booking, isLoading, isError } = useBooking(id)
   const cancelMutation = useCancelBooking()
-  const signMutation = useSignBooking()
   const approveMutation = useApproveBooking()
   const rejectMutation = useRejectBooking()
   const reviseMutation = useReviseBooking()
   const startReviewMutation = useStartReview()
   const { user, hasAnyRole, isAdmin, isSekretariat } = useAuth()
-  const isStaff = hasAnyRole(['admin', 'sekretariat'])
+  const isStaff = hasAnyRole(['p2', 'pastor', 'it_admin', 'sekretariat'])
 
   const [showCancel, setShowCancel] = useState(false)
-  const [signRole, setSignRole] = useState<'pemohon' | 'petugas' | null>(null)
   const [showApprove, setShowApprove] = useState(false)
   const [approveNotes, setApproveNotes] = useState('')
   const [showReject, setShowReject] = useState(false)
@@ -152,12 +136,6 @@ export default function BookingDetailPage() {
   const handleCancel = async () => {
     await cancelMutation.mutateAsync(booking.id)
     setShowCancel(false)
-  }
-
-  const handleSaveSignature = async (dataUrl: string) => {
-    if (!signRole) return
-    await signMutation.mutateAsync({ id: booking.id, role: signRole, signature: dataUrl })
-    setSignRole(null)
   }
 
   const handleApprove = async () => {
@@ -230,16 +208,6 @@ export default function BookingDetailPage() {
       : []),
   ]
 
-  // Dokumen resmi (bukti dokumen) — dari grup detail yang sama, field kosong dibuang
-  const documentSections = detailGroups
-    .map((g) => ({
-      title: g.title ?? '',
-      fields: g.fields
-        .map((f) => ({ label: f.label, value: f.value as string | null | undefined }))
-        .filter((f) => f.value),
-    }))
-    .filter((section) => section.fields.length > 0)
-
   // Timeline riwayat
   const sortedLogs = [...(booking.logs ?? [])].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -258,9 +226,6 @@ export default function BookingDetailPage() {
         meta: `${formatDate(booking.created_at, 'long')} · ${booking.user?.name ?? '-'}`,
         tone: 'default',
       }]
-
-  const canSignPemohon = user?.id === booking.user_id && !booking.signature_pemohon
-  const canSignPetugas = isStaff && booking.status === 'approved' && !booking.signature_petugas
 
   return (
     <div className="space-y-6">
@@ -438,10 +403,6 @@ export default function BookingDetailPage() {
                   </span>
                 </div>
               )}
-              <div className="border-t pt-3 space-y-2">
-                <SignatureStatus label="TTD Pemohon" signed={!!booking.signature_pemohon} />
-                <SignatureStatus label="TTD Petugas" signed={!!booking.signature_petugas} />
-              </div>
             </CardContent>
           </Card>
 
@@ -450,26 +411,6 @@ export default function BookingDetailPage() {
               <CardTitle className="text-base">Aksi</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <DocumentPreviewDialog
-                title="Surat Peminjaman Ruangan"
-                sections={documentSections}
-                applicantName={booking.user?.name}
-                submittedAt={booking.created_at}
-                status={booking.status}
-                signaturePemohonUrl={booking.signature_pemohon}
-                signaturePetugasUrl={booking.signature_petugas}
-                signerPetugasName={booking.signed_petugas_by}
-              />
-              {canSignPemohon && (
-                <Button variant="outline" className="w-full gap-2" onClick={() => setSignRole('pemohon')}>
-                  <PenLine className="h-4 w-4" /> Tanda Tangan Pemohon
-                </Button>
-              )}
-              {canSignPetugas && (
-                <Button variant="outline" className="w-full gap-2" onClick={() => setSignRole('petugas')}>
-                  <PenLine className="h-4 w-4" /> Tanda Tangan Petugas
-                </Button>
-              )}
               {canResubmit && (
                 <Link href={`/booking/new?edit=${booking.id}`} className={buttonVariants({ className: 'w-full gap-2' })}>
                   <Pencil className="h-4 w-4" /> Edit & Ajukan Ulang
@@ -501,15 +442,6 @@ export default function BookingDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <SignatureDialog
-        open={signRole !== null}
-        onOpenChange={(open) => { if (!open) setSignRole(null) }}
-        title={`Tanda Tangan Sebagai ${signRole === 'pemohon' ? 'Pemohon' : 'Petugas Sekretariat'}`}
-        savedSignature={user?.signature}
-        onSubmit={handleSaveSignature}
-        isPending={signMutation.isPending}
-      />
 
       <Dialog open={showApprove} onOpenChange={setShowApprove}>
         <DialogContent>

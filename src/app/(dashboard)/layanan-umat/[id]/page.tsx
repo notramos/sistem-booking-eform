@@ -17,7 +17,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { StatusStepper, type StepperStep } from '@/components/detail/StatusStepper';
 import { ActivityTimeline, type TimelineItem } from '@/components/detail/ActivityTimeline';
 import { DetailFields, type DetailGroup } from '@/components/detail/DetailFields';
-import { DocumentPreviewDialog } from '@/components/detail/DocumentPreviewDialog';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -42,22 +41,10 @@ function serviceSteps(status: string): StepperStep[] {
   ];
 }
 
-function SignatureStatus({ label, signed }: { label: string; signed: boolean }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={`inline-flex items-center gap-1.5 font-medium ${signed ? 'text-green-600' : 'text-muted-foreground'}`}>
-        <span className={`h-2 w-2 rounded-full ${signed ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
-        {signed ? 'Sudah' : 'Belum'}
-      </span>
-    </div>
-  );
-}
-
 export default function LayananUmatDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { hasAnyRole } = useAuth();
-  const isStaff = hasAnyRole(['sekretariat', 'admin']);
+  const isStaff = hasAnyRole(['sekretariat', 'p2', 'pastor', 'it_admin']);
   const { data: service, isLoading, isError } = useCongregationService(id);
   const approveMutation = useApproveCongregationService();
   const rejectMutation = useRejectCongregationService();
@@ -103,15 +90,6 @@ export default function LayananUmatDetailPage() {
         }))
       )
     : [];
-
-  const documentSections = detailGroups
-    .map((g) => ({
-      title: g.title ?? '',
-      fields: g.fields
-        .map((f) => ({ label: f.label, value: f.value as string | null | undefined }))
-        .filter((f) => f.value),
-    }))
-    .filter((section) => section.fields.length > 0);
 
   const timelineItems: TimelineItem[] = [
     {
@@ -258,9 +236,6 @@ export default function LayananUmatDetailPage() {
                   <span className="truncate font-medium">{service.user.name}</span>
                 </div>
               )}
-              <div className="border-t pt-3">
-                <SignatureStatus label="TTD Pemohon" signed={!!service.signature_pemohon} />
-              </div>
             </CardContent>
           </Card>
 
@@ -269,14 +244,6 @@ export default function LayananUmatDetailPage() {
               <CardTitle className="text-base">Aksi</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <DocumentPreviewDialog
-                title={typeConfig?.label ?? service.service_type}
-                sections={documentSections}
-                applicantName={service.applicant_name}
-                submittedAt={service.created_at}
-                status={service.status}
-                signaturePemohonUrl={service.signature_pemohon}
-              />
               {hasActions && (
                 <>
                   <Button

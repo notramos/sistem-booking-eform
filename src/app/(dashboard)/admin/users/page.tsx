@@ -39,7 +39,7 @@ const emptyForm = {
   name: "",
   email: "",
   password: "",
-  role: "jemaat",
+  role: "umat",
   phone: "",
   department: "",
   nip: "",
@@ -51,7 +51,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [formData, setFormData] = useState(emptyForm);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", department: "", nip: "", role: "jemaat" });
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", department: "", nip: "", role: "umat" });
   const [toggleTarget, setToggleTarget] = useState<User | null>(null);
 
   const { data: usersData, isLoading, isError, refetch } = useQuery({
@@ -98,7 +98,7 @@ export default function AdminUsersPage() {
       phone: user.phone || "",
       department: user.department || "",
       nip: user.nip || "",
-      role: user.roles?.[0]?.name || "jemaat",
+      role: user.roles?.[0]?.name || "umat",
     });
     setEditingUser(user);
   };
@@ -170,9 +170,11 @@ export default function AdminUsersPage() {
                   setFormData({ ...formData, role: e.target.value })
                 }
               >
-                <option value="jemaat">Jemaat</option>
+                <option value="umat">Umat</option>
                 <option value="sekretariat">Sekretariat</option>
-                <option value="admin">Admin Gereja</option>
+                <option value="p2">P2</option>
+                <option value="pastor">Pastor</option>
+                <option value="it_admin">IT Admin</option>
               </Select>
               <Input
                 label="Telepon"
@@ -326,9 +328,11 @@ export default function AdminUsersPage() {
             <Input label="Nama *" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />
             <Input label="Email *" type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} required />
             <Select label="Role" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
-              <option value="jemaat">Jemaat</option>
+              <option value="umat">Umat</option>
               <option value="sekretariat">Sekretariat</option>
-              <option value="admin">Admin Gereja</option>
+              <option value="p2">P2</option>
+              <option value="pastor">Pastor</option>
+              <option value="it_admin">IT Admin</option>
             </Select>
             <Input label="Telepon" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
             <Input label="Departemen" value={editForm.department} onChange={(e) => setEditForm({ ...editForm, department: e.target.value })} />

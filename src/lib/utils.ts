@@ -74,18 +74,22 @@ export function getInitials(name: string): string {
 
 export function getRoleBadgeColor(role: string): string {
   const colors: Record<string, string> = {
-    admin: 'bg-purple-100 text-purple-800',
+    it_admin: 'bg-purple-100 text-purple-800',
+    p2: 'bg-indigo-100 text-indigo-800',
+    pastor: 'bg-amber-100 text-amber-800',
     sekretariat: 'bg-blue-100 text-blue-800',
-    jemaat: 'bg-green-100 text-green-800',
+    umat: 'bg-green-100 text-green-800',
   };
   return colors[role] || 'bg-gray-100 text-gray-800';
 }
 
 export function getRoleLabel(role: string): string {
   const labels: Record<string, string> = {
-    admin: 'Admin Gereja',
+    it_admin: 'IT Admin',
+    p2: 'P2',
+    pastor: 'Pastor',
     sekretariat: 'Sekretariat',
-    jemaat: 'Jemaat',
+    umat: 'Umat',
   };
   return labels[role] || role;
 }

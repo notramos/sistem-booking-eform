@@ -20,8 +20,9 @@ interface AuthContextType {
   hasRole: (role: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
   isAdmin: boolean;
+  isItAdmin: boolean;
   isSekretariat: boolean;
-  isJemaat: boolean;
+  isUmat: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,9 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser: fetchUser,
     hasRole,
     hasAnyRole,
-    isAdmin: hasRole("admin"),
+    // P2, Pastor, dan IT Admin sederajat di tahap approval final — bedanya cuma
+    // IT Admin yang bisa kelola user internal (lihat isItAdmin).
+    isAdmin: hasAnyRole(["p2", "pastor", "it_admin"]),
+    isItAdmin: hasRole("it_admin"),
     isSekretariat: hasRole("sekretariat"),
-    isJemaat: hasRole("jemaat"),
+    isUmat: hasRole("umat"),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

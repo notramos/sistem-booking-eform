@@ -130,22 +130,6 @@ export function useApproveBooking() {
   });
 }
 
-export function useSignBooking() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, role, signature }: { id: string; role: 'pemohon' | 'petugas'; signature: string }) =>
-      bookingsApi.sign(id, { role, signature }),
-    onSuccess: () => {
-      toast.success('Tanda tangan berhasil disimpan');
-      qc.invalidateQueries({ queryKey: ['bookings'] });
-      qc.invalidateQueries({ queryKey: ['my-bookings'] });
-    },
-    onError: (err: { message?: string }) => {
-      toast.error(err.message || 'Gagal menyimpan tanda tangan');
-    },
-  });
-}
-
 export function useRejectBooking() {
   const qc = useQueryClient();
   return useMutation({

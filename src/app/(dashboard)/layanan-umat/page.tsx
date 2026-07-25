@@ -17,7 +17,7 @@ import { CalendarDays, Heart, User } from 'lucide-react';
 
 export default function LayananUmatPage() {
   const { hasAnyRole } = useAuth();
-  const isStaff = hasAnyRole(['sekretariat', 'admin']);
+  const isStaff = hasAnyRole(['sekretariat', 'p2', 'pastor', 'it_admin']);
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const { data, isLoading } = useCongregationServices({ status: statusFilter || undefined, page });

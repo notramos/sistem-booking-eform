@@ -4,7 +4,6 @@ export interface User {
   email: string;
   phone: string | null;
   avatar: string | null;
-  signature?: string | null;
   department: string | null;
   position: string | null;
   nip: string | null;
@@ -84,11 +83,6 @@ export interface Booking {
   cancelled_at: string | null;
   completed_at: string | null;
   is_cancellable?: boolean;
-  signature_pemohon?: string | null;
-  signature_pemohon_at?: string | null;
-  signature_petugas?: string | null;
-  signature_petugas_at?: string | null;
-  signed_petugas_by?: string | null;
   booking_type?: 'reguler' | 'rutin';
   recurring_pattern?: 'weekly' | 'monthly' | null;
   recurring_dates?: string[] | null;
@@ -260,8 +254,6 @@ export interface CongregationService {
   status: string;
   notes: string | null;
   dynamic_fields: Record<string, unknown> | null;
-  signature_pemohon?: string | null;
-  signature_pemohon_at?: string | null;
   user?: User;
   created_at: string;
 }

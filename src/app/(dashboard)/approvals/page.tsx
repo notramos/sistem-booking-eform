@@ -10,7 +10,7 @@ import { ServiceApprovalsTab } from '@/components/approvals/ServiceApprovalsTab'
 
 export default function ApprovalsPage() {
   const { hasAnyRole } = useAuth();
-  const isStaff = hasAnyRole(['sekretariat', 'admin']);
+  const isStaff = hasAnyRole(['sekretariat', 'p2', 'pastor', 'it_admin']);
   const [tab, setTab] = useState<'bookings' | 'services'>('bookings');
 
   // Query halaman pertama di-dedupe otomatis oleh react-query dengan query yang sama

@@ -4,18 +4,15 @@ import { useState, useMemo, useCallback, type ComponentType } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreateCongregationService } from '@/hooks/useCongregationServices';
 import { useWilayah } from '@/hooks/useParish';
-import { useAuth } from '@/hooks/useAuth';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSection } from '@/components/ui/form-section';
 import { DynamicFormFields } from '@/components/ui/dynamic-form-fields';
-import { OfficialDocumentPreview } from '@/components/ui/official-document-preview';
+import { DetailFields } from '@/components/detail/DetailFields';
 import { WizardProgress } from '@/components/ui/wizard-progress';
 import { WizardFooter } from '@/components/ui/wizard-footer';
-import { SignatureDialog } from '@/components/ui/signature-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen, PenLine, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
 import type { ServiceTypeConfig, ServiceFieldConfig } from '@/types';
@@ -112,14 +109,6 @@ export default function NewCongregationServicePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState<FormData>({ service_type: '' });
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
-
-  // Tanda tangan pemohon yang dibubuhkan langsung di form. Default: tanda tangan
-  // tersimpan di profil bila ada, dapat diubah lewat SignatureDialog (konsisten
-  // dengan pola TTD di approvals & booking/[id]).
-  const { user } = useAuth();
-  const profileSignature = user?.signature ?? null;
-  const [signature, setSignature] = useState<string | null>(profileSignature);
-  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
 
   const selectedType = formData.service_type;
@@ -218,15 +207,13 @@ export default function NewCongregationServicePage() {
     }
     if (Object.keys(dynamicFields).length > 0) payload.dynamic_fields = dynamicFields;
 
-    if (signature) payload.signature_pemohon = signature;
-
     try {
       await createService.mutateAsync(payload as unknown as Parameters<typeof createService.mutateAsync>[0]);
       router.push('/layanan-umat');
     } catch {
       // handled by hook
     }
-  }, [config, formData, createService, router, signature]);
+  }, [config, formData, createService, router]);
 
   const hasServiceType = !!selectedType;
 
@@ -349,43 +336,8 @@ export default function NewCongregationServicePage() {
               <p className="text-sm text-muted-foreground">
                 Periksa kembali data yang akan Anda kirimkan. Pastikan semua data sudah benar.
               </p>
-              <OfficialDocumentPreview
-                title={config.label}
-                sections={getReviewFields(config, formData)}
-                applicantName={formData.applicant_name}
-                signaturePemohonUrl={signature ?? undefined}
-              />
-
-              {/* Tanda tangan pemohon */}
-              <div className="rounded-lg border p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <PenLine className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-medium text-foreground">Tanda Tangan Pemohon</h3>
-                </div>
-
-                {signature ? (
-                  <div className="space-y-2">
-                    <div className="rounded-md border bg-white p-3 flex items-center justify-center max-w-xs">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={signature} alt="Tanda tangan" className="h-20 object-contain" />
-                    </div>
-                    <p className="text-xs text-green-600 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Tanda tangan siap dikirim
-                    </p>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setSignatureDialogOpen(true)}>
-                      <PenLine className="w-3.5 h-3.5 mr-1.5" /> Ubah Tanda Tangan
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      Belum ada tanda tangan — opsional, jika dikosongkan dokumen tetap menampilkan nama Anda sebagai pemohon.
-                    </p>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setSignatureDialogOpen(true)}>
-                      <PenLine className="w-3.5 h-3.5 mr-1.5" /> Tambah Tanda Tangan
-                    </Button>
-                  </div>
-                )}
+              <div className="rounded-lg border p-4">
+                <DetailFields groups={getReviewFields(config, formData)} />
               </div>
 
               <div className="flex items-start gap-2.5 rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
@@ -423,14 +375,6 @@ export default function NewCongregationServicePage() {
           )}
         </CardContent>
       </Card>
-
-      <SignatureDialog
-        open={signatureDialogOpen}
-        onOpenChange={setSignatureDialogOpen}
-        title="Tanda Tangan Pemohon"
-        savedSignature={profileSignature}
-        onSubmit={(dataUrl) => { setSignature(dataUrl); setSignatureDialogOpen(false); }}
-      />
     </div>
   );
 }
