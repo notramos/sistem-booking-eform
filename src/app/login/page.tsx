@@ -31,7 +31,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     try {
       await login(data.email, data.password);
-      router.push("/dashboard");
+      router.push("/booking/calendar");
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError("root", { message: e?.message || "Email atau password salah" });

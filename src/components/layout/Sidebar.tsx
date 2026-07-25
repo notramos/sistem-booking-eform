@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import {
-  LayoutDashboard, CalendarDays, DoorOpen, BookOpen, CheckSquare,
+  CalendarDays, DoorOpen, BookOpen, CheckSquare,
   Users, BarChart3, Settings, ClipboardList, Building2, Shield, Bell, Heart, Database,
 } from 'lucide-react';
 
@@ -18,10 +18,9 @@ const ALL_ROLES = ['umat', 'sekretariat', 'p2', 'pastor', 'it_admin'];
 const FULL_ACCESS_ROLES = ['p2', 'pastor', 'it_admin'];
 
 const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ALL_ROLES },
+  { href: '/booking/calendar', label: 'Kalender Booking', icon: CalendarDays, roles: ALL_ROLES },
   { href: '/my-bookings', label: 'Booking Saya', icon: BookOpen, roles: ALL_ROLES },
   { href: '/rooms', label: 'Ruangan', icon: DoorOpen, roles: ALL_ROLES },
-  { href: '/booking/calendar', label: 'Kalender Booking', icon: CalendarDays, roles: ALL_ROLES },
   { href: '/notifications', label: 'Notifikasi', icon: Bell, roles: ALL_ROLES },
 
   { section: 'Permohonan Pelayanan', roles: ALL_ROLES },
@@ -65,7 +64,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const navContent = (
     <>
       <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-3 min-w-0" onClick={onClose}>
+        <Link href="/booking/calendar" className="flex items-center gap-3 min-w-0" onClick={onClose}>
           <div className="w-11 h-11 shrink-0 bg-sidebar-primary rounded-xl flex items-center justify-center shadow-sm overflow-hidden">
             {logoError ? (
               <span className="text-sidebar-primary-foreground font-bold text-lg">A</span>

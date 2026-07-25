@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
     request.headers.get('authorization')?.replace('Bearer ', '');
 
   if (request.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL(token ? '/dashboard' : '/login', request.url));
+    return NextResponse.redirect(new URL(token ? '/booking/calendar' : '/login', request.url));
   }
 
   const isPublicPath = publicPaths.some((path) =>
@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (token && isPublicPath) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/booking/calendar', request.url));
   }
 
   return NextResponse.next();

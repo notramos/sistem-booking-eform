@@ -126,7 +126,7 @@ export default function RegisterPage() {
         parish: data.parish || undefined,
       });
       await refreshUser();
-      router.push('/dashboard');
+      router.push('/booking/calendar');
     } catch (err: unknown) {
       const e = err as { message?: string };
       profileForm.setError('root', { message: e?.message || 'Gagal menyelesaikan registrasi' });
