@@ -3,7 +3,7 @@
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
-import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { CalendarDays, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import * as Popover from '@radix-ui/react-popover';
@@ -85,24 +85,25 @@ export function DatePicker({
               locale={id}
               fromDate={fromDate}
               toDate={toDate}
-              captionLayout="dropdown-buttons"
+              captionLayout="dropdown"
               fromYear={fromYear}
               toYear={toYear}
-              components={{
-                IconLeft: () => <ChevronLeft className="w-4 h-4" />,
-                IconRight: () => <ChevronRight className="w-4 h-4" />,
-              }}
               classNames={{
                 month: 'space-y-2',
-                caption: 'flex justify-center relative items-center mb-2 gap-1',
-                caption_label: 'text-sm font-semibold text-foreground',
-                caption_dropdowns: 'flex items-center gap-1',
-                dropdown: 'rounded-md border border-input bg-background text-sm text-foreground px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-ring',
-                dropdown_month: 'mr-1',
-                dropdown_year: '',
+                caption: 'flex justify-center items-center mb-2',
+                caption_dropdowns: 'flex items-center gap-1.5',
+                dropdown_month: 'relative',
+                dropdown_year: 'relative',
+                dropdown: cn(
+                  'appearance-none rounded-md border border-input bg-background text-foreground text-sm font-medium',
+                  'pl-2 pr-6 py-1 cursor-pointer hover:bg-accent',
+                  'focus:outline-none focus:ring-1 focus:ring-ring',
+                  // Panah dropdown custom (bukan bawaan browser) via background-image, biar konsisten lintas browser.
+                  'bg-[length:14px] bg-[right_4px_center] bg-no-repeat',
+                  'bg-[url(\'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%2F%3E%3C%2Fsvg%3E\')]'
+                ),
+                caption_label: 'hidden',
                 vhidden: 'hidden',
-                nav: 'flex items-center justify-between absolute w-full',
-                nav_button: 'h-7 w-7 bg-transparent p-0 text-muted-foreground hover:text-foreground',
                 table: 'w-full border-collapse',
                 head_row: 'flex w-full',
                 head_cell: 'w-9 text-xs text-muted-foreground text-center font-medium',
