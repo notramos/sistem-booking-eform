@@ -15,6 +15,7 @@ export interface User {
 export interface Room {
   id: string;
   name: string;
+  patron_name?: string | null;
   slug: string;
   category_id: string;
   category?: RoomCategory;

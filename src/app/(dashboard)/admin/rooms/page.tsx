@@ -25,13 +25,13 @@ export default function AdminRoomsPage() {
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: '', category_id: '', description: '', capacity: '',
+    name: '', patron_name: '', category_id: '', description: '', capacity: '',
     floor: '', building: '', status: 'available', is_active: true,
     facilities: [] as string[],
   });
 
   const resetForm = () => {
-    setFormData({ name: '', category_id: '', description: '', capacity: '', floor: '', building: '', status: 'available', is_active: true, facilities: [] });
+    setFormData({ name: '', patron_name: '', category_id: '', description: '', capacity: '', floor: '', building: '', status: 'available', is_active: true, facilities: [] });
     setEditingId(null);
     setShowForm(false);
   };
@@ -39,6 +39,7 @@ export default function AdminRoomsPage() {
   const openEdit = (room: Room) => {
     setFormData({
       name: room.name,
+      patron_name: room.patron_name || '',
       category_id: room.category_id,
       description: room.description || '',
       capacity: String(room.capacity),
@@ -111,9 +112,8 @@ export default function AdminRoomsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <Input label="Nama Ruangan *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-              </div>
+              <Input label="Nama Ruangan *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+              <Input label="Nama Santo/Santa Pelindung" value={formData.patron_name} onChange={(e) => setFormData({ ...formData, patron_name: e.target.value })} />
               <Select label="Kategori *" value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })} required>
                 <option value="">Pilih Kategori</option>
                 {categories?.map((cat) => (

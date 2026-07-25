@@ -93,7 +93,10 @@ export default function RoomsPage() {
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold text-foreground">{room.name}</h3>
+                      <h3 className="font-semibold text-foreground">
+                        {room.name}
+                        {room.patron_name && <span className="text-muted-foreground font-normal"> · {room.patron_name}</span>}
+                      </h3>
                       <p className="text-xs text-muted-foreground">{room.category?.name}</p>
                     </div>
                     <Badge

@@ -91,7 +91,10 @@ export default function RoomDetailPage() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-2xl">{room.name}</CardTitle>
+                  <CardTitle className="text-2xl">
+                    {room.name}
+                    {room.patron_name && <span className="text-muted-foreground font-normal"> · {room.patron_name}</span>}
+                  </CardTitle>
                   <CardDescription>{room.category?.name}</CardDescription>
                 </div>
                 <Badge
