@@ -92,10 +92,10 @@ export function DatePicker({
                 month: 'space-y-2',
                 caption: 'flex justify-center items-center mb-2',
                 caption_dropdowns: 'flex items-center gap-1.5',
-                dropdown_month: 'relative',
-                dropdown_year: 'relative',
+                dropdown_month: 'relative w-[104px]',
+                dropdown_year: 'relative w-[76px]',
                 dropdown: cn(
-                  'appearance-none rounded-md border border-input bg-background text-foreground text-sm font-medium',
+                  'w-full appearance-none rounded-md border border-input bg-background text-foreground text-sm font-medium',
                   'pl-2 pr-6 py-1 cursor-pointer hover:bg-accent',
                   'focus:outline-none focus:ring-1 focus:ring-ring',
                   // Panah dropdown custom (bukan bawaan browser) via background-image, biar konsisten lintas browser.
