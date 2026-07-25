@@ -45,6 +45,7 @@ const LOG_LABELS: Record<string, string> = {
   cancelled: 'Booking dibatalkan',
   completed: 'Booking selesai',
   updated: 'Booking diperbarui',
+  rescheduled: 'Jadwal/ruangan diubah',
 }
 
 function bookingSteps(status: string): StepperStep[] {
@@ -84,6 +85,7 @@ function logIcon(action: string) {
   if (action === 'created') return <FileText className="h-4 w-4" />
   if (['approved', 'confirmed', 'completed'].includes(action)) return <CheckCircle2 className="h-4 w-4" />
   if (['cancelled', 'rejected'].includes(action)) return <XCircle className="h-4 w-4" />
+  if (action === 'rescheduled') return <Pencil className="h-4 w-4" />
   return <Clock className="h-4 w-4" />
 }
 
