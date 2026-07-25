@@ -338,32 +338,6 @@ export default function BookingDetailPage() {
             <RoomReallocationCard booking={booking} />
           )}
 
-          {canActOnApproval && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <CheckCircle2 className="h-5 w-5 text-primary" /> Aksi Persetujuan
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-wrap gap-2">
-                {canStartReview && (
-                  <Button variant="outline" onClick={() => startReviewMutation.mutate(booking.id)} disabled={startReviewMutation.isPending}>
-                    <PlayCircle className="h-4 w-4 mr-2" /> Mulai Review
-                  </Button>
-                )}
-                <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApprove(true)}>
-                  <CheckCircle2 className="h-4 w-4 mr-2" /> Setujui
-                </Button>
-                <Button variant="outline" onClick={() => setShowRevise(true)}>
-                  <RotateCcw className="h-4 w-4 mr-2" /> Minta Revisi
-                </Button>
-                <Button variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setShowReject(true)}>
-                  <XCircle className="h-4 w-4 mr-2" /> Tolak
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -376,8 +350,8 @@ export default function BookingDetailPage() {
           </Card>
         </div>
 
-        {/* Sidebar: ringkasan + aksi */}
-        <div className="space-y-6">
+        {/* Sidebar: ringkasan + aksi — sticky supaya tetap kelihatan saat kolom utama di-scroll */}
+        <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Ringkasan</CardTitle>
@@ -413,6 +387,25 @@ export default function BookingDetailPage() {
               <CardTitle className="text-base">Aksi</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {canActOnApproval && (
+                <>
+                  {canStartReview && (
+                    <Button variant="outline" className="w-full gap-2" onClick={() => startReviewMutation.mutate(booking.id)} disabled={startReviewMutation.isPending}>
+                      <PlayCircle className="h-4 w-4" /> Mulai Review
+                    </Button>
+                  )}
+                  <Button className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApprove(true)}>
+                    <CheckCircle2 className="h-4 w-4" /> Setujui
+                  </Button>
+                  <Button variant="outline" className="w-full gap-2" onClick={() => setShowRevise(true)}>
+                    <RotateCcw className="h-4 w-4" /> Minta Revisi
+                  </Button>
+                  <Button variant="outline" className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setShowReject(true)}>
+                    <XCircle className="h-4 w-4" /> Tolak
+                  </Button>
+                  <div className="border-t" />
+                </>
+              )}
               {canResubmit && (
                 <Link href={`/booking/new?edit=${booking.id}`} className={buttonVariants({ className: 'w-full gap-2' })}>
                   <Pencil className="h-4 w-4" /> Edit & Ajukan Ulang
