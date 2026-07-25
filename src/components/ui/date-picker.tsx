@@ -28,6 +28,10 @@ export function DatePicker({
   const now = new Date();
   const clampedToday = fromDate && now < fromDate ? fromDate : toDate && now > toDate ? toDate : now;
   const isTodayOutOfRange = !!fromDate && now < fromDate;
+  // Dropdown bulan/tahun (bukan cuma panah maju/mundur) — supaya pilih tahun lama
+  // (mis. tanggal lahir) atau jauh ke depan tidak perlu klik panah berkali-kali.
+  const fromYear = fromDate?.getFullYear() ?? now.getFullYear() - 100;
+  const toYear = toDate?.getFullYear() ?? now.getFullYear() + 10;
 
   return (
     <div>
@@ -81,14 +85,22 @@ export function DatePicker({
               locale={id}
               fromDate={fromDate}
               toDate={toDate}
+              captionLayout="dropdown-buttons"
+              fromYear={fromYear}
+              toYear={toYear}
               components={{
                 IconLeft: () => <ChevronLeft className="w-4 h-4" />,
                 IconRight: () => <ChevronRight className="w-4 h-4" />,
               }}
               classNames={{
                 month: 'space-y-2',
-                caption: 'flex justify-center relative items-center mb-2',
+                caption: 'flex justify-center relative items-center mb-2 gap-1',
                 caption_label: 'text-sm font-semibold text-foreground',
+                caption_dropdowns: 'flex items-center gap-1',
+                dropdown: 'rounded-md border border-input bg-background text-sm text-foreground px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-ring',
+                dropdown_month: 'mr-1',
+                dropdown_year: '',
+                vhidden: 'hidden',
                 nav: 'flex items-center justify-between absolute w-full',
                 nav_button: 'h-7 w-7 bg-transparent p-0 text-muted-foreground hover:text-foreground',
                 table: 'w-full border-collapse',

@@ -8,9 +8,11 @@ import { Select } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { TimeRangePicker } from '@/components/ui/time-range-picker';
 import { Button } from '@/components/ui/button';
-import { OPERATING_HOURS } from '@/lib/constants';
-import { useRooms } from '@/hooks/useRooms';
+import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS } from '@/lib/constants';
+import { useRooms, useDayAvailability } from '@/hooks/useRooms';
 import { useUpdateBooking } from '@/hooks/useBookings';
+import { formatTime } from '@/lib/utils';
+import { Info } from 'lucide-react';
 import type { Booking } from '@/types';
 
 /**
@@ -29,6 +31,13 @@ export function RoomReallocationCard({ booking }: { booking: Booking }) {
   const [endTime, setEndTime] = useState(booking.end_time.substring(0, 5));
 
   const rooms = roomsData?.data ?? [];
+
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + BOOKING_MIN_ADVANCE_DAYS);
+
+  const dateStr = date ? format(date, 'yyyy-MM-dd') : undefined;
+  const { data: dayAvailability } = useDayAvailability(roomId, dateStr);
+  const bookedSlots = dayAvailability?.booked_slots ?? [];
 
   const hasChanges = roomId !== booking.room_id
     || (date && format(date, 'yyyy-MM-dd') !== booking.booking_date)
@@ -63,7 +72,24 @@ export function RoomReallocationCard({ booking }: { booking: Booking }) {
           ))}
         </Select>
 
-        <DatePicker label="Tanggal" value={date} onChange={setDate} />
+        <DatePicker label="Tanggal" value={date} onChange={setDate} fromDate={minDate} />
+
+        {dateStr && bookedSlots.length > 0 && (
+          <div className="flex items-start gap-2 rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
+            <Info className="w-4 h-4 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium text-foreground mb-1">Sudah ada booking di ruangan ini pada tanggal tersebut:</p>
+              <ul className="space-y-0.5">
+                {bookedSlots.map((slot, i) => (
+                  <li key={i}>
+                    {formatTime(slot.start_time)} – {formatTime(slot.end_time)}
+                    {slot.title && <span className="text-muted-foreground/70"> · {slot.title}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         <TimeRangePicker
           label="Waktu"
