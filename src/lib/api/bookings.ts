@@ -34,6 +34,9 @@ export const bookingsApi = {
   update: (id: string, data: Partial<Pick<Booking, 'title' | 'description' | 'room_id' | 'booking_date' | 'start_time' | 'end_time' | 'notes'>>) =>
     apiClient.put<ApiResponse<Booking>>(`/bookings/${id}`, data),
 
+  updateRecurringDate: (id: string, oldDate: string, newDate: string) =>
+    apiClient.patch<ApiResponse<Booking>>(`/bookings/${id}/recurring-dates`, { old_date: oldDate, new_date: newDate }),
+
   cancel: (id: string) => apiClient.delete<ApiResponse>(`/bookings/${id}`),
 
   myBookings: (status?: string, page?: number, search?: string, perPage?: number) =>

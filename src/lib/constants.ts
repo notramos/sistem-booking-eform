@@ -7,15 +7,31 @@ export const OPERATING_HOURS = { open: '06:00', close: '22:00' } as const;
 
 /**
  * Jarak minimal hari-maju booking ruangan. Mirror dari config/booking.php
- * ('min_advance_days') di backend — tidak ada batas atas.
+ * ('min_advance_days') di backend. Batas ATAS tanggal booking ada di
+ * getMaxBookableDate() (lib/utils.ts) — akhir tahun berjalan, kecuali mulai
+ * November naik ke akhir tahun depan.
  */
 export const BOOKING_MIN_ADVANCE_DAYS = 7;
 
 /**
  * Pilihan durasi (bulan) untuk booking rutin — mirror validasi backend
- * (StoreRecurringBookingRequest: duration_months in:1,3,6,12).
+ * (PreviewRecurringBookingRequest: duration_months in:1,2,3). Booking rutin
+ * selalu berhenti di akhir tahun kalender dari tanggal pertamanya, tidak
+ * peduli aturan "November" di atas — lanjut ke tahun berikutnya berarti
+ * bikin seri booking rutin baru.
  */
-export const RECURRING_DURATION_OPTIONS = [1, 3, 6, 12] as const;
+export const RECURRING_DURATION_OPTIONS = [1, 2, 3] as const;
+
+/** Label tampilan untuk `booking.purpose_type` — dipakai di kartu booking/detail/approval. */
+export const PURPOSE_LABELS: Record<string, string> = {
+  ibadah: 'Ibadah & Persekutuan',
+  acara_keluarga: 'Acara Keluarga',
+  latihan_musik: 'Latihan Musik',
+  pembinaan: 'Pembinaan',
+  rapat: 'Rapat Pelayanan',
+  seminar: 'Seminar & Training',
+  publik: 'Acara Publik',
+};
 
 /**
  * Cookie penanda status login, di-set backend saat login (AuthController::login)

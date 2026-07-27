@@ -5,6 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Batas atas tanggal booking (biasa/realokasi) — akhir tahun berjalan, kecuali
+ * mulai November naik ke akhir tahun depan (mirror BookingService::maxBookableDate
+ * di backend — supaya date-picker tidak biarkan pilih tanggal yang nanti ditolak
+ * server, tapi validasi sesungguhnya tetap di backend).
+ */
+export function getMaxBookableDate(): Date {
+  const now = new Date();
+  const targetYear = now.getMonth() >= 10 ? now.getFullYear() + 1 : now.getFullYear();
+  return new Date(targetYear, 11, 31);
+}
+
 export function formatDate(date: string | Date, format: 'short' | 'long' | 'full' = 'short'): string {
   const d = new Date(date);
   const options: Intl.DateTimeFormatOptions =

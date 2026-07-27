@@ -12,7 +12,8 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, formatTime, getStatusColor, getStatusLabel, cn } from '@/lib/utils';
-import { CalendarDays, Clock, MapPin, Calendar, Search, RotateCcw } from 'lucide-react';
+import { PURPOSE_LABELS } from '@/lib/constants';
+import { CalendarDays, Clock, MapPin, Calendar, Search, RotateCcw, Tag, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { Booking } from '@/types';
 
@@ -158,6 +159,18 @@ export default function MyBookingsPage() {
                       <Clock className="h-3.5 w-3.5" />
                       {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
                     </span>
+                    {booking.purpose_type && (
+                      <span className="flex items-center gap-1.5">
+                        <Tag className="h-3.5 w-3.5" />
+                        {PURPOSE_LABELS[booking.purpose_type] ?? booking.purpose_type}
+                      </span>
+                    )}
+                    {booking.expected_attendees != null && (
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5" />
+                        {booking.expected_attendees} orang
+                      </span>
+                    )}
                   </div>
 
                   {revision?.notes && (

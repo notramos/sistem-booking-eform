@@ -18,7 +18,8 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Pagination } from '@/components/ui/pagination';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { formatDate, formatTime, getInitials, getStatusColor, getStatusLabel } from '@/lib/utils';
-import { CheckCircle2, XCircle, CalendarDays, Clock, Users, ClipboardList, Church, RotateCcw, PlayCircle } from 'lucide-react';
+import { PURPOSE_LABELS } from '@/lib/constants';
+import { CheckCircle2, XCircle, CalendarDays, Clock, Users, ClipboardList, Church, RotateCcw, PlayCircle, Tag } from 'lucide-react';
 
 export function BookingApprovalsTab() {
   const router = useRouter();
@@ -111,6 +112,11 @@ export function BookingApprovalsTab() {
                               <Church className="w-3 h-3" /> Pelayanan Gereja
                             </Badge>
                           )}
+                          {booking.booking_type === 'rutin' && (
+                            <Badge variant="outline" className="shrink-0">
+                              Rutin · {booking.recurring_dates?.length ?? 0} tanggal
+                            </Badge>
+                          )}
                           <Badge className={`${getStatusColor(booking.status)} shrink-0 text-xs`}>
                             {getStatusLabel(booking.status)}
                           </Badge>
@@ -124,12 +130,20 @@ export function BookingApprovalsTab() {
                         <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1.5">
                             <CalendarDays className="w-4 h-4" />
-                            {formatDate(booking.booking_date)}
+                            {booking.booking_type === 'rutin' && booking.recurring_dates && booking.recurring_dates.length > 1
+                              ? `${formatDate(booking.recurring_dates[0])} – ${formatDate(booking.recurring_dates[booking.recurring_dates.length - 1])}`
+                              : formatDate(booking.booking_date)}
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Clock className="w-4 h-4" />
                             {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
                           </span>
+                          {booking.purpose_type && (
+                            <span className="flex items-center gap-1.5">
+                              <Tag className="w-4 h-4" />
+                              {PURPOSE_LABELS[booking.purpose_type] ?? booking.purpose_type}
+                            </span>
+                          )}
                           {booking.expected_attendees ? (
                             <span className="flex items-center gap-1.5">
                               <Users className="w-4 h-4" />

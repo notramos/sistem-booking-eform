@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS } from '@/lib/constants';
 import { useRooms, useDayAvailability } from '@/hooks/useRooms';
 import { useUpdateBooking } from '@/hooks/useBookings';
-import { formatTime } from '@/lib/utils';
+import { formatTime, getMaxBookableDate } from '@/lib/utils';
 import { Info } from 'lucide-react';
 import type { Booking } from '@/types';
 
@@ -72,7 +72,7 @@ export function RoomReallocationCard({ booking }: { booking: Booking }) {
           ))}
         </Select>
 
-        <DatePicker label="Tanggal" value={date} onChange={setDate} fromDate={minDate} />
+        <DatePicker label="Tanggal" value={date} onChange={setDate} fromDate={minDate} toDate={getMaxBookableDate()} />
 
         {dateStr && bookedSlots.length > 0 && (
           <div className="flex items-start gap-2 rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">

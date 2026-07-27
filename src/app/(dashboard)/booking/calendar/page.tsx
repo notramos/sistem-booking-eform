@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Plus, CalendarDays, Clock, MapPin, Eye, CalendarPlus, Info, ScrollText, DoorOpen, ListChecks, FileCheck2, BellRing } from 'lucide-react';
-import { getStatusColor, getStatusLabel } from '@/lib/utils';
+import { getStatusColor, getStatusLabel, getMaxBookableDate } from '@/lib/utils';
 import { BOOKING_MIN_ADVANCE_DAYS, OPERATING_HOURS, TATA_TERTIB_TEXT } from '@/lib/constants';
 import type { CalendarEvent } from '@/types';
 
@@ -81,13 +81,15 @@ export default function CalendarPage() {
   const events = (rawEvents as CalendarEvent[] | undefined) ?? [];
 
   // Tanggal paling awal yang boleh dibooking (minimal H+7), untuk mute sel & gating tombol.
-  // Tidak ada batas atas.
   const minDateStr = useMemo(() => {
     const d = new Date(today);
     d.setDate(d.getDate() + BOOKING_MIN_ADVANCE_DAYS);
     return formatLocalDate(d);
   }, [today]);
-  const isBookableDate = (dateStr: string) => dateStr >= minDateStr;
+  // Batas atas: akhir tahun berjalan, kecuali mulai November naik ke akhir tahun depan.
+  const maxDate = useMemo(() => getMaxBookableDate(), []);
+  const maxDateStr = useMemo(() => formatLocalDate(maxDate), [maxDate]);
+  const isBookableDate = (dateStr: string) => dateStr >= minDateStr && dateStr <= maxDateStr;
   // Cuma tanggal yang SUDAH LEWAT yang dibuat pudar — tanggal hari ini s/d H+7
   // tetap terlihat jelas walau belum bisa dibooking (toast saat diklik sudah cukup jelaskan alasannya).
   const todayStr = useMemo(() => formatLocalDate(today), [today]);
@@ -203,7 +205,12 @@ export default function CalendarPage() {
               <h2 className="text-lg font-semibold text-foreground min-w-[140px] sm:min-w-[180px] text-center">
                 {MONTH_NAMES[month]} {year}
               </h2>
-              <Button variant="outline" size="icon" onClick={() => navigate(1)}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate(1)}
+                disabled={year > maxDate.getFullYear() || (year === maxDate.getFullYear() && month >= maxDate.getMonth())}
+              >
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -352,7 +359,7 @@ export default function CalendarPage() {
         </CardHeader>
         <CardContent className="pt-0 space-y-3 text-sm text-muted-foreground">
           <ul className="list-disc pl-5 space-y-1">
-            <li>Booking harus diajukan minimal <strong className="text-foreground">H+{BOOKING_MIN_ADVANCE_DAYS}</strong> (tidak ada batas maksimal hari ke depan).</li>
+            <li>Booking harus diajukan minimal <strong className="text-foreground">H+{BOOKING_MIN_ADVANCE_DAYS}</strong>, maksimal sampai <strong className="text-foreground">31 Desember {maxDate.getFullYear()}</strong>.</li>
             <li>Jam operasional ruangan: <strong className="text-foreground">{OPERATING_HOURS.open} – {OPERATING_HOURS.close}</strong>.</li>
             <li>Booking baru berlaku setelah disetujui oleh Sekretariat dan/atau Admin — status &quot;Menunggu Review&quot; belum berarti ruangan terkonfirmasi.</li>
           </ul>

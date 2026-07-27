@@ -25,7 +25,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { RoomRecommendationList } from '@/components/booking/RoomRecommendationList';
 import { BookedSlotsTimeline } from '@/components/booking/BookedSlotsTimeline';
 import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { cn, getMaxBookableDate } from '@/lib/utils';
 import { CalendarDays, ArrowLeft, Users, Repeat, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { roomsApi } from '@/lib/api/rooms';
@@ -57,7 +57,7 @@ function dateBounds() {
   t.setHours(0, 0, 0, 0);
   const min = new Date(t);
   min.setDate(min.getDate() + BOOKING_MIN_ADVANCE_DAYS);
-  return { min };
+  return { min, max: getMaxBookableDate() };
 }
 
 const bookingSchema = z.object({
@@ -148,8 +148,9 @@ export default function NewBookingPage() {
 
   const dateStr = watchedDate ? format(watchedDate, 'yyyy-MM-dd') : undefined;
 
-  // Batas tanggal yang boleh dipesan (minimal H+7, tidak ada batas atas), mengikuti backend.
-  const { min: minDate } = useMemo(() => dateBounds(), []);
+  // Batas tanggal yang boleh dipesan (minimal H+7, maksimal akhir tahun berjalan
+  // — atau tahun depan mulai November), mengikuti backend.
+  const { min: minDate, max: maxDate } = useMemo(() => dateBounds(), []);
 
   const { data: recommendations, isFetching: loadingRecommendations } = useRoomRecommendations(dateStr, debouncedAttendees);
   const { data: selectedRoom } = useRoom(selectedRoomId || '');
@@ -439,6 +440,7 @@ export default function NewBookingPage() {
                       value={field.value}
                       onChange={field.onChange}
                       fromDate={minDate}
+                      toDate={maxDate}
                     />
                   )}
                 />
@@ -483,7 +485,7 @@ export default function NewBookingPage() {
                       >
                         <option value="">Pilih durasi</option>
                         {RECURRING_DURATION_OPTIONS.map((m) => (
-                          <option key={m} value={m}>{m === 12 ? '1 Tahun' : `${m} Bulan`}</option>
+                          <option key={m} value={m}>{m} Bulan</option>
                         ))}
                       </Select>
                     )}

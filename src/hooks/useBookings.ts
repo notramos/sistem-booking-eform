@@ -195,3 +195,21 @@ export function useUpdateBooking() {
     },
   });
 }
+
+export function useUpdateRecurringDate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, oldDate, newDate }: { id: string; oldDate: string; newDate: string }) =>
+      bookingsApi.updateRecurringDate(id, oldDate, newDate),
+    onSuccess: () => {
+      toast.success('Tanggal booking rutin berhasil diubah');
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['my-bookings'] });
+      qc.invalidateQueries({ queryKey: ['pending-bookings'] });
+      qc.invalidateQueries({ queryKey: ['calendar-events'] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal mengubah tanggal booking rutin');
+    },
+  });
+}

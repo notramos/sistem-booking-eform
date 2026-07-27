@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { format } from 'date-fns'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card'
@@ -8,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import { StatusStepper, type StepperStep } from '@/components/detail/StatusStepper'
 import { ActivityTimeline, type TimelineItem } from '@/components/detail/ActivityTimeline'
 import { DetailFields, type DetailGroup } from '@/components/detail/DetailFields'
@@ -16,27 +18,20 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, RotateCcw, PlayCircle, Pencil,
+  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, RotateCcw, PlayCircle, Pencil, Info,
   MapPin, CalendarDays, Users, User as UserIcon,
 } from 'lucide-react'
 import {
   useBooking, useCancelBooking,
-  useApproveBooking, useRejectBooking, useReviseBooking, useStartReview,
+  useApproveBooking, useRejectBooking, useReviseBooking, useStartReview, useUpdateRecurringDate,
 } from '@/hooks/useBookings'
+import { useDayAvailability } from '@/hooks/useRooms'
 import { useAuth } from '@/hooks/useAuth'
 import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
+import { BOOKING_MIN_ADVANCE_DAYS, PURPOSE_LABELS } from '@/lib/constants'
+import type { Booking } from '@/types'
 
 const NON_FINAL_STATUSES = ['pending', 'sekretariat_review', 'admin_review', 'revision_sekretariat', 'revision_admin']
-
-const PURPOSE_LABELS: Record<string, string> = {
-  ibadah: 'Ibadah & Persekutuan',
-  acara_keluarga: 'Acara Keluarga',
-  latihan_musik: 'Latihan Musik',
-  pembinaan: 'Pembinaan',
-  rapat: 'Rapat Pelayanan',
-  seminar: 'Seminar & Training',
-  publik: 'Acara Publik',
-}
 
 const LOG_LABELS: Record<string, string> = {
   created: 'Booking diajukan',
@@ -96,6 +91,72 @@ function logTone(action: string): TimelineItem['tone'] {
   return 'muted'
 }
 
+/**
+ * Dialog ganti satu tanggal dalam seri booking rutin. Komponen terpisah (bukan
+ * inline di BookingDetailPage) supaya useDayAvailability bisa dipanggil dengan
+ * booking.room_id yang sudah pasti ada — di parent, booking bisa undefined
+ * sebelum guard isLoading/isError, jadi hook tidak aman dipanggil di sana.
+ */
+function RecurringDateEditDialog({
+  booking, oldDate, onClose,
+}: { booking: Booking; oldDate: string; onClose: () => void }) {
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined)
+  const updateRecurringDateMutation = useUpdateRecurringDate()
+
+  const year = new Date(oldDate + 'T00:00:00').getFullYear()
+  const minDate = new Date()
+  minDate.setDate(minDate.getDate() + BOOKING_MIN_ADVANCE_DAYS)
+  const fromDate = minDate.getFullYear() > year ? undefined : new Date(Math.max(minDate.getTime(), new Date(year, 0, 1).getTime()))
+  const toDate = new Date(year, 11, 31)
+
+  const dateStr = newDate ? format(newDate, 'yyyy-MM-dd') : undefined
+  const { data: dayAvailability } = useDayAvailability(booking.room_id, dateStr)
+  const bookedSlots = dayAvailability?.booked_slots ?? []
+
+  const handleSave = () => {
+    if (!newDate) return
+    updateRecurringDateMutation.mutate(
+      { id: booking.id, oldDate, newDate: format(newDate, 'yyyy-MM-dd') },
+      { onSuccess: onClose }
+    )
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Ganti Tanggal Booking Rutin</DialogTitle>
+          <DialogDesc>
+            Mengganti tanggal <strong>{formatDate(oldDate, 'long')}</strong> dengan tanggal lain di tahun {year} — tanggal lain di seri ini tidak ikut berubah.
+          </DialogDesc>
+        </DialogHeader>
+        <div className="py-2 space-y-3">
+          <DatePicker label="Tanggal Pengganti" value={newDate} onChange={setNewDate} fromDate={fromDate} toDate={toDate} />
+          {dateStr && bookedSlots.length > 0 && (
+            <div className="flex items-start gap-2 rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
+              <Info className="w-4 h-4 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium text-foreground mb-1">Sudah ada booking di ruangan ini pada tanggal tersebut:</p>
+                <ul className="space-y-0.5">
+                  {bookedSlots.map((slot, i) => (
+                    <li key={i}>{formatTime(slot.start_time)} – {formatTime(slot.end_time)}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Batal</Button>
+          <Button onClick={handleSave} disabled={!newDate} loading={updateRecurringDateMutation.isPending}>
+            Simpan
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { data: booking, isLoading, isError } = useBooking(id)
@@ -114,6 +175,7 @@ export default function BookingDetailPage() {
   const [rejectReason, setRejectReason] = useState('')
   const [showRevise, setShowRevise] = useState(false)
   const [reviseReason, setReviseReason] = useState('')
+  const [editingRecurringDate, setEditingRecurringDate] = useState<string | null>(null)
 
   if (isLoading) {
     return <Spinner size="lg" center label="Memuat detail booking..." />
@@ -168,6 +230,7 @@ export default function BookingDetailPage() {
   const canStartReview = isSekretariat && booking.status === 'pending'
   const isOwner = user?.id === booking.user_id
   const canResubmit = isOwner && ['revision_sekretariat', 'revision_admin'].includes(booking.status)
+  const canEditRecurringDates = isStaff && NON_FINAL_STATUSES.includes(booking.status)
   const latestRevision = [...(booking.approvals ?? [])]
     .filter((a) => a.action === 'revision')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
@@ -296,12 +359,27 @@ export default function BookingDetailPage() {
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <CalendarDays className="h-5 w-5 text-primary" /> Jadwal Rutin ({booking.recurring_dates.length} tanggal)
                 </CardTitle>
+                {canEditRecurringDates && (
+                  <p className="text-xs text-muted-foreground">Klik tanggal untuk mengganti tanggal tersebut secara individual.</p>
+                )}
               </CardHeader>
               <CardContent className="flex flex-wrap gap-1.5">
                 {booking.recurring_dates.map((d) => (
-                  <Badge key={d} variant="secondary" className="text-xs">
-                    {formatDate(d)}
-                  </Badge>
+                  canEditRecurringDates ? (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setEditingRecurringDate(d)}
+                      className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs text-secondary-foreground hover:bg-secondary/70 transition-colors"
+                    >
+                      {formatDate(d)}
+                      <Pencil className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  ) : (
+                    <Badge key={d} variant="secondary" className="text-xs">
+                      {formatDate(d)}
+                    </Badge>
+                  )
                 ))}
               </CardContent>
             </Card>
@@ -496,6 +574,14 @@ export default function BookingDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {editingRecurringDate && (
+        <RecurringDateEditDialog
+          booking={booking}
+          oldDate={editingRecurringDate}
+          onClose={() => setEditingRecurringDate(null)}
+        />
+      )}
     </div>
   )
 }
