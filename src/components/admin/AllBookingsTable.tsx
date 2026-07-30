@@ -117,7 +117,7 @@ export function AllBookingsTable() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Judul</TableHead>
+                  <TableHead>Peminjam</TableHead>
                   <TableHead className="hidden md:table-cell">Pemohon</TableHead>
                   <TableHead>Ruangan</TableHead>
                   <TableHead>Tanggal</TableHead>

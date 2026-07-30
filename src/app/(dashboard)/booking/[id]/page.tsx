@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import {
   Clock, FileText, XCircle, CheckCircle2, ArrowLeft, PlayCircle, Pencil, Info,
-  MapPin, CalendarDays, Users, User as UserIcon,
+  MapPin, CalendarDays, User as UserIcon,
 } from 'lucide-react'
 import {
   useBooking, useCancelBooking,
@@ -27,7 +27,8 @@ import {
 } from '@/hooks/useBookings'
 import { useDayAvailability } from '@/hooks/useRooms'
 import { useAuth } from '@/hooks/useAuth'
-import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
+import { cn, formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
+import { getServiceFieldLabel } from '@/lib/service-types'
 import { BOOKING_MIN_ADVANCE_DAYS, PURPOSE_LABELS } from '@/lib/constants'
 import type { Booking } from '@/types'
 
@@ -221,13 +222,46 @@ export default function BookingDetailPage() {
   const isOwner = user?.id === booking.user_id
   const canEdit = isOwner && ['pending', 'sekretariat_review', 'revision_sekretariat', 'revision_admin'].includes(booking.status)
   const canEditRecurringDates = isStaff && NON_FINAL_STATUSES.includes(booking.status)
+  const canCancel = (isOwner || isStaff) && !!booking.is_cancellable
+  const hasAnyAction = canActOnApproval || canEdit || canCancel
+
+  // Dipakai dua kali: card sidebar (desktop) dan action bar melayang (mobile).
+  const actionButtons = (
+    <>
+      {canActOnApproval && (
+        <>
+          {canStartReview && (
+            <Button variant="outline" className="w-full gap-2" onClick={() => startReviewMutation.mutate(booking.id)} disabled={startReviewMutation.isPending}>
+              <PlayCircle className="h-4 w-4" /> Mulai Review
+            </Button>
+          )}
+          <Button className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApprove(true)}>
+            <CheckCircle2 className="h-4 w-4" /> Setujui
+          </Button>
+          <Button variant="outline" className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setShowReject(true)}>
+            <XCircle className="h-4 w-4" /> Tolak
+          </Button>
+        </>
+      )}
+      {canEdit && (
+        <Link href={`/booking/new?edit=${booking.id}`} className={buttonVariants({ className: 'w-full gap-2' })}>
+          <Pencil className="h-4 w-4" /> Edit Booking
+        </Link>
+      )}
+      {canCancel && (
+        <Button variant="destructive" className="w-full gap-2" onClick={() => setShowCancel(true)}>
+          <XCircle className="h-4 w-4" /> Batalkan
+        </Button>
+      )}
+    </>
+  )
 
   // ---- Data untuk tampilan web ----
   const detailGroups: DetailGroup[] = [
     {
       title: 'Informasi Kegiatan',
       fields: [
-        { label: 'Judul', value: booking.title },
+        { label: 'Peminjam', value: booking.title },
         { label: 'Jenis Kegiatan', value: booking.purpose_type ? (PURPOSE_LABELS[booking.purpose_type] ?? booking.purpose_type) : null },
         { label: 'Jumlah Peserta', value: booking.expected_attendees ? `${booking.expected_attendees} orang` : null },
         { label: 'Kontak', value: booking.contact_person },
@@ -252,7 +286,7 @@ export default function BookingDetailPage() {
             { label: 'Kontak', value: booking.service_details.contact },
             { label: 'Perlengkapan', value: booking.service_details.equipment?.join(', ') || null },
             ...Object.entries(booking.service_details.dynamic_fields || {}).map(([key, value]) => ({
-              label: key,
+              label: getServiceFieldLabel(booking.service_details?.service_type_label, key),
               value: value ? String(value) : null,
             })),
           ],
@@ -280,7 +314,7 @@ export default function BookingDetailPage() {
       }]
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className={cn('space-y-4 sm:space-y-6', hasAnyAction && 'pb-24 lg:pb-0')}>
       {/* Header */}
       <div>
         <Link
@@ -311,6 +345,8 @@ export default function BookingDetailPage() {
                 <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDate(booking.booking_date, 'long')}</span>
               )}
               <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0" />{formatTime(booking.start_time)}–{formatTime(booking.end_time)}</span>
+              <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5 shrink-0" />{booking.user?.name ?? '-'}</span>
+              <span className="text-muted-foreground/70">Diajukan {formatDate(booking.created_at, 'long')}</span>
             </div>
           </div>
           <Badge className={`${getStatusColor(booking.status)} shrink-0 px-2.5 py-1 text-xs sm:px-3 sm:text-sm`}>
@@ -328,7 +364,7 @@ export default function BookingDetailPage() {
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Kolom utama: versi web */}
-        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
+        <div className={cn('space-y-4 sm:space-y-6', hasAnyAction ? 'lg:col-span-2' : 'lg:col-span-3')}>
           <Card>
             <CardHeader className="p-4 sm:p-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -399,73 +435,27 @@ export default function BookingDetailPage() {
           </Card>
         </div>
 
-        {/* Sidebar: ringkasan + aksi — sticky supaya tetap kelihatan saat kolom utama di-scroll */}
-        <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-6 lg:self-start">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base">Ringkasan</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 sm:space-y-3 text-sm p-4 pt-0 sm:p-6 sm:pt-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground">Status</span>
-                <Badge className={getStatusColor(booking.status)}>{getStatusLabel(booking.status)}</Badge>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground">Diajukan</span>
-                <span className="font-medium text-right">{formatDate(booking.created_at, 'long')}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground">Pemohon</span>
-                <span className="inline-flex items-center gap-1.5 font-medium truncate">
-                  <UserIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" /><span className="truncate">{booking.user?.name ?? '-'}</span>
-                </span>
-              </div>
-              {booking.expected_attendees != null && (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground">Peserta</span>
-                  <span className="inline-flex items-center gap-1.5 font-medium">
-                    <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />{booking.expected_attendees} orang
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base">Aksi</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-4 pt-0 sm:p-6 sm:pt-0">
-              {canActOnApproval && (
-                <>
-                  {canStartReview && (
-                    <Button variant="outline" className="w-full gap-2" onClick={() => startReviewMutation.mutate(booking.id)} disabled={startReviewMutation.isPending}>
-                      <PlayCircle className="h-4 w-4" /> Mulai Review
-                    </Button>
-                  )}
-                  <Button className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApprove(true)}>
-                    <CheckCircle2 className="h-4 w-4" /> Setujui
-                  </Button>
-                  <Button variant="outline" className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setShowReject(true)}>
-                    <XCircle className="h-4 w-4" /> Tolak
-                  </Button>
-                  <div className="border-t" />
-                </>
-              )}
-              {canEdit && (
-                <Link href={`/booking/new?edit=${booking.id}`} className={buttonVariants({ className: 'w-full gap-2' })}>
-                  <Pencil className="h-4 w-4" /> Edit Booking
-                </Link>
-              )}
-              {(isOwner || isStaff) && booking.is_cancellable && (
-                <Button variant="destructive" className="w-full gap-2" onClick={() => setShowCancel(true)}>
-                  <XCircle className="h-4 w-4" /> Batalkan Booking
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* Sidebar aksi (desktop) — sticky supaya tetap kelihatan saat kolom utama di-scroll.
+            Di mobile digantikan action bar melayang di bawah layar (lihat bawah). */}
+        {hasAnyAction && (
+          <div className="hidden lg:block lg:sticky lg:top-6 lg:self-start">
+            <Card>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base">Aksi</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 p-4 pt-0 sm:p-6 sm:pt-0">{actionButtons}</CardContent>
+            </Card>
+          </div>
+        )}
       </div>
+
+      {/* Action bar mobile — supaya staf tidak perlu scroll melewati seluruh detail
+          & riwayat hanya untuk menyetujui/menolak. */}
+      {hasAnyAction && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur lg:hidden">
+          <div className="flex gap-2 [&>*]:flex-1">{actionButtons}</div>
+        </div>
+      )}
 
       <Dialog open={showCancel} onOpenChange={setShowCancel}>
         <DialogContent>

@@ -20,7 +20,7 @@ import { DetailFields, type DetailGroup } from '@/components/detail/DetailFields
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
+import { cn, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { SERVICE_TYPE_MAP } from '@/lib/service-types';
 import {
   ArrowLeft, FileText, CheckCircle2, XCircle, Clock, User as UserIcon,
@@ -77,6 +77,26 @@ export default function LayananUmatDetailPage() {
   const typeConfig = SERVICE_TYPE_MAP[service.service_type];
   const hasActions = isStaff && service.status === 'pending';
 
+  // Dipakai dua kali: card sidebar (desktop) dan action bar melayang (mobile).
+  const actionButtons = (
+    <>
+      <Button
+        className="w-full gap-2 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+        variant="outline"
+        onClick={() => setShowApprove(true)}
+      >
+        <CheckCircle2 className="h-4 w-4" /> Setujui
+      </Button>
+      <Button
+        className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10"
+        variant="outline"
+        onClick={() => setShowReject(true)}
+      >
+        <XCircle className="h-4 w-4" /> Tolak
+      </Button>
+    </>
+  );
+
   const detailGroups: DetailGroup[] = typeConfig
     ? typeConfig.steps.flatMap((step) =>
         step.sections.map((section) => ({
@@ -130,7 +150,7 @@ export default function LayananUmatDetailPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className={cn('space-y-4 sm:space-y-6', hasActions && 'pb-24 lg:pb-0')}>
       {/* Header */}
       <div>
         <Link
@@ -147,7 +167,10 @@ export default function LayananUmatDetailPage() {
             </h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5 shrink-0" />{service.applicant_name}</span>
-              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0" />{formatDate(service.created_at, 'long')}</span>
+              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0" />Diajukan {formatDate(service.created_at, 'long')}</span>
+              {isStaff && service.user?.name && service.user.name !== service.applicant_name && (
+                <span className="text-muted-foreground/70">oleh {service.user.name}</span>
+              )}
             </div>
           </div>
           <Badge className={`${getStatusColor(service.status)} shrink-0 px-2.5 py-1 text-xs sm:px-3 sm:text-sm`}>
@@ -165,7 +188,7 @@ export default function LayananUmatDetailPage() {
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Kolom utama: versi web */}
-        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
+        <div className={cn('space-y-4 sm:space-y-6', hasActions ? 'lg:col-span-2' : 'lg:col-span-3')}>
           <Card>
             <CardHeader className="p-4 sm:p-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -211,61 +234,26 @@ export default function LayananUmatDetailPage() {
           </Card>
         </div>
 
-        {/* Sidebar: ringkasan + aksi */}
-        <div className="space-y-4 sm:space-y-6">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base">Ringkasan</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2.5 sm:space-y-3 text-sm p-4 pt-0 sm:p-6 sm:pt-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground">Status</span>
-                <Badge className={getStatusColor(service.status)}>{getStatusLabel(service.status)}</Badge>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground">Diajukan</span>
-                <span className="font-medium text-right">{formatDate(service.created_at, 'long')}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground">Pemohon</span>
-                <span className="truncate font-medium">{service.applicant_name}</span>
-              </div>
-              {isStaff && service.user?.name && (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground">Diajukan oleh</span>
-                  <span className="truncate font-medium">{service.user.name}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base">Aksi</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-4 pt-0 sm:p-6 sm:pt-0">
-              {hasActions && (
-                <>
-                  <Button
-                    className="w-full gap-2 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
-                    variant="outline"
-                    onClick={() => setShowApprove(true)}
-                  >
-                    <CheckCircle2 className="h-4 w-4" /> Setujui
-                  </Button>
-                  <Button
-                    className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10"
-                    variant="outline"
-                    onClick={() => setShowReject(true)}
-                  >
-                    <XCircle className="h-4 w-4" /> Tolak
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* Sidebar aksi (desktop) — di mobile digantikan action bar melayang di bawah. */}
+        {hasActions && (
+          <div className="hidden lg:block lg:sticky lg:top-6 lg:self-start">
+            <Card>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-base">Aksi</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 p-4 pt-0 sm:p-6 sm:pt-0">{actionButtons}</CardContent>
+            </Card>
+          </div>
+        )}
       </div>
+
+      {/* Action bar mobile — supaya staf tidak perlu scroll melewati seluruh detail
+          & riwayat hanya untuk menyetujui/menolak. */}
+      {hasActions && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur lg:hidden">
+          <div className="flex gap-2 [&>*]:flex-1">{actionButtons}</div>
+        </div>
+      )}
 
       <Dialog open={showApprove} onOpenChange={(open) => { if (!open) { setShowApprove(false); setApproveNotes(''); } }}>
         <DialogContent>

@@ -54,7 +54,7 @@ function BookingReport({ startDate, endDate }: { startDate: Date | undefined; en
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Judul</TableHead>
+                  <TableHead>Peminjam</TableHead>
                   <TableHead>Ruangan</TableHead>
                   <TableHead>Pemesan</TableHead>
                   <TableHead>Tanggal</TableHead>

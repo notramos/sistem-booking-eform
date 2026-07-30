@@ -738,6 +738,41 @@ export const SERVICE_TYPE_MAP = Object.fromEntries(
   SERVICE_TYPES.map((t) => [t.value, t])
 );
 
+/** `jadwal_misa` → `Jadwal Misa`, dipakai kalau nama field tidak ada di config mana pun. */
+function prettifyFieldName(name: string): string {
+  return name
+    .replace(/^dynamic_fields\./, '')
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+/**
+ * Peta nama field → label manusiawi untuk satu jenis pelayanan, dipakai saat
+ * menampilkan `dynamic_fields` mentah dari API (mis. di detail booking yang
+ * hanya tahu label jenis pelayanannya, bukan config-nya).
+ *
+ * `typeKey` boleh berupa `value` (mis. `intensi_misa`) maupun `label` jenis
+ * pelayanan — detail booking hanya menyimpan labelnya lewat `service_type_label`.
+ */
+export function getServiceFieldLabel(typeKey: string | undefined, fieldName: string): string {
+  const config = typeKey
+    ? (SERVICE_TYPE_MAP[typeKey] ?? SERVICE_TYPES.find((t) => t.label === typeKey))
+    : undefined;
+
+  if (config) {
+    for (const step of config.steps) {
+      for (const section of step.sections) {
+        for (const field of section.fields) {
+          if (field.name.replace(/^dynamic_fields\./, '') === fieldName) return field.label;
+        }
+      }
+    }
+  }
+
+  return prettifyFieldName(fieldName);
+}
+
 /**
  * Opsi jam jadwal misa tergantung hari dari `tanggal_misa` yang dipilih:
  * Jumat pertama di bulan itu > Minggu > Sabtu > hari lain (Senin-Kamis).

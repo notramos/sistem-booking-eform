@@ -18,13 +18,12 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DatePicker } from '@/components/ui/date-picker';
-import { TimeRangePicker } from '@/components/ui/time-range-picker';
 import { Spinner } from '@/components/ui/spinner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { RoomRecommendationList } from '@/components/booking/RoomRecommendationList';
-import { BookedSlotsTimeline } from '@/components/booking/BookedSlotsTimeline';
-import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS, TATA_TERTIB_TEXT } from '@/lib/constants';
+import { TimeSlotPicker } from '@/components/booking/TimeSlotPicker';
+import { BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS, TATA_TERTIB_TEXT } from '@/lib/constants';
 import { cn, getMaxBookableDate } from '@/lib/utils';
 import { CalendarDays, ArrowLeft, Users, Repeat, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -61,7 +60,7 @@ function dateBounds() {
 }
 
 const bookingSchema = z.object({
-  title: z.string().min(3, 'Judul minimal 3 karakter').max(255),
+  title: z.string().min(3, 'Nama peminjam minimal 3 karakter').max(255),
   description: z.string().optional(),
   bookingType: z.enum(['reguler', 'rutin']),
   bookingDate: z.date({ message: 'Tanggal wajib dipilih' }),
@@ -454,11 +453,11 @@ export default function NewBookingPage() {
         <Card>
           <CardHeader>
             <CardTitle>Detail Kegiatan</CardTitle>
-            <CardDescription>Judul, tanggal, dan tujuan peminjaman</CardDescription>
+            <CardDescription>Peminjam, tanggal, dan deskripsi kegiatan</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Input id="title" label="Peminjam *" placeholder="Contoh: Ibadah Keluarga" {...register('title')} />
+              <Input id="title" label="Peminjam *" placeholder="Contoh: Lingkungan St. Yohanes" {...register('title')} />
               {errors.title && <p className="text-destructive text-xs mt-1">{errors.title.message}</p>}
             </div>
 
@@ -711,17 +710,6 @@ export default function NewBookingPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {dateStr && (
-                <BookedSlotsTimeline
-                  date={dateStr}
-                  roomId={selectedRoomId}
-                  onPickSlot={(start, end) => {
-                    setValue('startTime', start);
-                    setValue('endTime', end);
-                  }}
-                />
-              )}
-
               <Controller
                 name="startTime"
                 control={control}
@@ -730,14 +718,14 @@ export default function NewBookingPage() {
                     name="endTime"
                     control={control}
                     render={({ field: endField }) => (
-                      <TimeRangePicker
+                      <TimeSlotPicker
                         label="Waktu Peminjaman *"
                         start={startField.value}
                         end={endField.value}
-                        onStartChange={startField.onChange}
-                        onEndChange={endField.onChange}
-                        minTime={OPERATING_HOURS.open}
-                        maxTime={OPERATING_HOURS.close}
+                        onChange={(s, e) => { startField.onChange(s); endField.onChange(e); }}
+                        roomId={selectedRoomId ?? undefined}
+                        date={dateStr}
+                        error={errors.startTime?.message ?? errors.endTime?.message}
                       />
                     )}
                   />
