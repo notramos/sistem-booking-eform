@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
             key: 'Content-Security-Policy',
-            value: `default-src 'self'; ${scriptSrc} style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ${apiOrigin};`,
+            value: `default-src 'self'; ${scriptSrc} style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ${apiOrigin} https://api-harilibur.vercel.app;`,
           },
         ],
       },
