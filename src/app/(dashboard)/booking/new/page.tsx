@@ -24,7 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { RoomRecommendationList } from '@/components/booking/RoomRecommendationList';
 import { BookedSlotsTimeline } from '@/components/booking/BookedSlotsTimeline';
-import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS } from '@/lib/constants';
+import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS, TATA_TERTIB_TEXT } from '@/lib/constants';
 import { cn, getMaxBookableDate } from '@/lib/utils';
 import { CalendarDays, ArrowLeft, Users, Repeat, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -115,6 +115,9 @@ export default function NewBookingPage() {
 
   const [datePreview, setDatePreview] = useState<RecurringDateEntry[] | null>(null);
   const [activeReplacementFor, setActiveReplacementFor] = useState<string | null>(null);
+  const [dateMode, setDateMode] = useState<'auto' | 'manual'>('auto');
+  const [manualDates, setManualDates] = useState<string[]>([]);
+  const [manualDatePicker, setManualDatePicker] = useState(false);
 
   const createBooking = useCreateBooking();
   const createRecurringBooking = useCreateRecurringBooking();
@@ -150,19 +153,21 @@ export default function NewBookingPage() {
 
   // Batas tanggal yang boleh dipesan (minimal H+7, maksimal akhir tahun berjalan
   // — atau tahun depan mulai November), mengikuti backend.
-  const { min: minDate, max: maxDate } = useMemo(() => dateBounds(), []);
+  const { min: minDate } = useMemo(() => dateBounds(), []);
 
   const { data: recommendations, isFetching: loadingRecommendations } = useRoomRecommendations(dateStr, debouncedAttendees);
   const { data: selectedRoom } = useRoom(selectedRoomId || '');
 
   const overCapacity = !!selectedRoom && attendeesNum > 0 && attendeesNum > selectedRoom.capacity;
 
-  // Redirect ke kalender bila tak ada konteks tanggal, ruangan, maupun mode edit.
+  // Form ini tidak lagi punya date-picker sendiri — tanggal wajib datang dari
+  // ?date= (diklik dari kalender), kecuali sedang mode edit booking yang sudah ada.
   useEffect(() => {
-    if (!preDate && !preRoomId && !editId) {
+    if (!preDate && !editId) {
+      toast.info('Pilih tanggal dari kalender terlebih dahulu.');
       router.replace('/booking/calendar');
     }
-  }, [preDate, preRoomId, editId, router]);
+  }, [preDate, editId, router]);
 
   useEffect(() => {
     if (!preDate || editId) return;
@@ -220,8 +225,8 @@ export default function NewBookingPage() {
   // hitung tanggal di client) — supaya tanggal yang bentrok bisa langsung ditawari
   // penggantian sebelum submit.
   useEffect(() => {
-    if (watchedBookingType !== 'rutin' || !selectedRoomId || !watchedDate || !watchedPattern || !watchedDuration || !debouncedStart || !debouncedEnd) {
-      setDatePreview(null);
+    if (dateMode !== 'auto' || watchedBookingType !== 'rutin' || !selectedRoomId || !watchedDate || !watchedPattern || !watchedDuration || !debouncedStart || !debouncedEnd) {
+      if (dateMode === 'auto') setDatePreview(null);
       return;
     }
 
@@ -248,7 +253,50 @@ export default function NewBookingPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchedBookingType, selectedRoomId, watchedDate, watchedPattern, watchedDuration, debouncedStart, debouncedEnd]);
+  }, [dateMode, watchedBookingType, selectedRoomId, watchedDate, watchedPattern, watchedDuration, debouncedStart, debouncedEnd]);
+
+  // Mode manual: bangun datePreview dari daftar tanggal yang dipilih user satu-satu,
+  // dicek ketersediaannya per tanggal ke backend (bukan lewat previewRecurring yang berbasis pola).
+  useEffect(() => {
+    if (dateMode !== 'manual' || watchedBookingType !== 'rutin' || !selectedRoomId || !debouncedStart || !debouncedEnd || manualDates.length === 0) {
+      if (dateMode === 'manual') setDatePreview(manualDates.length === 0 ? null : datePreview);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const results = await Promise.all(
+          manualDates.map(async (date) => {
+            try {
+              const res = await roomsApi.availability(selectedRoomId, date, debouncedStart, debouncedEnd);
+              return { date, available: res.data.data.available, reason: res.data.data.available ? null : ('conflict' as const) };
+            } catch {
+              return { date, available: false, reason: 'conflict' as const };
+            }
+          })
+        );
+        if (!cancelled) setDatePreview(results);
+      } catch {
+        if (!cancelled) setDatePreview(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateMode, watchedBookingType, selectedRoomId, manualDates, debouncedStart, debouncedEnd]);
+
+  // Mode manual tak punya pilihan pola/durasi di UI — isi nilai teknis default
+  // supaya lolos validasi schema (backend cuma pakai field ini untuk label, `dates` yang authoritative).
+  useEffect(() => {
+    if (dateMode === 'manual' && watchedBookingType === 'rutin') {
+      setValue('pattern', 'weekly');
+      setValue('durationMonths', 1);
+    }
+  }, [dateMode, watchedBookingType, setValue]);
 
   const hasUnresolvedRecurringConflicts = !!datePreview?.some((e) => !e.available && !e.replacementDate);
   const resolvedRecurringDates = useMemo(
@@ -410,7 +458,7 @@ export default function NewBookingPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Input id="title" label="Judul Peminjaman *" placeholder="Contoh: Ibadah Keluarga" {...register('title')} />
+              <Input id="title" label="Peminjam *" placeholder="Contoh: Ibadah Keluarga" {...register('title')} />
               {errors.title && <p className="text-destructive text-xs mt-1">{errors.title.message}</p>}
             </div>
 
@@ -429,77 +477,109 @@ export default function NewBookingPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <Controller
-                  name="bookingDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker
-                      label={watchedBookingType === 'rutin' ? 'Tanggal Pertama *' : 'Tanggal *'}
-                      value={field.value}
-                      onChange={field.onChange}
-                      fromDate={minDate}
-                      toDate={maxDate}
-                    />
-                  )}
-                />
-                {errors.bookingDate && <p className="text-destructive text-xs mt-1">{errors.bookingDate.message}</p>}
+            <div className="rounded-lg border bg-muted/40 p-3 flex items-center justify-between gap-3">
+              <div className="text-sm">
+                <span className="text-muted-foreground">{watchedBookingType === 'rutin' ? 'Tanggal Pertama' : 'Tanggal'}: </span>
+                <span className="font-medium text-foreground">
+                  {watchedDate ? format(watchedDate, 'EEEE, d MMMM yyyy', { locale: idLocale }) : '-'}
+                </span>
               </div>
-              <div>
-                <Select label="Tujuan Penggunaan" {...register('purposeType')}>
-                  <option value="">Pilih tujuan</option>
-                  <option value="ibadah">Ibadah & Persekutuan</option>
-                  <option value="acara_keluarga">Acara Keluarga</option>
-                  <option value="latihan_musik">Latihan Musik</option>
-                  <option value="pembinaan">Pembinaan</option>
-                  <option value="rapat">Rapat Pelayanan</option>
-                  <option value="seminar">Seminar & Training</option>
-                  <option value="publik">Acara Publik</option>
-                </Select>
-              </div>
+              <Link href="/booking/calendar" className="text-xs text-primary hover:underline shrink-0">
+                Ganti tanggal
+              </Link>
             </div>
+            {errors.bookingDate && <p className="text-destructive text-xs mt-1">{errors.bookingDate.message}</p>}
 
             {watchedBookingType === 'rutin' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 rounded-lg border border-dashed p-4">
-                <div>
-                  <label className="text-sm font-medium leading-none mb-1.5 block">Pola Pengulangan *</label>
-                  <Controller
-                    name="pattern"
-                    control={control}
-                    render={({ field }) => (
-                      <SegmentedControl options={PATTERN_OPTIONS} value={field.value ?? ''} onChange={field.onChange} />
-                    )}
+                <div className="lg:col-span-2">
+                  <label className="text-sm font-medium leading-none mb-1.5 block">Cara Menentukan Tanggal *</label>
+                  <SegmentedControl
+                    options={[
+                      { value: 'auto', label: 'Otomatis (pola)' },
+                      { value: 'manual', label: 'Pilih Manual' },
+                    ]}
+                    value={dateMode}
+                    onChange={(v) => setDateMode(v as 'auto' | 'manual')}
                   />
-                  {errors.pattern && <p className="text-destructive text-xs mt-1">{errors.pattern.message}</p>}
-                </div>
-                <div>
-                  <Controller
-                    name="durationMonths"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        label="Durasi *"
-                        value={field.value ?? ''}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                      >
-                        <option value="">Pilih durasi</option>
-                        {RECURRING_DURATION_OPTIONS.map((m) => (
-                          <option key={m} value={m}>{m} Bulan</option>
-                        ))}
-                      </Select>
-                    )}
-                  />
-                  {errors.durationMonths && <p className="text-destructive text-xs mt-1">{errors.durationMonths.message}</p>}
                 </div>
 
-                {!selectedRoomId && watchedPattern && watchedDuration && (
-                  <p className="lg:col-span-2 text-xs text-muted-foreground">
-                    Pilih ruangan terlebih dahulu untuk memeriksa ketersediaan tiap tanggal.
-                  </p>
+                {dateMode === 'auto' ? (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium leading-none mb-1.5 block">Pola Pengulangan *</label>
+                      <Controller
+                        name="pattern"
+                        control={control}
+                        render={({ field }) => (
+                          <SegmentedControl options={PATTERN_OPTIONS} value={field.value ?? ''} onChange={field.onChange} />
+                        )}
+                      />
+                      {errors.pattern && <p className="text-destructive text-xs mt-1">{errors.pattern.message}</p>}
+                    </div>
+                    <div>
+                      <Controller
+                        name="durationMonths"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            label="Durasi *"
+                            value={field.value ?? ''}
+                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                          >
+                            <option value="">Pilih durasi</option>
+                            {RECURRING_DURATION_OPTIONS.map((m) => (
+                              <option key={m} value={m}>{m} Bulan</option>
+                            ))}
+                          </Select>
+                        )}
+                      />
+                      {errors.durationMonths && <p className="text-destructive text-xs mt-1">{errors.durationMonths.message}</p>}
+                    </div>
+                  </>
+                ) : (
+                  <div className="lg:col-span-2 space-y-2">
+                    <label className="text-sm font-medium leading-none block">Daftar Tanggal *</label>
+                    {manualDates.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {manualDates.map((d) => (
+                          <span key={d} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border bg-muted/40 text-xs">
+                            {format(new Date(d + 'T00:00:00'), 'd MMM yyyy', { locale: idLocale })}
+                            <button
+                              type="button"
+                              onClick={() => setManualDates((prev) => prev.filter((x) => x !== d))}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {manualDatePicker ? (
+                      <DatePicker
+                        value={undefined}
+                        onChange={(d) => {
+                          if (d) {
+                            const ds = format(d, 'yyyy-MM-dd');
+                            setManualDates((prev) => (prev.includes(ds) ? prev : [...prev, ds].sort()));
+                          }
+                          setManualDatePicker(false);
+                        }}
+                        fromDate={watchedDate ?? minDate}
+                        toDate={watchedDate ? endOfMonth(new Date(watchedDate.getFullYear(), 11, 31)) : undefined}
+                        placeholder="Pilih tanggal"
+                      />
+                    ) : (
+                      <Button type="button" size="sm" variant="outline" onClick={() => setManualDatePicker(true)}>
+                        + Tambah Tanggal
+                      </Button>
+                    )}
+                    <p className="text-xs text-muted-foreground">Tanggal harus dalam tahun yang sama dengan tanggal pertama dan minimal H+7.</p>
+                  </div>
                 )}
 
-                {previewRecurring.isPending && (
+                {previewRecurring.isPending && dateMode === 'auto' && (
                   <p className="lg:col-span-2 text-xs text-muted-foreground flex items-center gap-1.5">
                     <Spinner size="sm" /> Memeriksa ketersediaan tiap tanggal...
                   </p>
@@ -680,19 +760,24 @@ export default function NewBookingPage() {
                   <Spinner size="sm" /> Memeriksa ketersediaan...
                 </p>
               )}
-
-              <Textarea id="notes" label="Catatan" placeholder="Catatan tambahan..." rows={2} {...register('notes')} />
             </CardContent>
           </Card>
         )}
 
         {selectedRoomId && (
-          <Checkbox
-            id="consent-booking"
-            checked={consentChecked}
-            onChange={(e) => setConsentChecked(e.target.checked)}
-            label="Saya menyatakan bahwa data yang diisi sudah benar dan bersedia bertanggung jawab atas pengajuan ini."
-          />
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="text-sm text-muted-foreground max-h-40 overflow-y-auto whitespace-pre-line border rounded-lg p-3 bg-muted/30">
+                {TATA_TERTIB_TEXT}
+              </div>
+              <Checkbox
+                id="consent-booking"
+                checked={consentChecked}
+                onChange={(e) => setConsentChecked(e.target.checked)}
+                label="Saya sudah membaca dan menyetujui Tata Tertib & Ketentuan Booking Ruangan."
+              />
+            </CardContent>
+          </Card>
         )}
 
         <div className="flex items-center gap-3">
