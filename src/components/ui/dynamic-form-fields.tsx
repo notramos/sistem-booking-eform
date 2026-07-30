@@ -30,7 +30,7 @@ export function DynamicFormFields({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {fields.map((field) => {
-        const fieldKey = isDynamic ? `dynamic_fields.${field.name}` : field.name;
+        const fieldKey = isDynamic && !field.name.startsWith('dynamic_fields.') ? `dynamic_fields.${field.name}` : field.name;
         const value = formData[fieldKey] ?? '';
         const error = errors[fieldKey];
 

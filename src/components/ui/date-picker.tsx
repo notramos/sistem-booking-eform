@@ -85,6 +85,11 @@ export function DatePicker({
               locale={id}
               fromDate={fromDate}
               toDate={toDate}
+              disabled={
+                fromDate || toDate
+                  ? [...(fromDate ? [{ before: fromDate }] : []), ...(toDate ? [{ after: toDate }] : [])]
+                  : undefined
+              }
               captionLayout="dropdown"
               fromYear={fromYear}
               toYear={toYear}

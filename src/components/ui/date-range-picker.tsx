@@ -80,6 +80,11 @@ export function DateRangePicker({
               locale={id}
               fromDate={fromDate}
               toDate={toDate}
+              disabled={
+                fromDate || toDate
+                  ? [...(fromDate ? [{ before: fromDate }] : []), ...(toDate ? [{ after: toDate }] : [])]
+                  : undefined
+              }
               components={{
                 IconLeft: () => <ChevronLeft className="w-4 h-4" />,
                 IconRight: () => <ChevronRight className="w-4 h-4" />,

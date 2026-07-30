@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, type ComponentType } from 'react';
+import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useCreateCongregationService } from '@/hooks/useCongregationServices';
 import { useWilayah } from '@/hooks/useParish';
@@ -157,7 +158,7 @@ export default function NewCongregationServicePage() {
   }, []);
 
   const updateDateField = useCallback((key: string, date: Date | undefined) => {
-    updateField(key, date ? date.toISOString().split('T')[0] : '');
+    updateField(key, date ? format(date, 'yyyy-MM-dd') : '');
   }, [updateField]);
 
   const filteredTypes = useMemo(() => {
