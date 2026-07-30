@@ -88,7 +88,11 @@ export function DynamicFormFields({
               </div>
             );
 
-          case 'date':
+          case 'date': {
+            // Tanggal lahir: bebas tanpa batas + dropdown bulan/tahun (bisa jauh ke
+            // belakang). Tanggal lain (mis. tanggal misa): tidak boleh sebelum hari
+            // ini, cukup geser bulan pakai panah karena rentangnya dekat.
+            const isBirthDate = field.name.endsWith('birth_date');
             return (
               <div key={fieldKey} className={style}>
                 <DatePicker
@@ -96,10 +100,12 @@ export function DynamicFormFields({
                   value={value ? new Date(value + 'T00:00:00') : undefined}
                   onChange={(date) => onDateChange(fieldKey, date)}
                   error={error}
-                  fromDate={field.name.endsWith('birth_date') ? undefined : new Date()}
+                  fromDate={isBirthDate ? undefined : new Date()}
+                  monthYearDropdown={isBirthDate}
                 />
               </div>
             );
+          }
 
           case 'date_range':
             return (
