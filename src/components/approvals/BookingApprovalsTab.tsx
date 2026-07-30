@@ -121,10 +121,18 @@ export function BookingApprovalsTab() {
                             {getStatusLabel(booking.status)}
                           </Badge>
                         </div>
-                        <p className="text-sm text-primary mt-0.5">{booking.room?.name}</p>
+                        <p className="text-sm text-primary mt-0.5">
+                          {booking.room?.name}
+                          {(booking.room?.building || booking.room?.floor) && (
+                            <span className="text-primary/70">
+                              {' '}· {booking.room?.building}{booking.room?.floor ? ` Lt.${booking.room.floor}` : ''}
+                            </span>
+                          )}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {booking.user?.name}
                           {booking.user?.department ? ` · ${booking.user.department}` : ''}
+                          {booking.contact_person ? ` · ${booking.contact_person}` : ''}
                         </p>
 
                         <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 text-sm text-muted-foreground">

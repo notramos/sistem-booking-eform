@@ -146,7 +146,13 @@ export default function MyBookingsPage() {
                   )}
 
                   <p className="flex items-center gap-1.5 text-sm text-muted-foreground mt-2">
-                    <MapPin className="h-3.5 w-3.5 shrink-0" /> {booking.room?.name}
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    {booking.room?.name}
+                    {(booking.room?.building || booking.room?.floor) && (
+                      <span className="text-muted-foreground/70">
+                        · {booking.room?.building}{booking.room?.floor ? ` Lt.${booking.room.floor}` : ''}
+                      </span>
+                    )}
                   </p>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
