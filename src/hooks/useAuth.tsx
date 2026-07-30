@@ -39,6 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await authApi.getUser();
       setUser(res.data.data);
+      // isLoggingOut sengaja tidak direset di logout() (lihat komentar di sana) —
+      // AuthProvider tidak ikut ter-unmount waktu pindah ke /login, jadi begitu ada
+      // sesi valid lagi (login biasa, OTP, atau refresh setelah redirect), reset
+      // di sini supaya overlay logout tidak nyangkut muncul lagi di sesi berikutnya.
+      setIsLoggingOut(false);
     } catch {
       setUser(null);
     } finally {
@@ -56,6 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const res = await authApi.login(email, password);
     setUser(res.data.data.user);
+    // isLoggingOut sengaja tidak direset saat logout (lihat komentar di logout()) —
+    // AuthProvider ini tidak ikut ter-unmount waktu pindah ke /login, jadi nilainya
+    // bertahan lintas sesi. Reset di sini supaya overlay logout tidak nyangkut
+    // muncul lagi setelah user login ulang (termasuk dengan akun berbeda).
+    setIsLoggingOut(false);
   }, []);
 
   const logout = useCallback(async () => {
