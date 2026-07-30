@@ -53,10 +53,6 @@ function toDateStr(iso: string) {
   return iso.slice(0, 10);
 }
 
-function toTimeStr(iso: string) {
-  return iso.slice(11, 16);
-}
-
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
@@ -114,6 +110,11 @@ export default function CalendarPage() {
 
   const days = useMemo(() => getMonthDays(year, month), [year, month]);
 
+  // Batas navigasi bulan — dipakai bersama oleh tombol panah dan shortcut keyboard
+  // supaya keduanya tidak bisa melewati rentang yang boleh dipesan.
+  const canGoPrev = !(year < today.getFullYear() || (year === today.getFullYear() && month <= today.getMonth()));
+  const canGoNext = !(year > maxDate.getFullYear() || (year === maxDate.getFullYear() && month >= maxDate.getMonth()));
+
   function navigate(delta: number) {
     setCurrentDate(new Date(year, month + delta, 1));
     setSelectedDate(null);
@@ -124,14 +125,25 @@ export default function CalendarPage() {
     setSelectedDate(formatLocalDate(today));
   }
 
+  const anyPanelOpen = sheetOpen || showGuide || showRules || legendOpen;
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'ArrowLeft') navigate(-1);
-      else if (e.key === 'ArrowRight') navigate(1);
+      // Jangan bajak panah saat user sedang mengetik atau sedang membaca panel
+      // yang terbuka di atas kalender.
+      const target = e.target as HTMLElement | null;
+      if (target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName ?? '')) return;
+      if (anyPanelOpen) return;
+
+      if (e.key === 'ArrowLeft' && canGoPrev) setCurrentDate(new Date(year, month - 1, 1));
+      else if (e.key === 'ArrowRight' && canGoNext) setCurrentDate(new Date(year, month + 1, 1));
+      else return;
+
+      setSelectedDate(null);
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [year, month]);
+  }, [year, month, canGoPrev, canGoNext, anyPanelOpen]);
 
   return (
     <div className="space-y-6">
@@ -161,23 +173,13 @@ export default function CalendarPage() {
         <CardHeader className="pb-2">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center justify-between sm:justify-start gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigate(-1)}
-                disabled={year < today.getFullYear() || (year === today.getFullYear() && month <= today.getMonth())}
-              >
+              <Button variant="outline" size="icon" onClick={() => navigate(-1)} disabled={!canGoPrev} aria-label="Bulan sebelumnya">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <h2 className="text-lg font-semibold text-foreground min-w-[140px] sm:min-w-[180px] text-center">
                 {MONTH_NAMES[month]} {year}
               </h2>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => navigate(1)}
-                disabled={year > maxDate.getFullYear() || (year === maxDate.getFullYear() && month >= maxDate.getMonth())}
-              >
+              <Button variant="outline" size="icon" onClick={() => navigate(1)} disabled={!canGoNext} aria-label="Bulan berikutnya">
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -253,37 +255,33 @@ export default function CalendarPage() {
                     <div
                       key={dateStr}
                       title={holiday?.name}
-                      aria-disabled={isPast}
-                      className={`relative border-r border-b border-border p-1.5 min-h-[64px] sm:min-h-[88px] transition-colors ${
-                        isPast
-                          ? 'cursor-not-allowed opacity-50'
-                          : `cursor-pointer ${
-                              isSelected
-                                ? 'bg-primary/10 hover:bg-primary/20'
-                                : isToday
-                                  ? 'bg-accent/40 hover:bg-accent/60'
-                                  : isRed
-                                    ? 'bg-neutral-900 hover:bg-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-600'
-                                    : 'hover:bg-accent/60'
-                            }`
-                      } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${isPast && isRed ? 'bg-neutral-900 dark:bg-neutral-800' : ''}`}
+                      className={`relative border-r border-b border-border p-1.5 min-h-[64px] sm:min-h-[88px] transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-primary/10 hover:bg-primary/20'
+                          : isToday
+                            ? 'bg-accent/40 hover:bg-accent/60'
+                            : isRed
+                              ? 'bg-red-50/60 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50'
+                              : 'hover:bg-accent/60'
+                      } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${isPast ? 'opacity-60' : ''}`}
                       onClick={() => {
-                        if (isPast) return;
                         setSelectedDate(dateStr);
-                        if (!bookable) {
+                        // Tanggal lampau tetap bisa dibuka untuk melihat riwayat — tak perlu
+                        // toast "terlalu dekat" yang justru menyesatkan di konteks itu.
+                        if (!bookable && !isPast) {
                           toast.info(`Tanggal ini terlalu dekat. Booking minimal H+${BOOKING_MIN_ADVANCE_DAYS} (mulai ${new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(minDateStr + 'T00:00:00'))}).`);
                         }
                         setSheetOpen(true);
                       }}
                     >
                       {holiday && (
-                        <span className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-white shrink-0" aria-hidden />
+                        <span className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" aria-hidden />
                       )}
                       <div className={`absolute top-1 right-1 text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
                         isToday
                           ? 'bg-primary text-primary-foreground'
                           : isRed
-                            ? 'text-white'
+                            ? 'text-red-600 dark:text-red-400'
                             : 'text-foreground'
                       }`}>
                         {dayNum}
@@ -300,7 +298,7 @@ export default function CalendarPage() {
                             />
                           ))}
                           {dayEvents.length > 4 && (
-                            <span className={`text-[9px] leading-none ${isRed ? 'text-neutral-300' : 'text-muted-foreground'}`}>
+                            <span className="text-[9px] leading-none text-muted-foreground">
                               +{dayEvents.length - 4}
                             </span>
                           )}
@@ -311,7 +309,7 @@ export default function CalendarPage() {
                           <TooltipCell key={event.id} event={event} />
                         ))}
                         {overflow > 0 && (
-                          <span className={`block text-[10px] font-medium px-1 ${isRed ? 'text-neutral-300' : 'text-muted-foreground'}`}>
+                          <span className="block text-[10px] font-medium px-1 text-muted-foreground">
                             +{overflow} lainnya
                           </span>
                         )}
@@ -398,7 +396,7 @@ export default function CalendarPage() {
       </Dialog>
 
       {/* Agenda — panel geser dari kanan, muncul saat tanggal diklik */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen} side="responsive">
         <SheetContent>
           <SheetHeader>
             <SheetTitle>
@@ -458,7 +456,9 @@ export default function CalendarPage() {
           {selectedDate && !isBookableDate(selectedDate) && (
             <div className="sticky bottom-0 bg-background pt-3 border-t mt-auto">
               <p className="text-xs text-muted-foreground">
-                Tanggal ini terlalu dekat untuk dipesan (minimal H+{BOOKING_MIN_ADVANCE_DAYS} dari hari ini).
+                {isPastDate(selectedDate)
+                  ? 'Tanggal ini sudah lewat — hanya bisa dilihat, tidak bisa dipesan.'
+                  : `Tanggal ini terlalu dekat untuk dipesan (minimal H+${BOOKING_MIN_ADVANCE_DAYS} dari hari ini).`}
               </p>
             </div>
           )}
