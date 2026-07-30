@@ -18,12 +18,12 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, RotateCcw, PlayCircle, Pencil, Info,
+  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, PlayCircle, Pencil, Info,
   MapPin, CalendarDays, Users, User as UserIcon,
 } from 'lucide-react'
 import {
   useBooking, useCancelBooking,
-  useApproveBooking, useRejectBooking, useReviseBooking, useStartReview, useUpdateRecurringDate,
+  useApproveBooking, useRejectBooking, useStartReview, useUpdateRecurringDate,
 } from '@/hooks/useBookings'
 import { useDayAvailability } from '@/hooks/useRooms'
 import { useAuth } from '@/hooks/useAuth'
@@ -163,7 +163,6 @@ export default function BookingDetailPage() {
   const cancelMutation = useCancelBooking()
   const approveMutation = useApproveBooking()
   const rejectMutation = useRejectBooking()
-  const reviseMutation = useReviseBooking()
   const startReviewMutation = useStartReview()
   const { user, hasAnyRole, isAdmin, isSekretariat } = useAuth()
   const isStaff = hasAnyRole(['p2', 'pastor', 'it_admin', 'sekretariat'])
@@ -173,8 +172,6 @@ export default function BookingDetailPage() {
   const [approveNotes, setApproveNotes] = useState('')
   const [showReject, setShowReject] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
-  const [showRevise, setShowRevise] = useState(false)
-  const [reviseReason, setReviseReason] = useState('')
   const [editingRecurringDate, setEditingRecurringDate] = useState<string | null>(null)
 
   if (isLoading) {
@@ -215,25 +212,15 @@ export default function BookingDetailPage() {
     setRejectReason('')
   }
 
-  const handleRevise = async () => {
-    if (!reviseReason.trim()) return
-    await reviseMutation.mutateAsync({ id: booking.id, reason: reviseReason })
-    setShowRevise(false)
-    setReviseReason('')
-  }
-
-  // Sekretariat: gate approve/reject/revisi ke tahap pertama saja (belum diteruskan ke admin).
+  // Sekretariat: gate approve/reject ke tahap pertama saja (belum diteruskan ke admin).
   // Admin: bisa bertindak kapan pun booking belum final (termasuk override/skip sekretariat).
   const canActOnApproval = isStaff && NON_FINAL_STATUSES.includes(booking.status) && (
     isAdmin || ['pending', 'sekretariat_review'].includes(booking.status)
   )
   const canStartReview = isSekretariat && booking.status === 'pending'
   const isOwner = user?.id === booking.user_id
-  const canResubmit = isOwner && ['revision_sekretariat', 'revision_admin'].includes(booking.status)
+  const canEdit = isOwner && ['pending', 'sekretariat_review', 'revision_sekretariat', 'revision_admin'].includes(booking.status)
   const canEditRecurringDates = isStaff && NON_FINAL_STATUSES.includes(booking.status)
-  const latestRevision = [...(booking.approvals ?? [])]
-    .filter((a) => a.action === 'revision')
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 
   // ---- Data untuk tampilan web ----
   const detailGroups: DetailGroup[] = [
@@ -396,22 +383,6 @@ export default function BookingDetailPage() {
             </Card>
           )}
 
-          {['revision_sekretariat', 'revision_admin'].includes(booking.status) && (
-            <Card className="border-orange-200 bg-orange-50/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-orange-700 flex items-center gap-2">
-                  <RotateCcw className="h-4 w-4" /> Perlu Revisi
-                  {latestRevision?.approver?.name && (
-                    <span className="font-normal text-orange-700/70">— diminta oleh {latestRevision.approver.name}</span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-orange-700/90">{latestRevision?.notes ?? '-'}</p>
-              </CardContent>
-            </Card>
-          )}
-
           {isSekretariat && booking.status === 'sekretariat_review' && (
             <RoomReallocationCard booking={booking} />
           )}
@@ -475,18 +446,15 @@ export default function BookingDetailPage() {
                   <Button className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApprove(true)}>
                     <CheckCircle2 className="h-4 w-4" /> Setujui
                   </Button>
-                  <Button variant="outline" className="w-full gap-2" onClick={() => setShowRevise(true)}>
-                    <RotateCcw className="h-4 w-4" /> Minta Revisi
-                  </Button>
                   <Button variant="outline" className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setShowReject(true)}>
                     <XCircle className="h-4 w-4" /> Tolak
                   </Button>
                   <div className="border-t" />
                 </>
               )}
-              {canResubmit && (
+              {canEdit && (
                 <Link href={`/booking/new?edit=${booking.id}`} className={buttonVariants({ className: 'w-full gap-2' })}>
-                  <Pencil className="h-4 w-4" /> Edit & Ajukan Ulang
+                  <Pencil className="h-4 w-4" /> Edit Booking
                 </Link>
               )}
               {(isOwner || isStaff) && booking.is_cancellable && (
@@ -551,25 +519,6 @@ export default function BookingDetailPage() {
             <Button variant="ghost" onClick={() => setShowReject(false)}>Batal</Button>
             <Button variant="destructive" onClick={handleReject} disabled={!rejectReason.trim()} loading={rejectMutation.isPending}>
               Tolak Booking
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showRevise} onOpenChange={setShowRevise}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Minta Revisi</DialogTitle>
-            <DialogDesc>Booking akan dikembalikan ke pemohon untuk diperbaiki. Pemohon akan mendapat notifikasi.</DialogDesc>
-          </DialogHeader>
-          <div className="py-2">
-            <label className="text-sm font-medium text-foreground mb-1 block">Alasan Revisi *</label>
-            <Textarea rows={3} placeholder="Jelaskan apa yang perlu diperbaiki..." value={reviseReason} onChange={(e) => setReviseReason(e.target.value)} />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowRevise(false)}>Batal</Button>
-            <Button onClick={handleRevise} disabled={!reviseReason.trim()} loading={reviseMutation.isPending}>
-              Minta Revisi
             </Button>
           </DialogFooter>
         </DialogContent>

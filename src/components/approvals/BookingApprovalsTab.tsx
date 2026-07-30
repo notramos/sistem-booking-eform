@@ -2,64 +2,27 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import {
-  usePendingBookings, useApproveBooking, useRejectBooking,
-  useStartReview, useReviseBooking,
-} from '@/hooks/useBookings';
+import { usePendingBookings } from '@/hooks/useBookings';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Pagination } from '@/components/ui/pagination';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { formatDate, formatTime, getInitials, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { PURPOSE_LABELS } from '@/lib/constants';
-import { CheckCircle2, XCircle, CalendarDays, Clock, Users, ClipboardList, Church, RotateCcw, PlayCircle, Tag } from 'lucide-react';
+import { XCircle, CalendarDays, Clock, Users, ClipboardList, Church, Tag, ChevronRight, MapPin } from 'lucide-react';
+
+const PATTERN_LABELS: Record<string, string> = { weekly: 'Mingguan', monthly: 'Bulanan' };
 
 export function BookingApprovalsTab() {
-  const router = useRouter();
-  const { hasAnyRole, isSekretariat } = useAuth();
+  const { hasAnyRole } = useAuth();
   const [page, setPage] = useState(1);
   const { data: pendingData, isLoading, isError, refetch } = usePendingBookings(hasAnyRole(['sekretariat', 'p2', 'pastor', 'it_admin']), page);
-  const approveBooking = useApproveBooking();
-  const rejectBooking = useRejectBooking();
-  const startReview = useStartReview();
-  const reviseBooking = useReviseBooking();
-
-  const [rejectId, setRejectId] = useState<string | null>(null);
-  const [rejectReason, setRejectReason] = useState('');
-  const [confirmApproveId, setConfirmApproveId] = useState<string | null>(null);
-  const [approveNotes, setApproveNotes] = useState('');
-  const [reviseId, setReviseId] = useState<string | null>(null);
-  const [reviseReason, setReviseReason] = useState('');
 
   const bookings = pendingData?.data ?? [];
-
-  const handleApprove = async () => {
-    if (!confirmApproveId) return;
-    await approveBooking.mutateAsync({ id: confirmApproveId, notes: approveNotes || undefined });
-    setConfirmApproveId(null);
-    setApproveNotes('');
-  };
-
-  const handleReject = async () => {
-    if (!rejectId || !rejectReason.trim()) return;
-    await rejectBooking.mutateAsync({ id: rejectId, reason: rejectReason });
-    setRejectId(null);
-    setRejectReason('');
-  };
-
-  const handleRevise = async () => {
-    if (!reviseId || !reviseReason.trim()) return;
-    await reviseBooking.mutateAsync({ id: reviseId, reason: reviseReason });
-    setReviseId(null);
-    setReviseReason('');
-  };
 
   if (isLoading) {
     return <Spinner size="lg" center label="Memuat data persetujuan..." />;
@@ -93,11 +56,15 @@ export function BookingApprovalsTab() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {bookings.map((booking) => (
-            <Card key={booking.id} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row">
-                  <div className="flex-1 p-5">
+          {bookings.map((booking) => {
+            const dynamicFieldsCount = booking.service_details
+              ? Object.values(booking.service_details.dynamic_fields ?? {}).filter((v) => v !== null && v !== '').length
+              : 0;
+
+            return (
+              <Link key={booking.id} href={`/booking/${booking.id}`} className="block group">
+                <Card className="overflow-hidden transition-all hover:shadow-md hover:border-primary/50">
+                  <CardContent className="p-5">
                     <div className="flex items-start gap-3">
                       <Avatar className="h-10 w-10 shrink-0">
                         <AvatarFallback className="text-xs">
@@ -110,22 +77,24 @@ export function BookingApprovalsTab() {
                           {booking.service_details && (
                             <Badge variant="outline" className="gap-1 shrink-0">
                               <Church className="w-3 h-3" /> Pelayanan Gereja
+                              {dynamicFieldsCount > 0 ? ` · ${dynamicFieldsCount} detail` : ''}
                             </Badge>
                           )}
                           {booking.booking_type === 'rutin' && (
                             <Badge variant="outline" className="shrink-0">
-                              Rutin · {booking.recurring_dates?.length ?? 0} tanggal
+                              Rutin{booking.recurring_pattern ? ` · ${PATTERN_LABELS[booking.recurring_pattern] ?? booking.recurring_pattern}` : ''} · {booking.recurring_dates?.length ?? 0} tanggal
                             </Badge>
                           )}
                           <Badge className={`${getStatusColor(booking.status)} shrink-0 text-xs`}>
                             {getStatusLabel(booking.status)}
                           </Badge>
                         </div>
-                        <p className="text-sm text-primary mt-0.5">
+                        <p className="text-sm text-primary mt-0.5 flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
                           {booking.room?.name}
                           {(booking.room?.building || booking.room?.floor) && (
                             <span className="text-primary/70">
-                              {' '}· {booking.room?.building}{booking.room?.floor ? ` Lt.${booking.room.floor}` : ''}
+                              · {booking.room?.building}{booking.room?.floor ? ` Lt.${booking.room.floor}` : ''}
                             </span>
                           )}
                         </p>
@@ -160,123 +129,27 @@ export function BookingApprovalsTab() {
                           ) : null}
                         </div>
 
+                        {booking.description && (
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{booking.description}</p>
+                        )}
                         {booking.notes && (
-                          <p className="text-sm text-muted-foreground mt-2 italic">&ldquo;{booking.notes}&rdquo;</p>
+                          <p className="text-sm text-muted-foreground mt-1 italic">&ldquo;{booking.notes}&rdquo;</p>
                         )}
                       </div>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground group-hover:text-primary shrink-0 self-center">
+                        <span className="hidden sm:inline">Lihat Detail</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex sm:flex-col gap-2 p-5 sm:border-l border-t sm:border-t-0 bg-muted/30 sm:justify-center shrink-0">
-                    <Link
-                      href={`/booking/${booking.id}`}
-                      className="hidden sm:block text-center text-xs text-muted-foreground hover:text-primary underline-offset-2 hover:underline mb-1"
-                    >
-                      Lihat Detail
-                    </Link>
-                    {isSekretariat && booking.status === 'pending' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 sm:flex-none"
-                        onClick={() => startReview.mutate(booking.id, { onSuccess: () => router.push(`/booking/${booking.id}`) })}
-                        disabled={startReview.isPending}
-                      >
-                        <PlayCircle className="w-4 h-4 mr-1" /> Mulai Review
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => setConfirmApproveId(booking.id)}
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-1" /> Setujui
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 sm:flex-none"
-                      onClick={() => { setReviseId(booking.id); setReviseReason(''); }}
-                    >
-                      <RotateCcw className="w-4 h-4 mr-1" /> Revisi
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 sm:flex-none text-destructive border-destructive/20 hover:bg-destructive/10"
-                      onClick={() => { setRejectId(booking.id); setRejectReason(''); }}
-                    >
-                      <XCircle className="w-4 h-4 mr-1" /> Tolak
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
 
       <Pagination meta={pendingData?.meta} onPageChange={setPage} itemLabel="booking" />
-
-      {/* Dialog: Setujui */}
-      <Dialog open={!!confirmApproveId} onOpenChange={(open) => { if (!open) { setConfirmApproveId(null); setApproveNotes(''); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Setujui Booking</DialogTitle>
-            <DialogDescription>Booking akan disetujui dan ruangan dikonfirmasi untuk peminjaman.</DialogDescription>
-          </DialogHeader>
-          <div className="py-2">
-            <label className="text-sm font-medium text-foreground mb-1 block">Catatan (opsional)</label>
-            <Textarea rows={2} placeholder="Tambahkan catatan..." value={approveNotes} onChange={(e) => setApproveNotes(e.target.value)} />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => { setConfirmApproveId(null); setApproveNotes(''); }}>Batal</Button>
-            <Button onClick={handleApprove} loading={approveBooking.isPending}>
-              Ya, Setujui
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog: Tolak */}
-      <Dialog open={!!rejectId} onOpenChange={(open) => { if (!open) { setRejectId(null); setRejectReason(''); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Tolak Booking</DialogTitle>
-            <DialogDescription>Masukkan alasan penolakan. Pemohon akan mendapat notifikasi.</DialogDescription>
-          </DialogHeader>
-          <div className="py-2">
-            <label className="text-sm font-medium text-foreground mb-1 block">Alasan Penolakan *</label>
-            <Textarea rows={3} placeholder="Masukkan alasan penolakan..." value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => { setRejectId(null); setRejectReason(''); }}>Batal</Button>
-            <Button variant="destructive" onClick={handleReject} disabled={!rejectReason.trim()} loading={rejectBooking.isPending}>
-              Tolak Booking
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog: Revisi */}
-      <Dialog open={!!reviseId} onOpenChange={(open) => { if (!open) { setReviseId(null); setReviseReason(''); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Minta Revisi</DialogTitle>
-            <DialogDescription>Booking akan dikembalikan ke pemohon untuk diperbaiki. Pemohon akan mendapat notifikasi.</DialogDescription>
-          </DialogHeader>
-          <div className="py-2">
-            <label className="text-sm font-medium text-foreground mb-1 block">Alasan Revisi *</label>
-            <Textarea rows={3} placeholder="Jelaskan apa yang perlu diperbaiki..." value={reviseReason} onChange={(e) => setReviseReason(e.target.value)} />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => { setReviseId(null); setReviseReason(''); }}>Batal</Button>
-            <Button onClick={handleRevise} disabled={!reviseReason.trim()} loading={reviseBooking.isPending}>
-              Minta Revisi
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

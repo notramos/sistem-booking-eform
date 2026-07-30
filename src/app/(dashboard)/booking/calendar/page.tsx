@@ -161,7 +161,12 @@ export default function CalendarPage() {
         <CardHeader className="pb-2">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center justify-between sm:justify-start gap-2">
-              <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate(-1)}
+                disabled={year < today.getFullYear() || (year === today.getFullYear() && month <= today.getMonth())}
+              >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <h2 className="text-lg font-semibold text-foreground min-w-[140px] sm:min-w-[180px] text-center">
@@ -242,20 +247,28 @@ export default function CalendarPage() {
                   const visibleEvents = dayEvents.slice(0, maxVisible);
                   const overflow = dayEvents.length - maxVisible;
 
+                  const isPast = isPastDate(dateStr);
+
                   return (
                     <div
                       key={dateStr}
                       title={holiday?.name}
-                      className={`relative border-r border-b border-border p-1.5 min-h-[64px] sm:min-h-[88px] transition-colors cursor-pointer ${
-                        isSelected
-                          ? 'bg-primary/10 hover:bg-primary/20'
-                          : isToday
-                            ? 'bg-accent/40 hover:bg-accent/60'
-                            : isRed
-                              ? 'bg-neutral-900 hover:bg-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-600'
-                              : 'hover:bg-accent/60'
-                      } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${isPastDate(dateStr) ? 'opacity-60' : ''}`}
+                      aria-disabled={isPast}
+                      className={`relative border-r border-b border-border p-1.5 min-h-[64px] sm:min-h-[88px] transition-colors ${
+                        isPast
+                          ? 'cursor-not-allowed opacity-50'
+                          : `cursor-pointer ${
+                              isSelected
+                                ? 'bg-primary/10 hover:bg-primary/20'
+                                : isToday
+                                  ? 'bg-accent/40 hover:bg-accent/60'
+                                  : isRed
+                                    ? 'bg-neutral-900 hover:bg-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-600'
+                                    : 'hover:bg-accent/60'
+                            }`
+                      } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${isPast && isRed ? 'bg-neutral-900 dark:bg-neutral-800' : ''}`}
                       onClick={() => {
+                        if (isPast) return;
                         setSelectedDate(dateStr);
                         if (!bookable) {
                           toast.info(`Tanggal ini terlalu dekat. Booking minimal H+${BOOKING_MIN_ADVANCE_DAYS} (mulai ${new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(minDateStr + 'T00:00:00'))}).`);

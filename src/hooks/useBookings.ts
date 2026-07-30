@@ -162,22 +162,6 @@ export function useStartReview() {
   });
 }
 
-export function useReviseBooking() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) => bookingsApi.revise(id, reason),
-    onSuccess: () => {
-      toast.success('Revisi diminta, pemohon akan diberi tahu');
-      qc.invalidateQueries({ queryKey: ['pending-bookings'] });
-      qc.invalidateQueries({ queryKey: ['bookings'] });
-      qc.invalidateQueries({ queryKey: ['my-bookings'] });
-    },
-    onError: (err: { message?: string }) => {
-      toast.error(err.message || 'Gagal meminta revisi');
-    },
-  });
-}
-
 export function useUpdateBooking() {
   const qc = useQueryClient();
   return useMutation({

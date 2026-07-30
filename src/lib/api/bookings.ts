@@ -63,7 +63,4 @@ export const bookingsApi = {
 
   startReview: (id: string) =>
     apiClient.post<ApiResponse<Booking>>(`/bookings/${id}/start-review`),
-
-  revise: (id: string, reason: string) =>
-    apiClient.post<ApiResponse<Booking>>(`/bookings/${id}/revise`, { reason }),
 };

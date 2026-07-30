@@ -443,9 +443,9 @@ export default function NewBookingPage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{editId ? 'Edit & Ajukan Ulang Booking' : 'Booking Ruangan'}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{editId ? 'Edit Booking' : 'Booking Ruangan'}</h1>
         <p className="text-muted-foreground mt-1">
-          {editId ? 'Perbaiki data sesuai catatan revisi, lalu ajukan ulang.' : 'Isi detail kegiatan, lalu pilih ruangan yang sesuai jumlah peserta'}
+          {editId ? 'Perbarui detail booking Anda.' : 'Isi detail kegiatan, lalu pilih ruangan yang sesuai jumlah peserta'}
         </p>
       </div>
 
@@ -793,7 +793,7 @@ export default function NewBookingPage() {
             }
           >
             <CalendarDays className="w-4 h-4 mr-2" />
-            {editId ? 'Ajukan Ulang' : watchedBookingType === 'rutin' ? 'Ajukan Jadwal Rutin' : 'Ajukan Booking'}
+            {editId ? 'Simpan Perubahan' : watchedBookingType === 'rutin' ? 'Ajukan Jadwal Rutin' : 'Ajukan Booking'}
           </Button>
         </div>
       </form>

@@ -96,7 +96,7 @@ export function DynamicFormFields({
                   value={value ? new Date(value + 'T00:00:00') : undefined}
                   onChange={(date) => onDateChange(fieldKey, date)}
                   error={error}
-                  fromDate={field.name === 'birth_date' ? undefined : new Date()}
+                  fromDate={field.name.endsWith('birth_date') ? undefined : new Date()}
                 />
               </div>
             );
