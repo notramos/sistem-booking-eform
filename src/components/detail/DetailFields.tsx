@@ -30,15 +30,15 @@ export function DetailFields({ groups }: { groups: DetailGroup[] }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {nonEmpty.map((group, gi) => (
         <div key={gi}>
           {group.title && (
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <h3 className="mb-2 sm:mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {group.title}
             </h3>
           )}
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 sm:gap-y-4">
             {group.fields.map((f, fi) => (
               <div key={fi} className="min-w-0">
                 <dt className="mb-0.5 text-xs text-muted-foreground">{f.label}</dt>

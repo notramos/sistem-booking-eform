@@ -280,7 +280,7 @@ export default function BookingDetailPage() {
       }]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
         <Link
@@ -290,30 +290,30 @@ export default function BookingDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           Kembali ke Booking Saya
         </Link>
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl font-bold text-foreground">{booking.title}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">{booking.title}</h1>
               {booking.booking_type === 'rutin' && (
                 <Badge variant="outline" className="shrink-0">
                   Rutin · {booking.recurring_dates?.length ?? 0} tanggal
                 </Badge>
               )}
             </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              {booking.room?.name && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{booking.room.name}</span>}
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+              {booking.room?.name && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{booking.room.name}</span>}
               {booking.booking_type === 'rutin' && booking.recurring_dates && booking.recurring_dates.length > 1 ? (
                 <span className="inline-flex items-center gap-1">
-                  <CalendarDays className="h-3.5 w-3.5" />
+                  <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                   {formatDate(booking.recurring_dates[0], 'long')} – {formatDate(booking.recurring_dates[booking.recurring_dates.length - 1], 'long')}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{formatDate(booking.booking_date, 'long')}</span>
+                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDate(booking.booking_date, 'long')}</span>
               )}
-              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{formatTime(booking.start_time)}–{formatTime(booking.end_time)}</span>
+              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0" />{formatTime(booking.start_time)}–{formatTime(booking.end_time)}</span>
             </div>
           </div>
-          <Badge className={`${getStatusColor(booking.status)} shrink-0 px-3 py-1 text-sm`}>
+          <Badge className={`${getStatusColor(booking.status)} shrink-0 px-2.5 py-1 text-xs sm:px-3 sm:text-sm`}>
             {getStatusLabel(booking.status)}
           </Badge>
         </div>
@@ -321,36 +321,36 @@ export default function BookingDetailPage() {
 
       {/* Status stepper */}
       <Card>
-        <CardContent className="py-5">
+        <CardContent className="p-4 sm:py-5 sm:px-6">
           <StatusStepper steps={bookingSteps(booking.status)} />
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Kolom utama: versi web */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5 text-primary" /> Detail Pemesanan
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <FileText className="h-5 w-5 text-primary shrink-0" /> Detail Pemesanan
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <DetailFields groups={detailGroups} />
             </CardContent>
           </Card>
 
           {booking.booking_type === 'rutin' && booking.recurring_dates && booking.recurring_dates.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <CalendarDays className="h-5 w-5 text-primary" /> Jadwal Rutin ({booking.recurring_dates.length} tanggal)
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <CalendarDays className="h-5 w-5 text-primary shrink-0" /> Jadwal Rutin ({booking.recurring_dates.length} tanggal)
                 </CardTitle>
                 {canEditRecurringDates && (
                   <p className="text-xs text-muted-foreground">Klik tanggal untuk mengganti tanggal tersebut secara individual.</p>
                 )}
               </CardHeader>
-              <CardContent className="flex flex-wrap gap-1.5">
+              <CardContent className="flex flex-wrap gap-1.5 p-4 pt-0 sm:p-6 sm:pt-0">
                 {booking.recurring_dates.map((d) => (
                   canEditRecurringDates ? (
                     <button
@@ -374,10 +374,10 @@ export default function BookingDetailPage() {
 
           {booking.status === 'rejected' && booking.reject_reason && (
             <Card className="border-red-200 bg-red-50/50">
-              <CardHeader className="pb-2">
+              <CardHeader className="p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm text-red-700">Alasan Penolakan</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <p className="text-sm text-red-700/90">{booking.reject_reason}</p>
               </CardContent>
             </Card>
@@ -388,43 +388,43 @@ export default function BookingDetailPage() {
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Clock className="h-5 w-5 text-primary" /> Riwayat Aktivitas
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Clock className="h-5 w-5 text-primary shrink-0" /> Riwayat Aktivitas
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <ActivityTimeline items={timelineItems} />
             </CardContent>
           </Card>
         </div>
 
         {/* Sidebar: ringkasan + aksi — sticky supaya tetap kelihatan saat kolom utama di-scroll */}
-        <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+        <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-6 lg:self-start">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-base">Ringkasan</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
+            <CardContent className="space-y-2.5 sm:space-y-3 text-sm p-4 pt-0 sm:p-6 sm:pt-0">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">Status</span>
                 <Badge className={getStatusColor(booking.status)}>{getStatusLabel(booking.status)}</Badge>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">Diajukan</span>
-                <span className="font-medium">{formatDate(booking.created_at, 'long')}</span>
+                <span className="font-medium text-right">{formatDate(booking.created_at, 'long')}</span>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">Pemohon</span>
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />{booking.user?.name ?? '-'}
+                <span className="inline-flex items-center gap-1.5 font-medium truncate">
+                  <UserIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" /><span className="truncate">{booking.user?.name ?? '-'}</span>
                 </span>
               </div>
               {booking.expected_attendees != null && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground">Peserta</span>
                   <span className="inline-flex items-center gap-1.5 font-medium">
-                    <Users className="h-3.5 w-3.5 text-muted-foreground" />{booking.expected_attendees} orang
+                    <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />{booking.expected_attendees} orang
                   </span>
                 </div>
               )}
@@ -432,10 +432,10 @@ export default function BookingDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-base">Aksi</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 p-4 pt-0 sm:p-6 sm:pt-0">
               {canActOnApproval && (
                 <>
                   {canStartReview && (

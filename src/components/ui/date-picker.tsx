@@ -28,10 +28,6 @@ export function DatePicker({
   const now = new Date();
   const clampedToday = fromDate && now < fromDate ? fromDate : toDate && now > toDate ? toDate : now;
   const isTodayOutOfRange = !!fromDate && now < fromDate;
-  // Dropdown bulan/tahun (bukan cuma panah maju/mundur) — supaya pilih tahun lama
-  // (mis. tanggal lahir) atau jauh ke depan tidak perlu klik panah berkali-kali.
-  const fromYear = fromDate?.getFullYear() ?? now.getFullYear() - 100;
-  const toYear = toDate?.getFullYear() ?? now.getFullYear() + 10;
 
   return (
     <div>
@@ -90,25 +86,14 @@ export function DatePicker({
                   ? [...(fromDate ? [{ before: fromDate }] : []), ...(toDate ? [{ after: toDate }] : [])]
                   : undefined
               }
-              captionLayout="dropdown"
-              fromYear={fromYear}
-              toYear={toYear}
               classNames={{
                 month: 'space-y-2',
-                caption: 'flex justify-center items-center mb-2',
-                caption_dropdowns: 'flex items-center gap-1.5',
-                dropdown_month: 'relative w-[104px]',
-                dropdown_year: 'relative w-[76px]',
-                dropdown: cn(
-                  'w-full appearance-none rounded-md border border-input bg-background text-foreground text-sm font-medium',
-                  'pl-2 pr-6 py-1 cursor-pointer hover:bg-accent',
-                  'focus:outline-none focus:ring-1 focus:ring-ring',
-                  // Panah dropdown custom (bukan bawaan browser) via background-image, biar konsisten lintas browser.
-                  'bg-[length:14px] bg-[right_4px_center] bg-no-repeat',
-                  'bg-[url(\'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%2F%3E%3C%2Fsvg%3E\')]'
-                ),
-                caption_label: 'hidden',
-                vhidden: 'hidden',
+                caption: 'flex justify-center items-center mb-2 relative',
+                caption_label: 'text-sm font-medium text-foreground',
+                nav: 'flex items-center gap-1',
+                nav_button: 'h-7 w-7 inline-flex items-center justify-center rounded-md border border-input bg-background text-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed',
+                nav_button_previous: 'absolute left-0',
+                nav_button_next: 'absolute right-0',
                 table: 'w-full border-collapse',
                 head_row: 'flex w-full',
                 head_cell: 'w-9 text-xs text-muted-foreground text-center font-medium',

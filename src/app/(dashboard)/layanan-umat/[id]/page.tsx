@@ -130,7 +130,7 @@ export default function LayananUmatDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
         <Link
@@ -140,17 +140,17 @@ export default function LayananUmatDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           Kembali ke Pelayanan Umat
         </Link>
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground break-words">
               {typeConfig?.label ?? service.service_type}
             </h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5" />{service.applicant_name}</span>
-              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{formatDate(service.created_at, 'long')}</span>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5 shrink-0" />{service.applicant_name}</span>
+              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0" />{formatDate(service.created_at, 'long')}</span>
             </div>
           </div>
-          <Badge className={`${getStatusColor(service.status)} shrink-0 px-3 py-1 text-sm`}>
+          <Badge className={`${getStatusColor(service.status)} shrink-0 px-2.5 py-1 text-xs sm:px-3 sm:text-sm`}>
             {getStatusLabel(service.status)}
           </Badge>
         </div>
@@ -158,31 +158,31 @@ export default function LayananUmatDetailPage() {
 
       {/* Status stepper */}
       <Card>
-        <CardContent className="py-5">
+        <CardContent className="p-4 sm:py-5 sm:px-6">
           <StatusStepper steps={serviceSteps(service.status)} />
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Kolom utama: versi web */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5 text-primary" /> Detail Permohonan
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <FileText className="h-5 w-5 text-primary shrink-0" /> Detail Permohonan
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <DetailFields groups={detailGroups} />
             </CardContent>
           </Card>
 
           {service.status === 'rejected' && service.notes && (
             <Card className="border-red-200 bg-red-50/50">
-              <CardHeader className="pb-2">
+              <CardHeader className="p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm text-red-700">Alasan Penolakan</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <p className="text-sm text-red-700/90">{service.notes}</p>
               </CardContent>
             </Card>
@@ -190,41 +190,41 @@ export default function LayananUmatDetailPage() {
 
           {service.status !== 'rejected' && service.notes && (
             <Card>
-              <CardHeader className="pb-2">
+              <CardHeader className="p-4 pb-2 sm:p-6 sm:pb-2">
                 <CardTitle className="text-sm">Catatan Sekretariat</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <p className="text-sm text-muted-foreground">{service.notes}</p>
               </CardContent>
             </Card>
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Clock className="h-5 w-5 text-primary" /> Riwayat
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Clock className="h-5 w-5 text-primary shrink-0" /> Riwayat
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <ActivityTimeline items={timelineItems} />
             </CardContent>
           </Card>
         </div>
 
         {/* Sidebar: ringkasan + aksi */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-base">Ringkasan</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
+            <CardContent className="space-y-2.5 sm:space-y-3 text-sm p-4 pt-0 sm:p-6 sm:pt-0">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">Status</span>
                 <Badge className={getStatusColor(service.status)}>{getStatusLabel(service.status)}</Badge>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">Diajukan</span>
-                <span className="font-medium">{formatDate(service.created_at, 'long')}</span>
+                <span className="font-medium text-right">{formatDate(service.created_at, 'long')}</span>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground">Pemohon</span>
@@ -240,10 +240,10 @@ export default function LayananUmatDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-base">Aksi</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 p-4 pt-0 sm:p-6 sm:pt-0">
               {hasActions && (
                 <>
                   <Button
