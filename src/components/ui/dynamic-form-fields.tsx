@@ -96,6 +96,7 @@ export function DynamicFormFields({
                   value={value ? new Date(value + 'T00:00:00') : undefined}
                   onChange={(date) => onDateChange(fieldKey, date)}
                   error={error}
+                  fromDate={field.name === 'birth_date' ? undefined : new Date()}
                 />
               </div>
             );
@@ -118,11 +119,14 @@ export function DynamicFormFields({
                 <Input
                   id={fieldKey}
                   type={field.type}
+                  inputMode={field.type === 'number' ? 'numeric' : undefined}
                   label={`${field.label}${field.required ? ' *' : ''}`}
                   placeholder={field.placeholder}
                   value={value}
                   onChange={(e) => onChange(fieldKey, e.target.value)}
                   error={error}
+                  readOnly={field.readOnly}
+                  disabled={field.readOnly}
                 />
               </div>
             );

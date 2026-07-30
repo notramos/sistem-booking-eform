@@ -279,6 +279,7 @@ export interface ServiceFieldConfig {
   options?: { value: string; label: string }[];
   colSpan?: 1 | 2 | 3;
   dynamicField?: boolean;
+  readOnly?: boolean;
 }
 
 export interface ServiceSectionConfig {

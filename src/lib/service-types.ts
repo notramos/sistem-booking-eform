@@ -686,6 +686,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
             id: 'jadwal_misa',
             title: 'Jadwal Pengumuman',
             fields: [
+              { name: 'dynamic_fields.tanggal_misa', label: 'Tanggal Misa', type: 'date', required: true, dynamicField: true },
               {
                 name: 'dynamic_fields.jadwal_misa',
                 label: 'Jadwal Misa',
@@ -693,13 +694,10 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
                 required: true,
                 dynamicField: true,
                 options: [
-                  { value: 'sabtu_1730', label: 'Sabtu, 17.30' },
-                  { value: 'minggu_0600', label: 'Minggu, 06.00' },
-                  { value: 'minggu_0830', label: 'Minggu, 08.30' },
-                  { value: 'minggu_1730', label: 'Minggu, 17.30' },
+                  { value: '07:00', label: '07.00' },
+                  { value: '18:00', label: '18.00' },
                 ],
               },
-              { name: 'dynamic_fields.tanggal_misa', label: 'Tanggal Misa', type: 'date', required: true, dynamicField: true },
             ],
           },
         ],
@@ -726,8 +724,8 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
             id: 'stipendium',
             title: 'Stipendium',
             fields: [
-              { name: 'dynamic_fields.stipendium_amount', label: 'Jumlah Stipendium (Rp)', type: 'text', required: true, placeholder: 'Contoh: 50000', dynamicField: true },
-              { name: 'dynamic_fields.stipendium_terbilang', label: 'Terbilang', type: 'text', required: false, colSpan: 2, placeholder: 'Contoh: lima puluh ribu rupiah', dynamicField: true },
+              { name: 'dynamic_fields.stipendium_amount', label: 'Jumlah Stipendium (Rp)', type: 'number', required: true, placeholder: 'Contoh: 50000', dynamicField: true },
+              { name: 'dynamic_fields.stipendium_terbilang', label: 'Terbilang', type: 'text', required: false, colSpan: 2, readOnly: true, placeholder: 'Terisi otomatis dari jumlah stipendium', dynamicField: true },
             ],
           },
         ],
@@ -739,3 +737,27 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
 export const SERVICE_TYPE_MAP = Object.fromEntries(
   SERVICE_TYPES.map((t) => [t.value, t])
 );
+
+/**
+ * Opsi jam jadwal misa tergantung hari dari `tanggal_misa` yang dipilih:
+ * Jumat pertama di bulan itu > Minggu > Sabtu > hari lain (Senin-Kamis).
+ */
+export function computeMisaScheduleOptions(dateStr: string): { value: string; label: string }[] {
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay(); // 0=Minggu ... 5=Jumat, 6=Sabtu
+  const isFirstFriday = day === 5 && d.getDate() <= 7;
+
+  if (isFirstFriday) return [{ value: '19:30', label: '19.30 (Jumat Pertama)' }];
+  if (day === 6) return [{ value: '17:30', label: '17.30' }];
+  if (day === 0) {
+    return [
+      { value: '06:00', label: '06.00' },
+      { value: '09:30', label: '09.30' },
+      { value: '17:30', label: '17.30' },
+    ];
+  }
+  return [
+    { value: '07:00', label: '07.00' },
+    { value: '18:00', label: '18.00' },
+  ];
+}

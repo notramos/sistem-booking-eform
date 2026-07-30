@@ -14,7 +14,8 @@ import { WizardFooter } from '@/components/ui/wizard-footer';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen } from 'lucide-react';
 import Link from 'next/link';
-import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
+import { SERVICE_TYPES, SERVICE_TYPE_MAP, computeMisaScheduleOptions } from '@/lib/service-types';
+import { angkaKeTerbilang } from '@/lib/terbilang';
 import type { ServiceTypeConfig, ServiceFieldConfig } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -96,18 +97,25 @@ export default function NewCongregationServicePage() {
     return { wilayahOptions, lingkunganOptions };
   }, [wilayahList]);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [formData, setFormData] = useState<FormData>({ service_type: '' });
+
   const injectAreaOptions = useCallback(
     (fields: ServiceFieldConfig[]): ServiceFieldConfig[] =>
       fields.map((f) => {
-        if (f.type !== 'select') return f;
-        if (f.name === 'neighborhood') return { ...f, options: areaOptions.lingkunganOptions };
-        if (f.name === 'region') return { ...f, options: areaOptions.wilayahOptions };
+        if (f.type === 'select') {
+          if (f.name === 'neighborhood') return { ...f, options: areaOptions.lingkunganOptions };
+          if (f.name === 'region') return { ...f, options: areaOptions.wilayahOptions };
+          return f;
+        }
+        if (f.name === 'dynamic_fields.jadwal_misa' && f.type === 'radio') {
+          const tanggalMisa = formData['dynamic_fields.tanggal_misa'];
+          if (tanggalMisa) return { ...f, options: computeMisaScheduleOptions(tanggalMisa) };
+        }
         return f;
       }),
-    [areaOptions]
+    [areaOptions, formData]
   );
-  const [searchQuery, setSearchQuery] = useState('');
-  const [formData, setFormData] = useState<FormData>({ service_type: '' });
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [consentChecked, setConsentChecked] = useState(false);
 
@@ -124,7 +132,23 @@ export default function NewCongregationServicePage() {
   }, [config]);
 
   const updateField = useCallback((key: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [key]: value };
+
+      // Jadwal misa cuma punya 1 opsi (Sabtu/Jumat pertama) — auto-pilih tanpa perlu diklik user.
+      if (key === 'dynamic_fields.tanggal_misa' && value) {
+        const options = computeMisaScheduleOptions(value);
+        if (options.length === 1) next['dynamic_fields.jadwal_misa'] = options[0].value;
+      }
+
+      // Hitung terbilang otomatis dari jumlah stipendium.
+      if (key === 'dynamic_fields.stipendium_amount') {
+        const n = Number(value);
+        next['dynamic_fields.stipendium_terbilang'] = value && n > 0 ? `${angkaKeTerbilang(n)} Rupiah` : '';
+      }
+
+      return next;
+    });
     setStepErrors((prev) => {
       const next = { ...prev };
       delete next[key];
