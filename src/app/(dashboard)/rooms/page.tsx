@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRooms, useRoomCategories } from '@/hooks/useRooms';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -91,19 +90,12 @@ export default function RoomsPage() {
             <Link key={room.id} href={`/rooms/${room.id}`}>
               <Card className="hover:shadow-md transition-all cursor-pointer h-full hover:border-primary/50">
                 <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-foreground">
-                        {room.name}
-                        {room.patron_name && <span className="text-muted-foreground font-normal"> · {room.patron_name}</span>}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">{room.category?.name}</p>
-                    </div>
-                    <Badge
-                      variant={room.status === 'available' ? 'success' : room.status === 'maintenance' ? 'warning' : 'secondary'}
-                    >
-                      {room.status === 'available' ? 'Tersedia' : room.status === 'maintenance' ? 'Perbaikan' : 'Tidak Tersedia'}
-                    </Badge>
+                  <div className="mb-3">
+                    <h3 className="font-semibold text-foreground">
+                      {room.name}
+                      {room.patron_name && <span className="text-muted-foreground font-normal"> · {room.patron_name}</span>}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">{room.category?.name}</p>
                   </div>
 
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-3">

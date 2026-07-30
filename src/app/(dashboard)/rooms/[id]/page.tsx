@@ -89,29 +89,12 @@ export default function RoomDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-2xl">
-                    {room.name}
-                    {room.patron_name && <span className="text-muted-foreground font-normal"> · {room.patron_name}</span>}
-                  </CardTitle>
-                  <CardDescription>{room.category?.name}</CardDescription>
-                </div>
-                <Badge
-                  variant={
-                    room.status === "available"
-                      ? "success"
-                      : room.status === "maintenance"
-                        ? "warning"
-                        : "secondary"
-                  }
-                >
-                  {room.status === "available"
-                    ? "Tersedia"
-                    : room.status === "maintenance"
-                      ? "Perbaikan"
-                      : "Tidak Tersedia"}
-                </Badge>
+              <div>
+                <CardTitle className="text-2xl">
+                  {room.name}
+                  {room.patron_name && <span className="text-muted-foreground font-normal"> · {room.patron_name}</span>}
+                </CardTitle>
+                <CardDescription>{room.category?.name}</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -254,19 +237,11 @@ export default function RoomDetailPage() {
                 </h3>
               </div>
               <Link href="/booking/calendar">
-                <Button
-                  className="w-full"
-                  disabled={room.status !== "available"}
-                >
+                <Button className="w-full">
                   <Calendar className="w-4 h-4 mr-2" />
                   Booking Lewat Kalender
                 </Button>
               </Link>
-              {room.status !== "available" && (
-                <p className="text-xs text-destructive mt-2 text-center">
-                  Ruangan tidak tersedia untuk dipesan
-                </p>
-              )}
             </CardContent>
           </Card>
 
