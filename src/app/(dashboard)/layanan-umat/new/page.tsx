@@ -32,6 +32,11 @@ function getServiceTypeIcon(icon: string) {
 
 const WIZARD_STEPS_BASE = [{ title: 'Pilih Pelayanan' }];
 
+/** Samakan dengan logika kunci di DynamicFormFields — field.name bisa sudah mengandung prefix `dynamic_fields.` sendiri. */
+function fieldKeyOf(field: ServiceFieldConfig): string {
+  return field.dynamicField && !field.name.startsWith('dynamic_fields.') ? `dynamic_fields.${field.name}` : field.name;
+}
+
 function buildStepSchema(stepIndex: number, config: ServiceTypeConfig) {
   const stepConfig = config.steps[stepIndex];
   if (!stepConfig) return null;
@@ -40,8 +45,7 @@ function buildStepSchema(stepIndex: number, config: ServiceTypeConfig) {
   for (const section of stepConfig.sections) {
     for (const field of section.fields) {
       if (field.required) {
-        const key = field.dynamicField ? `dynamic_fields.${field.name}` : field.name;
-        requiredFields.push(key);
+        requiredFields.push(fieldKeyOf(field));
       }
     }
   }
@@ -70,10 +74,7 @@ function getReviewFields(config: ServiceTypeConfig, formData: FormData) {
   for (const step of config.steps) {
     for (const section of step.sections) {
       const fields = section.fields
-        .map((f) => {
-          const key = f.dynamicField ? `dynamic_fields.${f.name}` : f.name;
-          return { label: f.label, value: formData[key] || null };
-        })
+        .map((f) => ({ label: f.label, value: formData[fieldKeyOf(f)] || null }))
         .filter((f) => f.value !== null);
       if (fields.length > 0) {
         sections.push({ title: section.title, fields });
