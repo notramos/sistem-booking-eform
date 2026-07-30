@@ -35,18 +35,23 @@ export function getNotificationDescription(notification: Notification): string |
   const { data } = notification;
   switch (data?.type) {
     case 'booking_rejected':
-    case 'booking_revision_requested':
-      return data.reason ? `${data.room_name ?? ''}${data.room_name ? ' · ' : ''}"${data.reason}"` : data.room_name ?? null;
+    case 'booking_revision_requested': {
+      const parts = [data.room_name, data.booking_date ? formatDate(data.booking_date) : null];
+      if (data.start_time && data.end_time) parts.push(`${data.start_time}-${data.end_time}`);
+      const info = parts.filter(Boolean).join(' · ');
+      return data.reason ? `${info}${info ? ' · ' : ''}"${data.reason}"` : info || null;
+    }
     case 'congregation_service_created':
       return data.applicant_name ? `${data.service_type_label ?? ''}${data.service_type_label ? ' · ' : ''}${data.applicant_name}` : null;
     case 'recurring_booking_created':
       return data.room_name && data.occurrence_count
         ? `${data.room_name} · ${data.occurrence_count} tanggal`
         : data.room_name ?? null;
-    default:
-      return data.room_name && data.booking_date
-        ? `${data.room_name} · ${formatDate(data.booking_date)}`
-        : data.room_name ?? null;
+    default: {
+      const parts = [data.room_name, data.booking_date ? formatDate(data.booking_date) : null];
+      if (data.start_time && data.end_time) parts.push(`${data.start_time}-${data.end_time}`);
+      return parts.filter(Boolean).join(' · ') || null;
+    }
   }
 }
 
