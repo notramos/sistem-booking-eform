@@ -27,6 +27,11 @@ function staticFallback(year: number): Holiday[] {
 /**
  * Mengembalikan Map<'yyyy-MM-dd', HolidayInfo> untuk lookup O(1) per sel
  * kalender. Bila API gagal, otomatis memakai daftar libur statis.
+ *
+ * Catatan: api-harilibur.vercel.app sudah tidak gratis lagi (balas 402 Payment
+ * Required) — query di-nonaktifkan (`enabled: false`) supaya tidak terus
+ * memanggil endpoint yang pasti gagal tiap buka kalender, cukup pakai
+ * `staticFallback` saja sampai ada sumber data libur nasional pengganti.
  */
 export function useHolidays(year: number): Map<string, HolidayInfo> {
   const { data } = useQuery({
@@ -35,6 +40,7 @@ export function useHolidays(year: number): Map<string, HolidayInfo> {
     staleTime: 24 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
     retry: 1,
+    enabled: false,
     placeholderData: () => staticFallback(year),
   });
 
