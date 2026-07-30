@@ -14,6 +14,7 @@ import type { User } from "@/types";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isLoggingOut: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Sesi disimpan di cookie session HttpOnly (tak bisa dibaca/di-cek dari JS),
   // jadi satu-satunya cara tahu status login adalah benar-benar bertanya ke backend.
@@ -57,9 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    setIsLoggingOut(true);
     try {
       await authApi.logout();
     } finally {
+      // User tetap dianggap keluar walau request logout ke server gagal (mis.
+      // network error) — sesi lokal tetap dibersihkan. isLoggingOut sengaja TIDAK
+      // direset di sini — overlay tetap tampil sampai router.push('/login') di
+      // pemanggil selesai pindah halaman, supaya tidak "kedip" duluan sebelum redirect.
       setUser(null);
     }
   }, []);
@@ -77,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     loading,
+    isLoggingOut,
     login,
     logout,
     refreshUser: fetchUser,

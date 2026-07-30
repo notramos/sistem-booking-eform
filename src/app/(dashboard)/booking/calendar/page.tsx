@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -67,6 +68,8 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   // Kalender hanya menampilkan booking yang sudah disetujui — tidak ada UI filter status/ruangan.
   const statusFilter = 'approved';
 
@@ -133,66 +136,25 @@ export default function CalendarPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Kalender Booking</h1>
           <p className="text-muted-foreground mt-1">Lihat jadwal peminjaman ruangan</p>
         </div>
-        <Link href={`/booking/new?date=${minDateStr}`}>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" /> Booking Baru
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowGuide(true)}>
+            <ListChecks className="w-4 h-4 mr-1.5" /> Cara Memesan
           </Button>
-        </Link>
+          <Button variant="outline" size="sm" onClick={() => setShowRules(true)}>
+            <ScrollText className="w-4 h-4 mr-1.5" /> Tata Tertib
+          </Button>
+          <Link href={`/booking/new?date=${minDateStr}`}>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" /> Booking Baru
+            </Button>
+          </Link>
+        </div>
       </div>
-
-      {/* Panduan cara memesan ruangan */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <ListChecks className="w-4 h-4 text-primary" /> Cara Memesan Ruangan
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <DoorOpen className="w-4 h-4" />
-              </div>
-              <div className="text-sm">
-                <p className="font-medium text-foreground">1. Cek Ketersediaan</p>
-                <p className="text-muted-foreground mt-0.5">Lihat kalender atau cari ruangan di menu Ruangan sesuai kapasitas & fasilitas yang dibutuhkan.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <CalendarPlus className="w-4 h-4" />
-              </div>
-              <div className="text-sm">
-                <p className="font-medium text-foreground">2. Isi Form Booking</p>
-                <p className="text-muted-foreground mt-0.5">Klik tanggal di kalender atau tombol Booking Baru, lalu isi judul kegiatan, tanggal, jam, dan jumlah peserta.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <FileCheck2 className="w-4 h-4" />
-              </div>
-              <div className="text-sm">
-                <p className="font-medium text-foreground">3. Ajukan & Tunggu Review</p>
-                <p className="text-muted-foreground mt-0.5">Booking diajukan minimal H+{BOOKING_MIN_ADVANCE_DAYS}, lalu ditinjau bertahap oleh Sekretariat dan Admin.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <BellRing className="w-4 h-4" />
-              </div>
-              <div className="text-sm">
-                <p className="font-medium text-foreground">4. Dapat Notifikasi</p>
-                <p className="text-muted-foreground mt-0.5">Setelah disetujui/ditolak, cek Notifikasi. Booking disetujui langsung muncul di kalender ini.</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Calendar */}
       <Card>
@@ -350,26 +312,77 @@ export default function CalendarPage() {
         </CardContent>
       </Card>
 
+      {/* Panduan cara memesan ruangan */}
+      <Dialog open={showGuide} onOpenChange={setShowGuide}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-primary" /> Cara Memesan Ruangan
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <DoorOpen className="w-4 h-4" />
+              </div>
+              <div className="text-sm">
+                <p className="font-medium text-foreground">1. Cek Ketersediaan</p>
+                <p className="text-muted-foreground mt-0.5">Lihat kalender atau cari ruangan di menu Ruangan sesuai kapasitas & fasilitas yang dibutuhkan.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <CalendarPlus className="w-4 h-4" />
+              </div>
+              <div className="text-sm">
+                <p className="font-medium text-foreground">2. Isi Form Booking</p>
+                <p className="text-muted-foreground mt-0.5">Klik tanggal di kalender atau tombol Booking Baru, lalu isi judul kegiatan, tanggal, jam, dan jumlah peserta.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <FileCheck2 className="w-4 h-4" />
+              </div>
+              <div className="text-sm">
+                <p className="font-medium text-foreground">3. Ajukan & Tunggu Review</p>
+                <p className="text-muted-foreground mt-0.5">Booking diajukan minimal H+{BOOKING_MIN_ADVANCE_DAYS}, lalu ditinjau bertahap oleh Sekretariat dan Admin.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <BellRing className="w-4 h-4" />
+              </div>
+              <div className="text-sm">
+                <p className="font-medium text-foreground">4. Dapat Notifikasi</p>
+                <p className="text-muted-foreground mt-0.5">Setelah disetujui/ditolak, cek Notifikasi. Booking disetujui langsung muncul di kalender ini.</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Tata tertib & ketentuan booking */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <ScrollText className="w-4 h-4 text-primary" /> Tata Tertib & Ketentuan Booking Ruangan
+      <Dialog open={showRules} onOpenChange={setShowRules}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ScrollText className="w-4 h-4 text-primary" /> Tata Tertib & Ketentuan Booking Ruangan
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Booking harus diajukan minimal <strong className="text-foreground">H+{BOOKING_MIN_ADVANCE_DAYS}</strong>, maksimal sampai <strong className="text-foreground">31 Desember {maxDate.getFullYear()}</strong>.</li>
+              <li>Jam operasional ruangan: <strong className="text-foreground">{OPERATING_HOURS.open} – {OPERATING_HOURS.close}</strong>.</li>
+              <li>Booking baru berlaku setelah disetujui oleh Sekretariat dan/atau Admin — status &quot;Menunggu Review&quot; belum berarti ruangan terkonfirmasi.</li>
+            </ul>
+            <div className="border-t pt-3 space-y-1">
+              {TATA_TERTIB_TEXT.split('\n').map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-3 text-sm text-muted-foreground">
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Booking harus diajukan minimal <strong className="text-foreground">H+{BOOKING_MIN_ADVANCE_DAYS}</strong>, maksimal sampai <strong className="text-foreground">31 Desember {maxDate.getFullYear()}</strong>.</li>
-            <li>Jam operasional ruangan: <strong className="text-foreground">{OPERATING_HOURS.open} – {OPERATING_HOURS.close}</strong>.</li>
-            <li>Booking baru berlaku setelah disetujui oleh Sekretariat dan/atau Admin — status &quot;Menunggu Review&quot; belum berarti ruangan terkonfirmasi.</li>
-          </ul>
-          <div className="border-t pt-3 space-y-1">
-            {TATA_TERTIB_TEXT.split('\n').map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
       {/* Agenda — panel geser dari kanan, muncul saat tanggal diklik */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

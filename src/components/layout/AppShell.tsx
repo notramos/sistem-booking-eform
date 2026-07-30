@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { ApkDownloadBanner } from '@/components/layout/ApkDownloadBanner';
+import { LogoutOverlay } from '@/components/layout/LogoutOverlay';
 import { Spinner } from '@/components/ui/spinner';
 import { TataTertibDialog } from '@/components/ui/tata-tertib-dialog';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +13,7 @@ import { useEffect } from 'react';
 import { TATA_TERTIB_STORAGE_KEY } from '@/lib/constants';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isLoggingOut } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showTataTertib, setShowTataTertib] = useState(false);
@@ -38,6 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
+      {isLoggingOut && <LogoutOverlay />}
       <TataTertibDialog open={showTataTertib} onAccepted={() => setShowTataTertib(false)} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="md:pl-64">
