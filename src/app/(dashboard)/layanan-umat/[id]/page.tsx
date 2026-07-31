@@ -21,10 +21,19 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { cn, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
-import { SERVICE_TYPE_MAP } from '@/lib/service-types';
+import { SERVICE_TYPE_MAP, getServiceFieldLabel } from '@/lib/service-types';
 import {
   ArrowLeft, FileText, CheckCircle2, XCircle, Clock, User as UserIcon,
 } from 'lucide-react';
+
+/** Tanggal ditampilkan panjang ("5 April 2026"), sisanya apa adanya. Nilai yang
+ *  ternyata bukan tanggal valid tetap ditampilkan mentah, bukan "Invalid Date". */
+function formatValue(raw: unknown, type?: string): string | null {
+  if (raw == null || raw === '') return null;
+  const text = String(raw);
+  if (type === 'date' && !Number.isNaN(new Date(text).getTime())) return formatDate(text, 'long');
+  return text;
+}
 
 function serviceSteps(status: string): StepperStep[] {
   if (status === 'rejected') {
@@ -97,19 +106,44 @@ export default function LayananUmatDetailPage() {
     </>
   );
 
-  const detailGroups: DetailGroup[] = typeConfig
+  // Nama field di config sebagian sudah mengandung prefix `dynamic_fields.`,
+  // sedangkan yang tersimpan di `service.dynamic_fields` selalu key polos
+  // (form melepas prefix-nya saat submit) — samakan dulu sebelum dicocokkan,
+  // kalau tidak sebagian besar detail permohonan tidak akan pernah tampil.
+  const record = service as unknown as Record<string, unknown>;
+  const shownKeys = new Set<string>();
+
+  const configGroups: DetailGroup[] = typeConfig
     ? typeConfig.steps.flatMap((step) =>
         step.sections.map((section) => ({
           title: section.title,
           fields: section.fields.map((f) => {
-            const value = f.dynamicField
-              ? service.dynamic_fields?.[f.name]
-              : (service as unknown as Record<string, unknown>)[f.name];
-            return { label: f.label, value: value != null && value !== '' ? String(value) : null };
+            const key = f.name.replace(/^dynamic_fields\./, '');
+            shownKeys.add(key);
+            const raw = f.dynamicField ? service.dynamic_fields?.[key] : record[key];
+            return { label: f.label, value: formatValue(raw, f.type) };
           }),
         }))
       )
     : [];
+
+  // Jaring pengaman supaya benar-benar tidak ada yang tersembunyi: data terisi
+  // yang tidak tercakup config (mis. permohonan lama atau config yang berubah).
+  const INTERNAL_KEYS = new Set([
+    'id', 'user_id', 'service_type', 'status', 'notes', 'dynamic_fields', 'user', 'created_at', 'updated_at',
+  ]);
+  const leftovers = [
+    ...Object.entries(record).filter(
+      ([k, v]) => !INTERNAL_KEYS.has(k) && !shownKeys.has(k) && v != null && v !== '' && typeof v !== 'object'
+    ),
+    ...Object.entries(service.dynamic_fields ?? {}).filter(
+      ([k, v]) => !shownKeys.has(k) && v != null && v !== ''
+    ),
+  ].map(([k, v]) => ({ label: getServiceFieldLabel(service.service_type, k), value: formatValue(v) }));
+
+  const detailGroups: DetailGroup[] = leftovers.length > 0
+    ? [...configGroups, { title: 'Informasi Lain', fields: leftovers }]
+    : configGroups;
 
   const timelineItems: TimelineItem[] = [
     {
