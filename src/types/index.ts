@@ -139,9 +139,12 @@ export interface Notification {
     occurrence_count?: number;
     skipped_count?: number;
     congregation_service_id?: string;
+    service_type?: string;
     service_type_label?: string;
     applicant_name?: string;
     contact?: string;
+    service_date?: string;
+    notes?: string;
     type: string;
   };
   read_at: string | null;

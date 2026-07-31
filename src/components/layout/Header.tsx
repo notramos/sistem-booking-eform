@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import {
   useNotifications, useUnreadNotificationCount, useMarkNotificationRead, useMarkAllNotificationsRead,
 } from '@/hooks/useNotifications';
-import { getNotificationMeta, getNotificationTitle, getNotificationHref } from '@/lib/notifications';
+import { getNotificationMeta, getNotificationTitle, getNotificationDescription, getNotificationHref } from '@/lib/notifications';
 import { getInitials, getRoleLabel, formatRelativeTime } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -99,18 +99,18 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         onClick={() => !n.read_at && markRead.mutate(n.id)}
                         className={`block px-3 py-2.5 border-b last:border-b-0 hover:bg-accent transition-colors ${!n.read_at ? 'bg-accent/40' : ''}`}
                       >
-                        <div className="flex items-start gap-2">
-                          <Icon className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${meta.tone}`} />
+                        <div className="flex items-start gap-2.5">
+                          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${meta.bg}`}>
+                            <Icon className={`w-3.5 h-3.5 ${meta.tone}`} />
+                          </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">
-                              {getNotificationTitle(n)}
-                            </p>
-                            {n.data?.room_name && (
-                              <p className="text-xs text-muted-foreground truncate">{n.data.room_name}</p>
+                            <p className="text-sm font-medium">{getNotificationTitle(n)}</p>
+                            {getNotificationDescription(n) && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">{getNotificationDescription(n)}</p>
                             )}
                             <p className="text-xs text-muted-foreground/60 mt-0.5">{formatRelativeTime(n.created_at)}</p>
                           </div>
-                          {!n.read_at && <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />}
+                          {!n.read_at && <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2.5 shrink-0" />}
                         </div>
                       </Link>
                     );
