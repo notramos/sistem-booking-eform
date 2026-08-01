@@ -14,7 +14,6 @@ interface DynamicFormFieldsProps {
   errors: Record<string, string | undefined>;
   onChange: (name: string, value: string) => void;
   onDateChange: (name: string, date: Date | undefined) => void;
-  isDynamic?: boolean;
 }
 
 export function DynamicFormFields({
@@ -23,14 +22,20 @@ export function DynamicFormFields({
   errors,
   onChange,
   onDateChange,
-  isDynamic = false,
 }: DynamicFormFieldsProps) {
   if (fields.length === 0) return null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {fields.map((field) => {
-        const fieldKey = isDynamic && !field.name.startsWith('dynamic_fields.') ? `dynamic_fields.${field.name}` : field.name;
+        // Kunci ditentukan per-field (bukan per-section) supaya cocok dengan
+        // validasi langkah, halaman review, dan halaman detail yang semuanya
+        // memakai `field.dynamicField`. Kalau mengikuti section, field biasa
+        // yang sekelompok dengan field dinamis akan salah tersimpan sebagai
+        // `dynamic_fields.<nama>` dan tidak pernah lolos validasi.
+        const fieldKey = field.dynamicField && !field.name.startsWith('dynamic_fields.')
+          ? `dynamic_fields.${field.name}`
+          : field.name;
         const value = formData[fieldKey] ?? '';
         const error = errors[fieldKey];
 

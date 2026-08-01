@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { ErrorState } from '@/components/ui/error-state';
+import { Pagination } from '@/components/ui/pagination';
 import Link from 'next/link';
 import { Search, MapPin, Users, Building2, RotateCcw } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -16,20 +17,35 @@ export default function RoomsPage() {
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [capacity, setCapacity] = useState('');
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
   const { data: categories } = useRoomCategories();
+  // per_page 100 = batas maksimum backend; default backend cuma 12 sehingga
+  // sebagian ruangan sebelumnya tidak pernah muncul di halaman ini.
   const { data: roomsData, isLoading, isError, refetch } = useRooms({
     search: debouncedSearch || undefined,
     category_id: categoryId || undefined,
     capacity: capacity || undefined,
+    per_page: 100,
+    page,
   });
+
+  const totalRooms = roomsData?.meta?.total;
+
+  // Filter berubah → kembali ke halaman pertama, supaya hasil filter tidak
+  // "kosong" hanya karena masih menyisa di halaman lanjutan hasil sebelumnya.
+  const resetToFirstPage = () => setPage(1);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Ruangan</h1>
-        <p className="text-muted-foreground mt-1">Cari dan lihat ketersediaan ruangan gereja</p>
+        <p className="text-muted-foreground mt-1">
+          {totalRooms != null
+            ? `${totalRooms} ruangan gereja — cari berdasarkan nama, kategori, atau kapasitas`
+            : 'Cari dan lihat ketersediaan ruangan gereja'}
+        </p>
       </div>
 
       <Card>
@@ -40,17 +56,17 @@ export default function RoomsPage() {
               <Input
                 placeholder="Cari ruangan..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); resetToFirstPage(); }}
                 className="pl-10"
               />
             </div>
-            <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <Select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); resetToFirstPage(); }}>
               <option value="">Semua Kategori</option>
               {categories?.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </Select>
-            <Select value={capacity} onChange={(e) => setCapacity(e.target.value)}>
+            <Select value={capacity} onChange={(e) => { setCapacity(e.target.value); resetToFirstPage(); }}>
               <option value="">Semua Kapasitas</option>
               <option value="10">10+ orang</option>
               <option value="20">20+ orang</option>
@@ -78,7 +94,7 @@ export default function RoomsPage() {
                 <p className="text-lg font-medium text-foreground">Tidak ada ruangan ditemukan</p>
                 <p className="text-sm text-muted-foreground mt-1">Coba ubah filter pencarian atau kategori</p>
               </div>
-              <Button variant="outline" onClick={() => { setSearch(''); setCategoryId(''); setCapacity(''); }}>
+              <Button variant="outline" onClick={() => { setSearch(''); setCategoryId(''); setCapacity(''); resetToFirstPage(); }}>
                 <RotateCcw className="w-4 h-4 mr-1" /> Reset Filter
               </Button>
             </div>
@@ -134,6 +150,10 @@ export default function RoomsPage() {
           ))}
         </div>
       )}
+
+      {/* Pengaman bila ruangan suatu saat melebihi 100 (batas maksimum per_page
+          backend) — otomatis tersembunyi selama masih muat dalam satu halaman. */}
+      <Pagination meta={roomsData?.meta} onPageChange={setPage} itemLabel="ruangan" />
     </div>
   );
 }

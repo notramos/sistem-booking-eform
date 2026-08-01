@@ -13,7 +13,7 @@ import { DetailFields } from '@/components/detail/DetailFields';
 import { WizardProgress } from '@/components/ui/wizard-progress';
 import { WizardFooter } from '@/components/ui/wizard-footer';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen } from 'lucide-react';
+import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen, CalendarPlus, MessagesSquare } from 'lucide-react';
 import Link from 'next/link';
 import { SERVICE_TYPES, SERVICE_TYPE_MAP, computeMisaScheduleOptions } from '@/lib/service-types';
 import { angkaKeTerbilang } from '@/lib/terbilang';
@@ -24,6 +24,7 @@ type FormData = Record<string, string>;
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
   Droplets, Bird, Flame, Church, Heart, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, BookOpen,
+  CalendarPlus, MessagesSquare,
 };
 
 function getServiceTypeIcon(icon: string) {
@@ -347,7 +348,6 @@ export default function NewCongregationServicePage() {
                     errors={stepErrors}
                     onChange={updateField}
                     onDateChange={updateDateField}
-                    isDynamic={section.fields.some((f) => f.dynamicField)}
                   />
                 </FormSection>
               ))}

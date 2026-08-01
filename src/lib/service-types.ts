@@ -732,6 +732,167 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
       },
     ],
   },
+  {
+    value: 'permohonan_misa',
+    label: 'Permohonan Misa',
+    description: 'Permohonan agar misa diadakan di luar jadwal tetap — misa lingkungan, rumah, arwah, atau syukur',
+    icon: 'CalendarPlus',
+    theme: 'text-amber-600',
+    steps: [
+      {
+        title: 'Data Pemohon',
+        sections: [
+          {
+            id: 'data_pemohon',
+            title: 'Data Pemohon',
+            fields: [
+              { name: 'applicant_name', label: 'Nama Pemohon', type: 'text', required: true, colSpan: 2 },
+              ...kontakFields.filter((f) => ['contact', 'neighborhood', 'address'].includes(f.name)),
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Detail Misa',
+        description: 'Jadwal yang Anda ajukan akan dikonfirmasi ulang oleh sekretariat sesuai ketersediaan romo',
+        sections: [
+          {
+            id: 'jenis_misa',
+            title: 'Jenis & Keperluan',
+            fields: [
+              {
+                name: 'dynamic_fields.jenis_misa',
+                label: 'Jenis Misa',
+                type: 'radio',
+                required: true,
+                colSpan: 2,
+                dynamicField: true,
+                options: [
+                  { value: 'lingkungan', label: 'Misa Lingkungan' },
+                  { value: 'arwah', label: 'Misa Arwah (Requiem)' },
+                  { value: 'syukur', label: 'Misa Syukur' },
+                  { value: 'rumah', label: 'Misa di Rumah / Keluarga' },
+                  { value: 'lainnya', label: 'Lainnya' },
+                ],
+              },
+              {
+                name: 'description',
+                label: 'Keterangan / Intensi Misa',
+                type: 'textarea',
+                required: true,
+                colSpan: 2,
+                placeholder: 'Contoh: Misa arwah 40 hari Bapak Antonius Budi',
+              },
+            ],
+          },
+          {
+            id: 'waktu_tempat',
+            title: 'Waktu & Tempat',
+            fields: [
+              // Nama field SENGAJA bukan `tanggal_misa`/`jadwal_misa` — kedua nama itu
+              // dibajak layanan Intensi Misa untuk mengunci pilihan ke jadwal misa
+              // tetap paroki, padahal permohonan ini justru di luar jadwal tersebut.
+              { name: 'dynamic_fields.tanggal_misa_diminta', label: 'Tanggal Diminta', type: 'date', required: true, dynamicField: true },
+              { name: 'dynamic_fields.jam_misa_diminta', label: 'Jam Diminta', type: 'time', required: true, dynamicField: true },
+              { name: 'dynamic_fields.tempat_misa', label: 'Tempat Misa', type: 'text', required: true, placeholder: 'Gereja / rumah / balai lingkungan', dynamicField: true },
+              { name: 'dynamic_fields.perkiraan_umat', label: 'Perkiraan Jumlah Umat', type: 'number', required: false, placeholder: 'Contoh: 50', dynamicField: true },
+              { name: 'dynamic_fields.alamat_misa', label: 'Alamat Lengkap (bila di luar gereja)', type: 'textarea', required: false, colSpan: 2, placeholder: 'Alamat tempat misa diadakan', dynamicField: true },
+              { name: 'dynamic_fields.kebutuhan_petugas', label: 'Kebutuhan Petugas (opsional)', type: 'textarea', required: false, colSpan: 2, placeholder: 'Misdinar, lektor, organis, dll', dynamicField: true },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'konsultasi_romo',
+    label: 'Konsultasi Romo',
+    description: 'Permohonan jadwal konsultasi dengan romo — romo dan waktu pastinya diatur sekretariat',
+    icon: 'MessagesSquare',
+    theme: 'text-teal-600',
+    steps: [
+      {
+        title: 'Data Pemohon',
+        sections: [
+          {
+            id: 'data_pemohon',
+            title: 'Data Pemohon',
+            fields: [
+              { name: 'applicant_name', label: 'Nama Pemohon', type: 'text', required: true, colSpan: 2 },
+              ...kontakFields.filter((f) => ['contact', 'neighborhood'].includes(f.name)),
+            ],
+          },
+        ],
+      },
+      {
+        title: 'Detail Konsultasi',
+        description: 'Sekretariat akan menghubungi Anda untuk memastikan romo dan jadwal yang tersedia',
+        sections: [
+          {
+            id: 'detail_konsultasi',
+            title: 'Keperluan',
+            fields: [
+              {
+                name: 'dynamic_fields.topik_konsultasi',
+                label: 'Topik Konsultasi',
+                type: 'radio',
+                required: true,
+                colSpan: 2,
+                dynamicField: true,
+                options: [
+                  { value: 'perkawinan', label: 'Persiapan Perkawinan' },
+                  { value: 'keluarga', label: 'Keluarga' },
+                  { value: 'rohani', label: 'Rohani & Iman' },
+                  { value: 'pendampingan', label: 'Pendampingan Pribadi' },
+                  { value: 'lainnya', label: 'Lainnya' },
+                ],
+              },
+              {
+                name: 'description',
+                label: 'Uraian Singkat',
+                type: 'textarea',
+                required: true,
+                colSpan: 2,
+                placeholder: 'Ceritakan singkat hal yang ingin dikonsultasikan',
+              },
+            ],
+          },
+          {
+            id: 'waktu_konsultasi',
+            title: 'Waktu yang Diinginkan',
+            fields: [
+              { name: 'dynamic_fields.tanggal_diminta', label: 'Tanggal Diminta', type: 'date', required: true, dynamicField: true },
+              {
+                name: 'dynamic_fields.waktu_preferensi',
+                label: 'Waktu Preferensi',
+                type: 'select',
+                required: true,
+                dynamicField: true,
+                placeholder: 'Pilih rentang waktu',
+                options: [
+                  { value: 'pagi', label: 'Pagi (08.00–11.00)' },
+                  { value: 'siang', label: 'Siang (11.00–14.00)' },
+                  { value: 'sore', label: 'Sore (16.00–19.00)' },
+                ],
+              },
+              {
+                name: 'dynamic_fields.sifat',
+                label: 'Sifat Permohonan',
+                type: 'radio',
+                required: true,
+                colSpan: 2,
+                dynamicField: true,
+                options: [
+                  { value: 'biasa', label: 'Biasa' },
+                  { value: 'mendesak', label: 'Mendesak' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export const SERVICE_TYPE_MAP = Object.fromEntries(
