@@ -61,10 +61,16 @@ export default function RegisterPage() {
   const profileForm = useForm<ProfileForm>({ resolver: zodResolver(profileSchema) });
 
   const watchedWilayahId = profileForm.watch('wilayahId');
-  const lingkunganOptions = useMemo(
-    () => wilayahList?.find((w) => w.id === watchedWilayahId)?.lingkungan ?? [],
-    [wilayahList, watchedWilayahId]
-  );
+  const lingkunganOptions = useMemo(() => {
+    const wilayah = wilayahList?.find((w) => w.id === watchedWilayahId);
+    // Daftar ini sudah tersaring per wilayah, jadi area cuma ditampilkan bila
+    // memang menambah informasi (mis. "St. Alfonsus 2 — Alindra"), bukan saat
+    // area-nya sekadar mengulang nama wilayah yang barusan dipilih.
+    return (wilayah?.lingkungan ?? []).map((l) => ({
+      id: l.id,
+      label: l.area && l.area !== wilayah?.name ? `${l.name} — ${l.area}` : l.name,
+    }));
+  }, [wilayahList, watchedWilayahId]);
 
   const startCooldown = () => {
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
@@ -298,7 +304,7 @@ export default function RegisterPage() {
                 <Select label="Lingkungan" {...profileForm.register('lingkunganId')} disabled={!watchedWilayahId}>
                   <option value="">{watchedWilayahId ? 'Pilih lingkungan' : 'Pilih wilayah terlebih dahulu'}</option>
                   {lingkunganOptions.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
+                    <option key={l.id} value={l.id}>{l.label}</option>
                   ))}
                 </Select>
 

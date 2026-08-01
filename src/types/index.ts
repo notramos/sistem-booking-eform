@@ -265,6 +265,8 @@ export interface CongregationService {
 export interface Lingkungan {
   id: string;
   name: string;
+  /** Nama perumahan/kompleks tempat lingkungan berada, mis. "Vila Mutiara Gading". */
+  area?: string | null;
 }
 
 export interface Wilayah {

@@ -94,8 +94,13 @@ export default function NewCongregationServicePage() {
   // Opsi dropdown Lingkungan (neighborhood) & Wilayah (region) dari data master.
   const areaOptions = useMemo(() => {
     const wilayahOptions = (wilayahList ?? []).map((w) => ({ value: w.name, label: w.name }));
+    // Daftar lingkungan disajikan datar lintas wilayah, jadi nama saja
+    // ("St. Alfonsus 2") sulit dikenali — sertakan perumahan/wilayahnya.
     const lingkunganOptions = (wilayahList ?? []).flatMap((w) =>
-      w.lingkungan.map((l) => ({ value: l.name, label: l.name }))
+      w.lingkungan.map((l) => ({
+        value: l.name,
+        label: l.area ? `${l.name} — ${l.area}` : `${l.name} — ${w.name}`,
+      }))
     );
     return { wilayahOptions, lingkunganOptions };
   }, [wilayahList]);
