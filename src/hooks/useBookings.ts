@@ -197,3 +197,21 @@ export function useUpdateRecurringDate() {
     },
   });
 }
+
+export function useDeleteRecurringDate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, date }: { id: string; date: string }) =>
+      bookingsApi.deleteRecurringDate(id, date),
+    onSuccess: () => {
+      toast.success('Tanggal booking rutin berhasil dihapus');
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['my-bookings'] });
+      qc.invalidateQueries({ queryKey: ['pending-bookings'] });
+      qc.invalidateQueries({ queryKey: ['calendar-events'] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal menghapus tanggal booking rutin');
+    },
+  });
+}

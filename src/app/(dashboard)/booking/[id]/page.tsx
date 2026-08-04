@@ -18,12 +18,12 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, PlayCircle, Pencil, Info,
+  Clock, FileText, XCircle, CheckCircle2, ArrowLeft, PlayCircle, Pencil, Info, Trash2,
   MapPin, CalendarDays, User as UserIcon,
 } from 'lucide-react'
 import {
   useBooking, useCancelBooking,
-  useApproveBooking, useRejectBooking, useStartReview, useUpdateRecurringDate,
+  useApproveBooking, useRejectBooking, useStartReview, useUpdateRecurringDate, useDeleteRecurringDate,
 } from '@/hooks/useBookings'
 import { useDayAvailability } from '@/hooks/useRooms'
 import { useAuth } from '@/hooks/useAuth'
@@ -165,6 +165,7 @@ export default function BookingDetailPage() {
   const approveMutation = useApproveBooking()
   const rejectMutation = useRejectBooking()
   const startReviewMutation = useStartReview()
+  const deleteRecurringDateMutation = useDeleteRecurringDate()
   const { user, hasAnyRole, isAdmin, isSekretariat } = useAuth()
   const isStaff = hasAnyRole(['p2', 'pastor', 'it_admin', 'sekretariat'])
 
@@ -174,6 +175,7 @@ export default function BookingDetailPage() {
   const [showReject, setShowReject] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [editingRecurringDate, setEditingRecurringDate] = useState<string | null>(null)
+  const [deletingRecurringDate, setDeletingRecurringDate] = useState<string | null>(null)
 
   if (isLoading) {
     return <Spinner size="lg" center label="Memuat detail booking..." />
@@ -389,15 +391,30 @@ export default function BookingDetailPage() {
               <CardContent className="flex flex-wrap gap-1.5 p-4 pt-0 sm:p-6 sm:pt-0">
                 {booking.recurring_dates.map((d) => (
                   canEditRecurringDates ? (
-                    <button
+                    <span
                       key={d}
-                      type="button"
-                      onClick={() => setEditingRecurringDate(d)}
-                      className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs text-secondary-foreground hover:bg-secondary/70 transition-colors"
+                      className="inline-flex items-center gap-1 rounded-full bg-secondary pl-2.5 pr-1 py-0.5 text-xs text-secondary-foreground"
                     >
-                      {formatDate(d)}
-                      <Pencil className="h-3 w-3 text-muted-foreground" />
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingRecurringDate(d)}
+                        className="inline-flex items-center gap-1 hover:opacity-70 transition-opacity"
+                        title="Ganti tanggal ini"
+                      >
+                        {formatDate(d)}
+                        <Pencil className="h-3 w-3 text-muted-foreground" />
+                      </button>
+                      {booking.recurring_dates!.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setDeletingRecurringDate(d)}
+                          className="ml-0.5 rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          title="Hapus tanggal ini"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
+                    </span>
                   ) : (
                     <Badge key={d} variant="secondary" className="text-xs">
                       {formatDate(d)}
@@ -509,6 +526,33 @@ export default function BookingDetailPage() {
             <Button variant="ghost" onClick={() => setShowReject(false)}>Batal</Button>
             <Button variant="destructive" onClick={handleReject} disabled={!rejectReason.trim()} loading={rejectMutation.isPending}>
               Tolak Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deletingRecurringDate} onOpenChange={(open) => { if (!open) setDeletingRecurringDate(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hapus Tanggal Booking Rutin</DialogTitle>
+            <DialogDesc>
+              Tanggal <strong>{deletingRecurringDate && formatDate(deletingRecurringDate, 'long')}</strong> akan dihapus dari seri booking rutin ini. Tanggal lain di seri ini tidak ikut berubah, dan tindakan ini tidak dapat diurungkan.
+            </DialogDesc>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeletingRecurringDate(null)}>Batal</Button>
+            <Button
+              variant="destructive"
+              loading={deleteRecurringDateMutation.isPending}
+              onClick={() => {
+                if (!deletingRecurringDate) return
+                deleteRecurringDateMutation.mutate(
+                  { id: booking.id, date: deletingRecurringDate },
+                  { onSuccess: () => setDeletingRecurringDate(null) }
+                )
+              }}
+            >
+              Ya, Hapus
             </Button>
           </DialogFooter>
         </DialogContent>
