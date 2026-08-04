@@ -202,6 +202,9 @@ export default function CalendarPage() {
                         <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Booking Disetujui
                       </span>
                       <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: '#8b5cf6' }} /> Booking Auditorium
+                      </span>
+                      <span className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" /> Hari Libur Nasional
                       </span>
                     </div>
