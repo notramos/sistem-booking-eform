@@ -13,6 +13,12 @@ export const bookingsApi = {
     expected_attendees?: number; notes?: string;
   }) => apiClient.post<ApiResponse<Booking>>('/bookings', data),
 
+  createManual: (data: {
+    room_id: string; title: string; description?: string; booking_date: string;
+    start_time: string; end_time: string; status: string;
+    contact_person?: string; expected_attendees?: number;
+  }) => apiClient.post<ApiResponse<Booking>>('/bookings/manual', data),
+
   previewRecurring: (data: {
     room_id: string; first_date: string; start_time: string; end_time: string;
     pattern: 'weekly' | 'monthly'; duration_months: number;

@@ -17,6 +17,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { Eye, ClipboardList, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { ManualBookingDialog } from '@/components/admin/ManualBookingDialog';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Semua Status' },
@@ -62,6 +63,10 @@ export function AllBookingsTable() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <ManualBookingDialog />
+      </div>
+
       <Card>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">

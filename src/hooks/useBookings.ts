@@ -74,6 +74,23 @@ export function useCreateBooking() {
   });
 }
 
+export function useCreateManualBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof bookingsApi.createManual>[0]) => bookingsApi.createManual(data),
+    onSuccess: () => {
+      toast.success('Booking manual berhasil ditambahkan');
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['my-bookings'] });
+      qc.invalidateQueries({ queryKey: ['pending-bookings'] });
+      qc.invalidateQueries({ queryKey: ['calendar-events'] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal menambahkan booking manual');
+    },
+  });
+}
+
 export function usePreviewRecurringBooking() {
   return useMutation({
     mutationFn: (data: Parameters<typeof bookingsApi.previewRecurring>[0]) => bookingsApi.previewRecurring(data),
