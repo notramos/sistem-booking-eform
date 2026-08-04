@@ -38,7 +38,7 @@ function BookingReport({ startDate, endDate }: { startDate: Date | undefined; en
     enabled: !!sd && !!ed,
   });
 
-  const bookings = (data as { data?: { id: string; title: string; room?: { name: string }; user?: { name: string }; booking_date: string; status: string }[] })?.data || [];
+  const bookings = (data as { data?: { id: string; title: string; description?: string | null; room?: { name: string }; user?: { name: string }; booking_date: string; status: string }[] })?.data || [];
 
   return (
     <div>
@@ -55,6 +55,7 @@ function BookingReport({ startDate, endDate }: { startDate: Date | undefined; en
               <TableHeader>
                 <TableRow>
                   <TableHead>Peminjam</TableHead>
+                  <TableHead>Kegiatan</TableHead>
                   <TableHead>Ruangan</TableHead>
                   <TableHead>Pemesan</TableHead>
                   <TableHead>Tanggal</TableHead>
@@ -62,9 +63,10 @@ function BookingReport({ startDate, endDate }: { startDate: Date | undefined; en
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.map((b: { id: string; title: string; room?: { name: string }; user?: { name: string }; booking_date: string; status: string }) => (
+                {bookings.map((b: { id: string; title: string; description?: string | null; room?: { name: string }; user?: { name: string }; booking_date: string; status: string }) => (
                   <TableRow key={b.id}>
                     <TableCell className="font-medium">{b.title}</TableCell>
+                    <TableCell className="max-w-[240px] truncate" title={b.description ?? undefined}>{b.description || '-'}</TableCell>
                     <TableCell>{b.room?.name || '-'}</TableCell>
                     <TableCell>{b.user?.name || '-'}</TableCell>
                     <TableCell>{formatDate(b.booking_date)}</TableCell>
