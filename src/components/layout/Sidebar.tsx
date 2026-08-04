@@ -18,13 +18,13 @@ const ALL_ROLES = ['umat', 'sekretariat', 'p2', 'pastor', 'it_admin'];
 const FULL_ACCESS_ROLES = ['p2', 'pastor', 'it_admin'];
 
 const menuItems = [
-  { href: '/booking/calendar', label: 'Kalender Booking', icon: CalendarDays, roles: ALL_ROLES },
+  { section: 'Permohonan Pelayanan', roles: ALL_ROLES },
+  { href: '/layanan-umat', label: 'Pelayanan Umat', icon: Heart, roles: ALL_ROLES },
+
+  { href: '/booking/calendar', label: 'Peminjaman Ruangan', icon: CalendarDays, roles: ALL_ROLES },
   { href: '/my-bookings', label: 'Booking Saya', icon: BookOpen, roles: ALL_ROLES },
   { href: '/rooms', label: 'Ruangan', icon: DoorOpen, roles: ALL_ROLES },
   { href: '/notifications', label: 'Notifikasi', icon: Bell, roles: ALL_ROLES },
-
-  { section: 'Permohonan Pelayanan', roles: ALL_ROLES },
-  { href: '/layanan-umat', label: 'Pelayanan Umat', icon: Heart, roles: ALL_ROLES },
 
   { section: 'Sekretariat', roles: ['sekretariat', ...FULL_ACCESS_ROLES] },
   { href: '/approvals', label: 'Persetujuan', icon: CheckSquare, roles: ['sekretariat', ...FULL_ACCESS_ROLES] },

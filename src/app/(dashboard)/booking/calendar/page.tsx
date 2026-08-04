@@ -150,7 +150,7 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Kalender Booking</h1>
+          <h1 className="text-2xl font-bold text-foreground">Peminjaman Ruangan</h1>
           <p className="text-muted-foreground mt-1">Lihat jadwal peminjaman ruangan</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
