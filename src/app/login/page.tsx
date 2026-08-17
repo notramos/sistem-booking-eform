@@ -57,7 +57,7 @@ export default function LoginPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/img/albertus-logo.png" alt="Logo Paroki Santo Albertus Agung" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-white drop-shadow">E-Albertus</h1>
+          <h1 className="text-2xl font-bold text-white drop-shadow">AlbertusKu</h1>
           <p className="text-white/80 mt-1 drop-shadow">Sistem Peminjaman Ruangan Gereja</p>
           <p className="text-sm text-white/60 drop-shadow">Gereja Albertus Agung</p>
         </div>
