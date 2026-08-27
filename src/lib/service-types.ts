@@ -694,8 +694,8 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
                 required: true,
                 dynamicField: true,
                 options: [
-                  { value: '07:00', label: '07.00' },
-                  { value: '18:00', label: '18.00' },
+                  { value: '06:30', label: '06.30' },
+                  { value: '18:30', label: '18.30' },
                 ],
               },
             ],
@@ -936,15 +936,14 @@ export function getServiceFieldLabel(typeKey: string | undefined, fieldName: str
 
 /**
  * Opsi jam jadwal misa tergantung hari dari `tanggal_misa` yang dipilih:
- * Jumat pertama di bulan itu > Minggu > Sabtu > hari lain (Senin-Kamis).
+ * Jumat pertama di bulan itu > Minggu > Senin/Rabu/Sabtu (06.30) > Selasa/Kamis/Jumat (18.30).
  */
 export function computeMisaScheduleOptions(dateStr: string): { value: string; label: string }[] {
   const d = new Date(dateStr + 'T00:00:00');
-  const day = d.getDay(); // 0=Minggu ... 5=Jumat, 6=Sabtu
+  const day = d.getDay(); // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
   const isFirstFriday = day === 5 && d.getDate() <= 7;
 
   if (isFirstFriday) return [{ value: '19:30', label: '19.30 (Jumat Pertama)' }];
-  if (day === 6) return [{ value: '17:30', label: '17.30' }];
   if (day === 0) {
     return [
       { value: '06:00', label: '06.00' },
@@ -952,8 +951,6 @@ export function computeMisaScheduleOptions(dateStr: string): { value: string; la
       { value: '17:30', label: '17.30' },
     ];
   }
-  return [
-    { value: '07:00', label: '07.00' },
-    { value: '18:00', label: '18.00' },
-  ];
+  if (day === 1 || day === 3 || day === 6) return [{ value: '06:30', label: '06.30' }];
+  return [{ value: '18:30', label: '18.30' }];
 }

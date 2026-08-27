@@ -347,6 +347,19 @@ export default function NewCongregationServicePage() {
                   title={section.title}
                   defaultOpen={idx === 0}
                 >
+                  {section.id === 'stipendium' && (
+                    <div className="mb-4 flex flex-col items-center gap-2 rounded-lg border bg-muted/30 p-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/img/qris-intensi-misa.jpeg"
+                        alt="QRIS Stipendium Intensi Misa - Gereja Albertus"
+                        className="w-full max-w-[240px] rounded-md border bg-white"
+                      />
+                      <p className="text-center text-xs text-muted-foreground">
+                        Scan QRIS di atas untuk pembayaran stipendium intensi misa.
+                      </p>
+                    </div>
+                  )}
                   <DynamicFormFields
                     fields={injectAreaOptions(section.fields)}
                     formData={formData}
