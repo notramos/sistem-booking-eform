@@ -14,6 +14,7 @@ import { ErrorState } from '@/components/ui/error-state';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
+import { ManualIntensiMisaDialog } from '@/components/admin/ManualIntensiMisaDialog';
 import { Eye, ClipboardList, X } from 'lucide-react';
 
 const STATUS_OPTIONS = [
@@ -45,6 +46,10 @@ export function AllServicesTable() {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <ManualIntensiMisaDialog />
+      </div>
+
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap items-end gap-3">

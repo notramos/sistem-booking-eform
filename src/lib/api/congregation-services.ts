@@ -28,6 +28,10 @@ export interface CreateCongregationServicePayload {
   dynamic_fields?: Record<string, string>;
 }
 
+export interface CreateManualCongregationServicePayload extends CreateCongregationServicePayload {
+  status: 'pending' | 'approved' | 'rejected';
+}
+
 export const congregationServicesApi = {
   list: (params?: { status?: string; service_type?: string; page?: number }) =>
     apiClient.get<PaginatedResponse<CongregationService>>('/congregation-services', { params }),
@@ -37,6 +41,9 @@ export const congregationServicesApi = {
 
   create: (data: CreateCongregationServicePayload) =>
     apiClient.post<ApiResponse<CongregationService>>('/congregation-services', data),
+
+  createManual: (data: CreateManualCongregationServicePayload) =>
+    apiClient.post<ApiResponse<CongregationService>>('/congregation-services/manual', data),
 
   approve: (id: string, notes?: string) =>
     apiClient.post<ApiResponse<CongregationService>>(`/congregation-services/${id}/approve`, { notes }),

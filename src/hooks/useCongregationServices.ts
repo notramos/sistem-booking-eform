@@ -41,6 +41,22 @@ export function useCreateCongregationService() {
   });
 }
 
+export function useCreateManualCongregationService() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Parameters<typeof congregationServicesApi.createManual>[0]) =>
+      congregationServicesApi.createManual(data),
+    onSuccess: () => {
+      toast.success('Permohonan pelayanan umat berhasil ditambahkan');
+      queryClient.invalidateQueries({ queryKey: ['congregation-services'] });
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || 'Gagal menambahkan permohonan');
+    },
+  });
+}
+
 export function useApproveCongregationService() {
   const queryClient = useQueryClient();
 
