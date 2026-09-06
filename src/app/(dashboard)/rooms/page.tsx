@@ -12,6 +12,7 @@ import { Pagination } from '@/components/ui/pagination';
 import Link from 'next/link';
 import { Search, MapPin, Users, Building2, RotateCcw } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { getRoomDisplayName } from '@/lib/utils';
 
 export default function RoomsPage() {
   const [search, setSearch] = useState('');
@@ -107,11 +108,10 @@ export default function RoomsPage() {
               <Card className="hover:shadow-md transition-all cursor-pointer h-full hover:border-primary/50">
                 <CardContent className="p-5">
                   <div className="mb-3">
-                    <h3 className="font-semibold text-foreground">
-                      {room.name}
-                      {room.patron_name && <span className="text-muted-foreground font-normal"> · {room.patron_name}</span>}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">{room.category?.name}</p>
+                    <h3 className="font-semibold text-foreground">{getRoomDisplayName(room)}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {room.name}{room.category?.name ? ` · ${room.category.name}` : ''}
+                    </p>
                   </div>
 
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-3">

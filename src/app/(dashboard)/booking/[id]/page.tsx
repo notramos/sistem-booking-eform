@@ -27,7 +27,7 @@ import {
 } from '@/hooks/useBookings'
 import { useDayAvailability } from '@/hooks/useRooms'
 import { useAuth } from '@/hooks/useAuth'
-import { cn, formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
+import { cn, formatDate, formatTime, getStatusColor, getStatusLabel, getRoomDisplayLabel } from '@/lib/utils'
 import { getServiceFieldLabel } from '@/lib/service-types'
 import { BOOKING_MIN_ADVANCE_DAYS, PURPOSE_LABELS } from '@/lib/constants'
 import type { Booking } from '@/types'
@@ -274,7 +274,7 @@ export default function BookingDetailPage() {
     {
       title: 'Ruangan & Waktu',
       fields: [
-        { label: 'Ruangan', value: booking.room?.name },
+        { label: 'Ruangan', value: getRoomDisplayLabel(booking.room) },
         { label: 'Gedung / Lokasi', value: booking.room?.building },
         { label: 'Tanggal', value: booking.booking_date ? formatDate(booking.booking_date, 'full') : null },
         { label: 'Waktu', value: `${formatTime(booking.start_time)} – ${formatTime(booking.end_time)}` },
@@ -337,7 +337,7 @@ export default function BookingDetailPage() {
               )}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-              {booking.room?.name && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{booking.room.name}</span>}
+              {booking.room && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{getRoomDisplayLabel(booking.room)}</span>}
               {booking.booking_type === 'rutin' && booking.recurring_dates && booking.recurring_dates.length > 1 ? (
                 <span className="inline-flex items-center gap-1">
                   <CalendarDays className="h-3.5 w-3.5 shrink-0" />

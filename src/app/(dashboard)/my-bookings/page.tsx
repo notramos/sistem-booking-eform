@@ -11,7 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
-import { formatDate, formatTime, getStatusColor, getStatusLabel, cn } from '@/lib/utils';
+import { formatDate, formatTime, getStatusColor, getStatusLabel, getRoomDisplayLabel, cn } from '@/lib/utils';
 import { PURPOSE_LABELS } from '@/lib/constants';
 import { CalendarDays, Clock, MapPin, Calendar, Search, Tag, Users } from 'lucide-react';
 import Link from 'next/link';
@@ -116,7 +116,7 @@ export default function MyBookingsPage() {
 
                   <p className="flex items-center gap-1.5 text-sm text-muted-foreground mt-2">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    {booking.room?.name}
+                    {getRoomDisplayLabel(booking.room)}
                     {(booking.room?.building || booking.room?.floor) && (
                       <span className="text-muted-foreground/70">
                         · {booking.room?.building}{booking.room?.floor ? ` Lt.${booking.room.floor}` : ''}

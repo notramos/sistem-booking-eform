@@ -13,7 +13,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { FileText, FileSpreadsheet, CalendarDays, XCircle } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
-import { formatDate, downloadBlob } from '@/lib/utils';
+import { formatDate, downloadBlob, getRoomDisplayLabel } from '@/lib/utils';
 import { toast } from 'sonner';
 
 function ReportError({ onRetry }: { onRetry: () => void }) {
@@ -38,7 +38,7 @@ function BookingReport({ startDate, endDate }: { startDate: Date | undefined; en
     enabled: !!sd && !!ed,
   });
 
-  const bookings = (data as { data?: { id: string; title: string; description?: string | null; room?: { name: string }; user?: { name: string }; booking_date: string; status: string }[] })?.data || [];
+  const bookings = (data as { data?: { id: string; title: string; description?: string | null; room?: { name: string; patron_name?: string | null; display_name?: string; display_label?: string }; user?: { name: string }; booking_date: string; status: string }[] })?.data || [];
 
   return (
     <div>
@@ -67,7 +67,7 @@ function BookingReport({ startDate, endDate }: { startDate: Date | undefined; en
                   <TableRow key={b.id}>
                     <TableCell className="font-medium">{b.title}</TableCell>
                     <TableCell className="max-w-[240px] truncate" title={b.description ?? undefined}>{b.description || '-'}</TableCell>
-                    <TableCell>{b.room?.name || '-'}</TableCell>
+                    <TableCell>{getRoomDisplayLabel(b.room)}</TableCell>
                     <TableCell>{b.user?.name || '-'}</TableCell>
                     <TableCell>{formatDate(b.booking_date)}</TableCell>
                     <TableCell>
@@ -102,7 +102,7 @@ function RoomUtilization({ startDate, endDate }: { startDate: Date | undefined; 
     enabled: !!sd && !!ed,
   });
 
-  const rooms = (data as { data?: { room_name: string; capacity: number; total_bookings: number; booked_minutes: number; utilization_percentage: number }[] })?.data || [];
+  const rooms = (data as { data?: { room_name: string; room_number?: string; capacity: number; total_bookings: number; booked_minutes: number; utilization_percentage: number }[] })?.data || [];
 
   return (
     <div>
@@ -126,9 +126,14 @@ function RoomUtilization({ startDate, endDate }: { startDate: Date | undefined; 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rooms.map((r: { room_name: string; capacity: number; total_bookings: number; booked_minutes: number; utilization_percentage: number }, i: number) => (
+                {rooms.map((r: { room_name: string; room_number?: string; capacity: number; total_bookings: number; booked_minutes: number; utilization_percentage: number }, i: number) => (
                   <TableRow key={i}>
-                    <TableCell className="font-medium">{r.room_name}</TableCell>
+                    <TableCell>
+                      <p className="font-medium">{r.room_name}</p>
+                      {r.room_number && r.room_number !== r.room_name && (
+                        <p className="text-xs text-muted-foreground">{r.room_number}</p>
+                      )}
+                    </TableCell>
                     <TableCell>{r.capacity}</TableCell>
                     <TableCell>{r.total_bookings}</TableCell>
                     <TableCell>{(r.booked_minutes / 60).toFixed(1)}</TableCell>

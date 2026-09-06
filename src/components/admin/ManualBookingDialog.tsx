@@ -12,6 +12,7 @@ import { TimeSlotPicker } from '@/components/booking/TimeSlotPicker';
 import { useRooms } from '@/hooks/useRooms';
 import { useCreateManualBooking } from '@/hooks/useBookings';
 import { Plus } from 'lucide-react';
+import { getRoomDisplayLabel } from '@/lib/utils';
 
 const STATUS_OPTIONS = [
   { value: 'approved', label: 'Disetujui' },
@@ -101,7 +102,7 @@ export function ManualBookingDialog() {
               <option value="">Pilih ruangan</option>
               {rooms.map((room) => (
                 <option key={room.id} value={room.id}>
-                  {room.name}{room.building ? ` — ${room.building}` : ''} ({room.capacity} orang)
+                  {getRoomDisplayLabel(room)}{room.building ? ` — ${room.building}` : ''} ({room.capacity} orang)
                 </option>
               ))}
             </Select>

@@ -13,12 +13,12 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, X, XCircle } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getRoomDisplayLabel } from '@/lib/utils';
 
 interface MaintenanceSchedule {
   id: string;
   room_id: string;
-  room?: { id: string; name: string };
+  room?: { id: string; name: string; patron_name?: string | null; display_name?: string; display_label?: string };
   title: string;
   description: string | null;
   start_date: string;
@@ -137,7 +137,7 @@ export default function AdminMaintenancePage() {
               <Select label="Ruangan *" value={formData.room_id} onChange={(e) => setFormData({ ...formData, room_id: e.target.value })} required>
                 <option value="">Pilih Ruangan</option>
                 {roomsData?.data?.map((room) => (
-                  <option key={room.id} value={room.id}>{room.name}</option>
+                  <option key={room.id} value={room.id}>{getRoomDisplayLabel(room)}</option>
                 ))}
               </Select>
               <div className="md:col-span-2">
@@ -208,7 +208,7 @@ export default function AdminMaintenancePage() {
               ) : (
                 schedules?.map((sched) => (
                   <TableRow key={sched.id}>
-                    <TableCell className="font-medium">{sched.room?.name || sched.room_id}</TableCell>
+                    <TableCell className="font-medium">{sched.room ? getRoomDisplayLabel(sched.room) : sched.room_id}</TableCell>
                     <TableCell>{sched.title}</TableCell>
                     <TableCell>{formatDate(sched.start_date)} – {formatDate(sched.end_date)}</TableCell>
                     <TableCell className="hidden md:table-cell">

@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Pagination } from '@/components/ui/pagination';
-import { formatDate, formatTime, getInitials, getStatusColor, getStatusLabel } from '@/lib/utils';
+import { formatDate, formatTime, getInitials, getStatusColor, getStatusLabel, getRoomDisplayLabel } from '@/lib/utils';
 import { PURPOSE_LABELS } from '@/lib/constants';
 import { XCircle, CalendarDays, Clock, Users, ClipboardList, Church, Tag, ChevronRight, MapPin } from 'lucide-react';
 
@@ -91,7 +91,7 @@ export function BookingApprovalsTab() {
                         </div>
                         <p className="text-sm text-primary mt-0.5 flex items-center gap-1">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
-                          {booking.room?.name}
+                          {getRoomDisplayLabel(booking.room)}
                           {(booking.room?.building || booking.room?.floor) && (
                             <span className="text-primary/70">
                               · {booking.room?.building}{booking.room?.floor ? ` Lt.${booking.room.floor}` : ''}

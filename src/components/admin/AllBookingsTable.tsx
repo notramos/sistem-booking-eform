@@ -14,7 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { Pagination } from '@/components/ui/pagination';
-import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils';
+import { formatDate, formatTime, getStatusColor, getStatusLabel, getRoomDisplayLabel } from '@/lib/utils';
 import { Eye, ClipboardList, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ManualBookingDialog } from '@/components/admin/ManualBookingDialog';
@@ -89,7 +89,7 @@ export function AllBookingsTable() {
               <option value="">Semua Ruangan</option>
               {rooms.map((room) => (
                 <option key={room.id} value={room.id}>
-                  {room.name}{room.building ? ` - ${room.building}` : ''}
+                  {getRoomDisplayLabel(room)}{room.building ? ` - ${room.building}` : ''}
                 </option>
               ))}
             </Select>
@@ -136,7 +136,7 @@ export function AllBookingsTable() {
                   <TableRow key={booking.id}>
                     <TableCell className="font-medium">{booking.title}</TableCell>
                     <TableCell className="hidden md:table-cell">{booking.user?.name ?? '-'}</TableCell>
-                    <TableCell>{booking.room?.name ?? '-'}</TableCell>
+                    <TableCell>{getRoomDisplayLabel(booking.room)}</TableCell>
                     <TableCell>{formatDate(booking.booking_date)}</TableCell>
                     <TableCell>{formatTime(booking.start_time)} - {formatTime(booking.end_time)}</TableCell>
                     <TableCell>

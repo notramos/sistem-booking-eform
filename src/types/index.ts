@@ -16,6 +16,8 @@ export interface Room {
   id: string;
   name: string;
   patron_name?: string | null;
+  display_name?: string;
+  display_label?: string;
   slug: string;
   category_id: string;
   category?: RoomCategory;

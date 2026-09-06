@@ -12,6 +12,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, X, XCircle } from 'lucide-react';
 import type { Room } from '@/types';
+import { getRoomDisplayName } from '@/lib/utils';
 
 export default function AdminRoomsPage() {
   const [page, setPage] = useState(1);
@@ -112,8 +113,8 @@ export default function AdminRoomsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Nama Ruangan *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-              <Input label="Nama Santo/Santa Pelindung" value={formData.patron_name} onChange={(e) => setFormData({ ...formData, patron_name: e.target.value })} />
+              <Input label="Nomor / Lokasi Ruangan *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+              <Input label="Nama Utama Ruangan" value={formData.patron_name} onChange={(e) => setFormData({ ...formData, patron_name: e.target.value })} />
               <Select label="Kategori *" value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })} required>
                 <option value="">Pilih Kategori</option>
                 {categories?.map((cat) => (
@@ -196,7 +197,10 @@ export default function AdminRoomsPage() {
               ) : (
                 roomsData?.data?.map((room) => (
                   <TableRow key={room.id}>
-                    <TableCell className="font-medium">{room.name}</TableCell>
+                    <TableCell>
+                      <p className="font-medium">{getRoomDisplayName(room)}</p>
+                      {room.patron_name && <p className="text-xs text-muted-foreground">{room.name}</p>}
+                    </TableCell>
                     <TableCell>{room.category?.name || '-'}</TableCell>
                     <TableCell>{room.capacity}</TableCell>
                     <TableCell className="hidden md:table-cell">{room.building || '-'} {room.floor ? `(Lt.${room.floor})` : ''}</TableCell>

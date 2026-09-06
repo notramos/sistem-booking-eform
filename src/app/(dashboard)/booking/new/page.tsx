@@ -24,7 +24,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { RoomRecommendationList } from '@/components/booking/RoomRecommendationList';
 import { TimeSlotPicker } from '@/components/booking/TimeSlotPicker';
 import { BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS, TATA_TERTIB_TEXT } from '@/lib/constants';
-import { cn, getMaxBookableDate } from '@/lib/utils';
+import { cn, getMaxBookableDate, getRoomDisplayName } from '@/lib/utils';
 import { CalendarDays, ArrowLeft, Users, Repeat, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { roomsApi } from '@/lib/api/rooms';
@@ -704,7 +704,7 @@ export default function NewBookingPage() {
                 </div>
                 {selectedRoom && (
                   <Badge variant="secondary" className="gap-1 shrink-0">
-                    <Users className="w-3 h-3" /> {selectedRoom.name} · {selectedRoom.capacity} org
+                    <Users className="w-3 h-3" /> {getRoomDisplayName(selectedRoom)} · {selectedRoom.capacity} org
                   </Badge>
                 )}
               </div>

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { OPERATING_HOURS, BOOKING_MIN_ADVANCE_DAYS } from '@/lib/constants';
 import { useRooms, useDayAvailability } from '@/hooks/useRooms';
 import { useUpdateBooking } from '@/hooks/useBookings';
-import { formatTime, getMaxBookableDate } from '@/lib/utils';
+import { formatTime, getMaxBookableDate, getRoomDisplayLabel } from '@/lib/utils';
 import { Info } from 'lucide-react';
 import type { Booking } from '@/types';
 
@@ -68,7 +68,7 @@ export function RoomReallocationCard({ booking }: { booking: Booking }) {
       <CardContent className="space-y-4">
         <Select label="Ruangan" value={roomId} onChange={(e) => setRoomId(e.target.value)}>
           {rooms.map((room) => (
-            <option key={room.id} value={room.id}>{room.name} · {room.capacity} orang</option>
+            <option key={room.id} value={room.id}>{getRoomDisplayLabel(room)} · {room.capacity} orang</option>
           ))}
         </Select>
 

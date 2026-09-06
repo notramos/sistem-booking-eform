@@ -5,6 +5,24 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+type RoomNameLike = {
+  name: string;
+  patron_name?: string | null;
+  display_name?: string;
+  display_label?: string;
+};
+
+/** Nama utama ruangan adalah nama pelindung; nomor/lokasi tetap sebagai pendamping. */
+export function getRoomDisplayName(room?: RoomNameLike | null): string {
+  return room?.display_name || room?.patron_name || room?.name || '-';
+}
+
+export function getRoomDisplayLabel(room?: RoomNameLike | null): string {
+  if (!room) return '-';
+  return room.display_label
+    || (room.patron_name ? `${room.patron_name} · ${room.name}` : room.name);
+}
+
 /**
  * Batas atas tanggal booking (biasa/realokasi) — akhir tahun berjalan, kecuali
  * mulai November naik ke akhir tahun depan (mirror BookingService::maxBookableDate

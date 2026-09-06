@@ -32,6 +32,7 @@ import {
   formatTime,
   getStatusColor,
   getStatusLabel,
+  getRoomDisplayName,
 } from "@/lib/utils";
 
 const activeStatuses = ["pending", "approved"];
@@ -90,11 +91,10 @@ export default function RoomDetailPage() {
           <Card>
             <CardHeader>
               <div>
-                <CardTitle className="text-2xl">
-                  {room.name}
-                  {room.patron_name && <span className="text-muted-foreground font-normal"> · {room.patron_name}</span>}
-                </CardTitle>
-                <CardDescription>{room.category?.name}</CardDescription>
+                <CardTitle className="text-2xl">{getRoomDisplayName(room)}</CardTitle>
+                <CardDescription>
+                  {room.name}{room.category?.name ? ` · ${room.category.name}` : ''}
+                </CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -256,7 +256,7 @@ export default function RoomDetailPage() {
                     <img
                       key={img.id}
                       src={`/storage/${img.image_path}`}
-                      alt={room.name}
+                      alt={getRoomDisplayName(room)}
                       className="w-full h-24 object-cover rounded-lg"
                     />
                   ))}
