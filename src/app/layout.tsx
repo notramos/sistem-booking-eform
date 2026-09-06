@@ -7,13 +7,13 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'AlbertusKu - Sistem Peminjaman Ruangan Gereja',
+  title: 'AlbertusKU - Sistem Peminjaman Ruangan Gereja',
   description: 'Sistem peminjaman ruangan Gereja Albertus Agung',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'AlbertusKu',
+    title: 'AlbertusKU',
   },
 };
 

@@ -79,7 +79,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             )}
           </div>
           <div className="min-w-0">
-            <h1 className="text-base font-bold text-sidebar-foreground leading-tight truncate">AlbertusKu</h1>
+            <h1 className="text-base font-bold text-sidebar-foreground leading-tight truncate">AlbertusKU</h1>
             <p className="text-[11px] text-sidebar-foreground/50 leading-tight truncate">Paroki Santo Albertus Agung</p>
           </div>
         </Link>
@@ -127,7 +127,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </ScrollArea>
 
       <div className="p-4 border-t border-sidebar-border">
-        <p className="text-xs text-sidebar-foreground/40 text-center">AlbertusKu v1.0</p>
+        <p className="text-xs text-sidebar-foreground/40 text-center">AlbertusKU v1.0</p>
       </div>
     </>
   );

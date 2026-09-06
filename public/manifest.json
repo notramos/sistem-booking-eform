@@ -1,6 +1,6 @@
 {
-  "name": "AlbertusKu - Sistem Peminjaman Ruangan Gereja",
-  "short_name": "AlbertusKu",
+  "name": "AlbertusKU - Sistem Peminjaman Ruangan Gereja",
+  "short_name": "AlbertusKU",
   "description": "Sistem peminjaman ruangan Gereja Albertus Agung",
   "start_url": "/dashboard",
   "scope": "/",

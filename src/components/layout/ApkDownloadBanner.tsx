@@ -57,7 +57,7 @@ export function ApkDownloadBanner({ compact = false }: ApkDownloadBannerProps) {
     <div className="flex items-center gap-3 bg-primary/10 border-b border-primary/20 px-4 py-2.5 text-sm">
       <Smartphone className="w-4 h-4 text-primary shrink-0" />
       <p className="flex-1 min-w-0 text-foreground">
-        Ada aplikasi Android AlbertusKu — install langsung dari HP kamu.
+        Ada aplikasi Android AlbertusKU — install langsung dari HP kamu.
       </p>
       <a
         href={APK_DOWNLOAD_PATH}

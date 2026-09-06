@@ -58,7 +58,7 @@ export const APK_BANNER_DISMISSED_KEY = 'apk_banner_dismissed';
  * Path file APK Android (hasil build PWABuilder) — taruh file .apk di
  * public/downloads/ dengan nama ini setelah di-generate dari URL production.
  */
-export const APK_DOWNLOAD_PATH = '/downloads/e-albertus.apk';
+export const APK_DOWNLOAD_PATH = '/downloads/albertusku.apk';
 
 /**
  * PLACEHOLDER — isi teks tata tertib resmi di sini. Satu tempat, mudah diganti
