@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { authApi } from "@/lib/api/auth";
+import { useQueryClient } from '@tanstack/react-query';
 import type { User } from "@/types";
 
 interface AuthContextType {
@@ -29,6 +30,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -60,13 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authApi.login(email, password);
+    queryClient.clear();
     setUser(res.data.data.user);
     // isLoggingOut sengaja tidak direset saat logout (lihat komentar di logout()) —
     // AuthProvider ini tidak ikut ter-unmount waktu pindah ke /login, jadi nilainya
     // bertahan lintas sesi. Reset di sini supaya overlay logout tidak nyangkut
     // muncul lagi setelah user login ulang (termasuk dengan akun berbeda).
     setIsLoggingOut(false);
-  }, []);
+  }, [queryClient]);
 
   const logout = useCallback(async () => {
     setIsLoggingOut(true);
@@ -78,8 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // direset di sini — overlay tetap tampil sampai router.push('/login') di
       // pemanggil selesai pindah halaman, supaya tidak "kedip" duluan sebelum redirect.
       setUser(null);
+      queryClient.clear();
     }
-  }, []);
+  }, [queryClient]);
 
   const hasRole = useCallback(
     (role: string) => user?.roles?.some((r) => r.name === role) ?? false,

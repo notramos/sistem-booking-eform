@@ -13,6 +13,7 @@ import { ErrorState } from '@/components/ui/error-state';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { TooltipCell } from '@/components/booking/TooltipCell';
 import { useCalendarEvents } from '@/hooks/useBookings';
+import { useAuth } from '@/hooks/useAuth';
 import { useHolidays } from '@/hooks/useHolidays';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -58,6 +59,8 @@ function isSameDay(a: Date, b: Date) {
 }
 
 export default function CalendarPage() {
+  const { hasAnyRole } = useAuth();
+  const canViewAll = hasAnyRole(['sekretariat', 'p2', 'pastor', 'it_admin']);
   const router = useRouter();
   const today = useMemo(() => new Date(), []);
   const [currentDate, setCurrentDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
@@ -66,8 +69,7 @@ export default function CalendarPage() {
   const [legendOpen, setLegendOpen] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [showRules, setShowRules] = useState(false);
-  // Kalender hanya menampilkan booking yang sudah disetujui — tidak ada UI filter status/ruangan.
-  const statusFilter = 'approved';
+  // Booking selesai tetap terlihat sebagai riwayat, dengan warna tersendiri.
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -77,7 +79,7 @@ export default function CalendarPage() {
   const { data: rawEvents, isLoading, isError, refetch } = useCalendarEvents(yearStart, yearEnd);
   const holidays = useHolidays(year);
 
-  const events = (rawEvents as CalendarEvent[] | undefined) ?? [];
+  const events = useMemo(() => (rawEvents as CalendarEvent[] | undefined) ?? [], [rawEvents]);
 
   // Tanggal paling awal yang boleh dibooking (minimal H+7), untuk mute sel & gating tombol.
   const minDateStr = useMemo(() => {
@@ -94,7 +96,7 @@ export default function CalendarPage() {
   const todayStr = useMemo(() => formatLocalDate(today), [today]);
   const isPastDate = (dateStr: string) => dateStr < todayStr;
 
-  const filteredEvents = useMemo(() => events.filter((e) => e.status === statusFilter), [events]);
+  const filteredEvents = useMemo(() => events.filter((e) => e.status === 'approved' || e.status === 'completed'), [events]);
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
@@ -151,7 +153,8 @@ export default function CalendarPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Peminjaman Ruangan</h1>
-          <p className="text-muted-foreground mt-1">Lihat jadwal peminjaman ruangan</p>
+          <p className="text-muted-foreground mt-1">{canViewAll ? 'Lihat jadwal peminjaman ruangan' : 'Kalender booking Anda yang disetujui dan selesai'}</p>
+          {!canViewAll && <p className="text-xs text-muted-foreground mt-1">Ketersediaan ruangan diperiksa saat memilih ruangan dan jam. Booking pengguna lain tidak ditampilkan di kalender Anda.</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowGuide(true)}>
@@ -202,7 +205,10 @@ export default function CalendarPage() {
                         <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Booking Disetujui
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: '#8b5cf6' }} /> Booking Auditorium
+                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: '#8b5cf6' }} /> Auditorium Disetujui
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block" /> Booking Selesai
                       </span>
                       <span className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" /> Hari Libur Nasional
@@ -444,7 +450,7 @@ export default function CalendarPage() {
               </div>
             </ScrollArea>
           ) : selectedDate ? (
-            <EmptyState icon={CalendarDays} title="Tidak ada jadwal pada tanggal ini" />
+            <EmptyState icon={CalendarDays} title={canViewAll ? 'Tidak ada jadwal pada tanggal ini' : 'Tidak ada booking Anda yang disetujui atau selesai pada tanggal ini'} description={!canViewAll ? 'Cek slot yang tersedia saat memilih ruangan dan jam peminjaman.' : undefined} />
           ) : (
             <EmptyState icon={CalendarDays} title="Klik tanggal pada kalender untuk melihat jadwal" />
           )}
