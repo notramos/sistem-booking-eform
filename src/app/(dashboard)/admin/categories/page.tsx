@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, X, XCircle } from 'lucide-react';
 import type { RoomCategory, RoomFacility } from '@/types';
+import { ParishAreaManager } from '@/components/admin/ParishAreaManager';
 
 function CategoryManager() {
   const qc = useQueryClient();
@@ -345,20 +346,27 @@ export default function AdminCategoriesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Kelola Kategori & Fasilitas</h1>
-        <p className="text-muted-foreground mt-1">Atur kategori dan fasilitas ruangan gereja</p>
+        <h1 className="text-2xl font-bold text-foreground">Master Data</h1>
+        <p className="text-muted-foreground mt-1">Kelola kategori, fasilitas, wilayah, dan lingkungan paroki</p>
       </div>
 
       <Tabs defaultValue="categories" value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="grid h-auto w-full grid-cols-3 sm:w-auto">
           <TabsTrigger value="categories">Kategori</TabsTrigger>
           <TabsTrigger value="facilities">Fasilitas</TabsTrigger>
+          <TabsTrigger value="parish-areas">
+            <span className="sm:hidden">Wilayah</span>
+            <span className="hidden sm:inline">Wilayah & Lingkungan</span>
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="categories">
           <CategoryManager />
         </TabsContent>
         <TabsContent value="facilities">
           <FacilityManager />
+        </TabsContent>
+        <TabsContent value="parish-areas">
+          <ParishAreaManager />
         </TabsContent>
       </Tabs>
     </div>

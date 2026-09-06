@@ -266,14 +266,21 @@ export interface CongregationService {
 
 export interface Lingkungan {
   id: string;
+  wilayah_id?: string;
+  wilayah_name?: string;
   name: string;
   /** Nama perumahan/kompleks tempat lingkungan berada, mis. "Vila Mutiara Gading". */
   area?: string | null;
+  is_active?: boolean;
+  users_count?: number;
 }
 
 export interface Wilayah {
   id: string;
   name: string;
+  is_active?: boolean;
+  lingkungan_count?: number;
+  users_count?: number;
   lingkungan: Lingkungan[];
 }
 

@@ -34,7 +34,7 @@ const menuItems = [
   { section: 'Administrasi', roles: FULL_ACCESS_ROLES },
   { href: '/admin/users', label: 'Kelola User', icon: Users, roles: ['it_admin'] },
   { href: '/admin/rooms', label: 'Kelola Ruangan', icon: Building2, roles: FULL_ACCESS_ROLES },
-  { href: '/admin/categories', label: 'Kategori & Fasilitas', icon: Settings, roles: FULL_ACCESS_ROLES },
+  { href: '/admin/categories', label: 'Master Data', icon: Settings, roles: FULL_ACCESS_ROLES },
   { href: '/admin/maintenance', label: 'Jadwal Perbaikan', icon: ClipboardList, roles: FULL_ACCESS_ROLES },
   { href: '/admin/audit-logs', label: 'Audit Log', icon: Shield, roles: FULL_ACCESS_ROLES },
 ];
