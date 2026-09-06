@@ -67,12 +67,13 @@ export function TooltipCell({ event }: { event: CalendarEvent }) {
             <Badge className={getStatusColor(event.status)}>
               {event.extendedProps?.status_label ?? getStatusLabel(event.status)}
             </Badge>
-            <Link
+            {event.can_view_detail && <Link
               href={`/booking/${event.booking_id ?? event.id}`}
               className="block text-center text-primary hover:underline pt-1"
             >
               Lihat Detail
-            </Link>
+            </Link>}
+            {!event.can_view_detail && <p className="text-muted-foreground pt-1">Detail hanya untuk pemilik booking dan staf berwenang.</p>}
           </div>
           <Popover.Arrow className="fill-popover" />
         </Popover.Content>

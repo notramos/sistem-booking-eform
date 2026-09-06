@@ -153,8 +153,8 @@ export default function CalendarPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Peminjaman Ruangan</h1>
-          <p className="text-muted-foreground mt-1">{canViewAll ? 'Lihat jadwal peminjaman ruangan' : 'Kalender booking Anda yang disetujui dan selesai'}</p>
-          {!canViewAll && <p className="text-xs text-muted-foreground mt-1">Ketersediaan ruangan diperiksa saat memilih ruangan dan jam. Booking pengguna lain tidak ditampilkan di kalender Anda.</p>}
+          <p className="text-muted-foreground mt-1">Lihat jadwal peminjaman ruangan</p>
+          {!canViewAll && <p className="text-xs text-muted-foreground mt-1">Jadwal semua booking disetujui dan selesai dapat dilihat. Detail hanya dapat dibuka untuk booking Anda sendiri.</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowGuide(true)}>
@@ -424,6 +424,7 @@ export default function CalendarPage() {
                     {index > 0 && <Separator />}
                     <button
                       type="button"
+                      disabled={!event.can_view_detail}
                       onClick={() => router.push(`/booking/${event.booking_id ?? event.id}`)}
                       className="w-full flex items-start gap-3 py-3 text-left hover:bg-muted/50 transition-colors rounded-md px-2 -mx-2"
                     >
@@ -442,15 +443,16 @@ export default function CalendarPage() {
                         <Badge className={getStatusColor(event.status)}>
                           {event.extendedProps?.status_label ?? getStatusLabel(event.status)}
                         </Badge>
+                        {!event.can_view_detail && <p className="text-xs text-muted-foreground">Detail hanya untuk pemilik booking dan staf berwenang.</p>}
                       </div>
-                      <Eye className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                      {event.can_view_detail && <Eye className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />}
                     </button>
                   </div>
                 ))}
               </div>
             </ScrollArea>
           ) : selectedDate ? (
-            <EmptyState icon={CalendarDays} title={canViewAll ? 'Tidak ada jadwal pada tanggal ini' : 'Tidak ada booking Anda yang disetujui atau selesai pada tanggal ini'} description={!canViewAll ? 'Cek slot yang tersedia saat memilih ruangan dan jam peminjaman.' : undefined} />
+            <EmptyState icon={CalendarDays} title="Tidak ada booking disetujui atau selesai pada tanggal ini" description="Cek slot yang tersedia saat memilih ruangan dan jam peminjaman." />
           ) : (
             <EmptyState icon={CalendarDays} title="Klik tanggal pada kalender untuk melihat jadwal" />
           )}

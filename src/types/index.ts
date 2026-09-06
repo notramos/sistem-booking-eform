@@ -172,6 +172,7 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface CalendarEvent {
+  can_view_detail?: boolean;
   /** Unik per kemunculan (booking_id::tanggal untuk booking rutin) — dipakai untuk key, bukan navigasi. */
   id: string;
   /** ID booking sesungguhnya (dipakai untuk navigasi ke /booking/{id}) — sama untuk semua kemunculan booking rutin. */
