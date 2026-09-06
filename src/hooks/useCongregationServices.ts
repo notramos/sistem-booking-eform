@@ -34,6 +34,7 @@ export function useCreateCongregationService() {
     onSuccess: () => {
       toast.success('Permohonan pelayanan umat berhasil dikirim');
       queryClient.invalidateQueries({ queryKey: ['congregation-services'] });
+      queryClient.invalidateQueries({ queryKey: ['report-intensi-misa'] });
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Gagal mengirim permohonan');
@@ -50,6 +51,7 @@ export function useCreateManualCongregationService() {
     onSuccess: () => {
       toast.success('Permohonan pelayanan umat berhasil ditambahkan');
       queryClient.invalidateQueries({ queryKey: ['congregation-services'] });
+      queryClient.invalidateQueries({ queryKey: ['report-intensi-misa'] });
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Gagal menambahkan permohonan');
@@ -66,6 +68,7 @@ export function useApproveCongregationService() {
     onSuccess: () => {
       toast.success('Permohonan berhasil disetujui');
       queryClient.invalidateQueries({ queryKey: ['congregation-services'] });
+      queryClient.invalidateQueries({ queryKey: ['report-intensi-misa'] });
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Gagal menyetujui permohonan');
@@ -82,6 +85,7 @@ export function useRejectCongregationService() {
     onSuccess: () => {
       toast.success('Permohonan berhasil ditolak');
       queryClient.invalidateQueries({ queryKey: ['congregation-services'] });
+      queryClient.invalidateQueries({ queryKey: ['report-intensi-misa'] });
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || 'Gagal menolak permohonan');

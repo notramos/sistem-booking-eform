@@ -29,6 +29,7 @@ export interface CreateCongregationServicePayload {
 }
 
 export interface CreateManualCongregationServicePayload extends CreateCongregationServicePayload {
+  received_at?: string;
   status: 'pending' | 'approved' | 'rejected';
 }
 

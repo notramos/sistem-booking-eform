@@ -9,6 +9,7 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { FormSection } from '@/components/ui/form-section';
 import { DynamicFormFields } from '@/components/ui/dynamic-form-fields';
+import { MisaDeadlineNotice } from '@/components/ui/misa-deadline-notice';
 import { DetailFields } from '@/components/detail/DetailFields';
 import { WizardProgress } from '@/components/ui/wizard-progress';
 import { WizardFooter } from '@/components/ui/wizard-footer';
@@ -61,12 +62,6 @@ function getStepErrors(requiredFields: string[], data: FormData): Record<string,
     }
   }
   return errors;
-}
-
-function getStepFields(config: ServiceTypeConfig, stepIndex: number) {
-  const stepConfig = config.steps[stepIndex];
-  if (!stepConfig) return [];
-  return stepConfig.sections.flatMap((s) => s.fields);
 }
 
 function getReviewFields(config: ServiceTypeConfig, formData: FormData) {
@@ -367,6 +362,9 @@ export default function NewCongregationServicePage() {
                     onChange={updateField}
                     onDateChange={updateDateField}
                   />
+                  {config.value === 'intensi_misa' && section.id === 'jadwal_misa' && (
+                    <div className="mt-4"><MisaDeadlineNotice date={formData['dynamic_fields.tanggal_misa']} time={formData['dynamic_fields.jadwal_misa']} /></div>
+                  )}
                 </FormSection>
               ))}
 
@@ -383,6 +381,7 @@ export default function NewCongregationServicePage() {
               <div className="rounded-lg border p-4">
                 <DetailFields groups={getReviewFields(config, formData)} />
               </div>
+              {config.value === 'intensi_misa' && <MisaDeadlineNotice date={formData['dynamic_fields.tanggal_misa']} time={formData['dynamic_fields.jadwal_misa']} />}
 
               <div className="flex items-start gap-2.5 rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
                 <Info className="w-4 h-4 mt-0.5 shrink-0" />

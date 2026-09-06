@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { SERVICE_TYPE_MAP, getServiceFieldLabel } from '@/lib/service-types';
+import { formatWibDateTime } from '@/lib/misa-deadline';
 import {
   ArrowLeft, FileText, CheckCircle2, XCircle, Clock, User as UserIcon,
 } from 'lucide-react';
@@ -130,7 +131,7 @@ export default function LayananUmatDetailPage() {
   // Jaring pengaman supaya benar-benar tidak ada yang tersembunyi: data terisi
   // yang tidak tercakup config (mis. permohonan lama atau config yang berubah).
   const INTERNAL_KEYS = new Set([
-    'id', 'user_id', 'service_type', 'status', 'notes', 'dynamic_fields', 'user', 'created_at', 'updated_at',
+    'id', 'user_id', 'service_type', 'status', 'notes', 'dynamic_fields', 'user', 'created_at', 'updated_at', 'received_at',
   ]);
   const leftovers = [
     ...Object.entries(record).filter(
@@ -144,6 +145,12 @@ export default function LayananUmatDetailPage() {
   const detailGroups: DetailGroup[] = leftovers.length > 0
     ? [...configGroups, { title: 'Informasi Lain', fields: leftovers }]
     : configGroups;
+  if (service.service_type === 'intensi_misa') {
+    detailGroups.push({ title: 'Waktu Pengajuan', fields: [
+      { label: 'Pengajuan / pencatatan', value: formatWibDateTime(service.created_at) },
+      { label: 'Diterima Sekretariat', value: service.received_at ? formatWibDateTime(service.received_at) : 'Belum tercatat terpisah' },
+    ] });
+  }
 
   const timelineItems: TimelineItem[] = [
     {

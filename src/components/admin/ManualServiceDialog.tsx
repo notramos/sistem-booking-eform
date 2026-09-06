@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
+import { MisaDeadlineNotice } from '@/components/ui/misa-deadline-notice';
+import { nowWibInput } from '@/lib/misa-deadline';
 import { useCreateManualCongregationService } from '@/hooks/useCongregationServices';
 import { SERVICE_TYPES, computeMisaScheduleOptions } from '@/lib/service-types';
 import { angkaKeTerbilang } from '@/lib/terbilang';
@@ -54,6 +56,7 @@ export function ManualServiceDialog() {
   const [permohonanLainnya, setPermohonanLainnya] = useState('');
   const [stipendiumAmount, setStipendiumAmount] = useState('');
   const [status, setStatus] = useState('approved');
+  const [receivedAt, setReceivedAt] = useState(nowWibInput);
 
   const tanggalStr = tanggalMisa ? format(tanggalMisa, 'yyyy-MM-dd') : undefined;
   const scheduleOptions = tanggalStr ? computeMisaScheduleOptions(tanggalStr) : [];
@@ -77,6 +80,7 @@ export function ManualServiceDialog() {
     setPermohonanLainnya('');
     setStipendiumAmount('');
     setStatus('approved');
+    setReceivedAt(nowWibInput());
   };
 
   const handleTanggalChange = (d: Date | undefined) => {
@@ -99,6 +103,7 @@ export function ManualServiceDialog() {
         neighborhood: neighborhood.trim() || undefined,
         contact: contact.trim(),
         status: status as 'pending' | 'approved' | 'rejected',
+        received_at: receivedAt ? `${receivedAt}:00+07:00` : undefined,
         dynamic_fields: {
           tanggal_misa: tanggalStr,
           jadwal_misa: jadwalMisa,
@@ -115,7 +120,7 @@ export function ManualServiceDialog() {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <Button variant="outline" size="sm" onClick={() => { setReceivedAt(nowWibInput()); setOpen(true); }}>
         <Plus className="w-4 h-4 mr-1.5" /> Tambah Manual
       </Button>
 
@@ -184,6 +189,8 @@ export function ManualServiceDialog() {
 
               <div className="space-y-3 py-2">
                 <Input label="Nama Pemohon *" placeholder="Nama lengkap pemohon" value={applicantName} onChange={(e) => setApplicantName(e.target.value)} />
+                <Input label="Waktu diterima Sekretariat (WIB)" type="datetime-local" value={receivedAt} max={nowWibInput()} onChange={(e) => setReceivedAt(e.target.value)} />
+                <p className="text-xs text-muted-foreground">Sesuaikan dengan waktu formulir diterima. Waktu pencatatan sistem tetap disimpan terpisah.</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Input label="Lingkungan" placeholder="Nama lingkungan" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
                   <Input label="Kontak *" placeholder="Nomor HP" value={contact} onChange={(e) => setContact(e.target.value)} />
@@ -198,6 +205,7 @@ export function ManualServiceDialog() {
                   ))}
                 </Select>
 
+                <MisaDeadlineNotice date={tanggalStr} time={jadwalMisa} />
                 <Textarea label="Ucapan Syukur atas" rows={2} placeholder="Opsional" value={ucapanSyukur} onChange={(e) => setUcapanSyukur(e.target.value)} />
                 <Textarea label="Mohon Istirahat Kekal Bagi" rows={2} placeholder="Opsional" value={doaArwah} onChange={(e) => setDoaArwah(e.target.value)} />
                 <Textarea label="Permohonan Lainnya" rows={2} placeholder="Opsional" value={permohonanLainnya} onChange={(e) => setPermohonanLainnya(e.target.value)} />

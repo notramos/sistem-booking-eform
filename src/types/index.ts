@@ -230,6 +230,7 @@ export interface ReportFilter {
 }
 
 export interface CongregationService {
+  received_at?: string | null;
   id: string;
   user_id: string;
   service_type: string;

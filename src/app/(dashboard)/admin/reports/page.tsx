@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { reportsApi } from '@/lib/api/reports';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
+import { IntensiMisaReport } from '@/components/admin/IntensiMisaReport';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Download, FileText, FileSpreadsheet, CalendarDays, XCircle } from 'lucide-react';
+import { FileText, FileSpreadsheet, CalendarDays, XCircle } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format } from 'date-fns';
 import { formatDate, downloadBlob } from '@/lib/utils';
@@ -348,10 +348,10 @@ export default function AdminReportsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Laporan</h1>
-        <p className="text-muted-foreground mt-1">Lihat dan ekspor laporan peminjaman ruangan</p>
+        <p className="text-muted-foreground mt-1">Lihat dan ekspor laporan peminjaman ruangan dan Intensi Misa</p>
       </div>
 
-      <Card>
+      {tab !== 'intensi_misa' && <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap items-end gap-4">
             <DatePicker
@@ -374,15 +374,17 @@ export default function AdminReportsPage() {
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       <Tabs defaultValue="bookings" value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="h-auto flex-wrap justify-start gap-1">
+          <TabsTrigger value="intensi_misa">Intensi Misa</TabsTrigger>
           <TabsTrigger value="bookings">Laporan Booking</TabsTrigger>
           <TabsTrigger value="utilization">Utilisasi Ruangan</TabsTrigger>
           <TabsTrigger value="activity">Aktivitas User</TabsTrigger>
           <TabsTrigger value="monthly">Laporan Bulanan</TabsTrigger>
         </TabsList>
+        <TabsContent value="intensi_misa"><IntensiMisaReport /></TabsContent>
         <TabsContent value="bookings">
           <BookingReport startDate={startDate} endDate={endDate} />
         </TabsContent>

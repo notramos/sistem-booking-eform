@@ -1,7 +1,29 @@
 import apiClient from '@/lib/api-client';
 import type { ApiResponse } from '@/types';
 
+export interface IntensiReportRow {
+  id: string;
+  submitted_at: string | null;
+  received_at: string | null;
+  misa_date: string;
+  schedule: string;
+  applicant_name: string;
+  region: string | null;
+  neighborhood: string | null;
+  ucapan_syukur: string;
+  doa_arwah: string;
+  permohonan_lainnya: string;
+  stipendium: number | null;
+  status: string;
+}
+
 export const reportsApi = {
+  intensiMisa: (params: Record<string, string>) =>
+    apiClient.get<{ data: IntensiReportRow[]; meta: { current_page: number; last_page: number; total: number } }>('/reports/intensi-misa', { params }),
+
+  exportIntensiMisa: (params: Record<string, string>) =>
+    apiClient.get('/reports/intensi-misa/excel', { params, responseType: 'blob' }),
+
   bookings: (params?: Record<string, string | undefined>) =>
     apiClient.get('/reports/bookings', { params }),
 
