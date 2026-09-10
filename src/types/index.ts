@@ -8,6 +8,11 @@ export interface User {
   position: string | null;
   nip: string | null;
   is_active: boolean;
+  wilayah_id?: string | null;
+  lingkungan_id?: string | null;
+  parish?: string | null;
+  wilayah?: { id: string; name: string } | null;
+  lingkungan?: { id: string; name: string; area?: string | null } | null;
   roles: { id: number; name: string; pivot?: { model_type: string; model_id: string } }[];
   permissions?: { id: number; name: string }[];
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ComponentType } from 'react';
+import { useMemo, useState, type ComponentType } from 'react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { MisaDeadlineNotice } from '@/components/ui/misa-deadline-notice';
 import { nowWibInput } from '@/lib/misa-deadline';
 import { useCreateManualCongregationService } from '@/hooks/useCongregationServices';
+import { useWilayah } from '@/hooks/useParish';
 import { SERVICE_TYPES, computeMisaScheduleOptions } from '@/lib/service-types';
 import { angkaKeTerbilang } from '@/lib/terbilang';
 import { cn } from '@/lib/utils';
@@ -45,8 +46,10 @@ export function ManualServiceDialog() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<'pick' | 'intensi_misa'>('pick');
   const createManual = useCreateManualCongregationService();
+  const { data: wilayahList, isLoading: wilayahLoading } = useWilayah();
 
   const [applicantName, setApplicantName] = useState('');
+  const [region, setRegion] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [contact, setContact] = useState('');
   const [tanggalMisa, setTanggalMisa] = useState<Date | undefined>(undefined);
@@ -57,6 +60,11 @@ export function ManualServiceDialog() {
   const [stipendiumAmount, setStipendiumAmount] = useState('');
   const [status, setStatus] = useState('approved');
   const [receivedAt, setReceivedAt] = useState(nowWibInput);
+
+  const lingkunganOptions = useMemo(
+    () => (wilayahList ?? []).find((w) => w.name === region)?.lingkungan.filter((l) => l.is_active !== false) ?? [],
+    [wilayahList, region]
+  );
 
   const tanggalStr = tanggalMisa ? format(tanggalMisa, 'yyyy-MM-dd') : undefined;
   const scheduleOptions = tanggalStr ? computeMisaScheduleOptions(tanggalStr) : [];
@@ -71,6 +79,7 @@ export function ManualServiceDialog() {
   const resetForm = () => {
     setStep('pick');
     setApplicantName('');
+    setRegion('');
     setNeighborhood('');
     setContact('');
     setTanggalMisa(undefined);
@@ -100,6 +109,7 @@ export function ManualServiceDialog() {
       {
         service_type: 'intensi_misa',
         applicant_name: applicantName.trim(),
+        region: region || undefined,
         neighborhood: neighborhood.trim() || undefined,
         contact: contact.trim(),
         status: status as 'pending' | 'approved' | 'rejected',
@@ -191,10 +201,21 @@ export function ManualServiceDialog() {
                 <Input label="Nama Pemohon *" placeholder="Nama lengkap pemohon" value={applicantName} onChange={(e) => setApplicantName(e.target.value)} />
                 <Input label="Waktu diterima Sekretariat (WIB)" type="datetime-local" value={receivedAt} max={nowWibInput()} onChange={(e) => setReceivedAt(e.target.value)} />
                 <p className="text-xs text-muted-foreground">Sesuaikan dengan waktu formulir diterima. Waktu pencatatan sistem tetap disimpan terpisah.</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Input label="Lingkungan" placeholder="Nama lingkungan" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
-                  <Input label="Kontak *" placeholder="Nomor HP" value={contact} onChange={(e) => setContact(e.target.value)} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Select label="Wilayah" value={region} disabled={wilayahLoading} onChange={(e) => { setRegion(e.target.value); setNeighborhood(''); }}>
+                    <option value="">{wilayahLoading ? 'Memuat wilayah...' : 'Pilih wilayah'}</option>
+                    {(wilayahList ?? []).filter((w) => w.is_active !== false).map((w) => (
+                      <option key={w.id} value={w.name}>{w.name}</option>
+                    ))}
+                  </Select>
+                  <Select label="Lingkungan" value={neighborhood} disabled={!region} onChange={(e) => setNeighborhood(e.target.value)}>
+                    <option value="">{region ? 'Pilih lingkungan' : 'Pilih wilayah dulu'}</option>
+                    {lingkunganOptions.map((l) => (
+                      <option key={l.id} value={l.name}>{l.area ? `${l.name} — ${l.area}` : l.name}</option>
+                    ))}
+                  </Select>
                 </div>
+                <Input label="Kontak *" placeholder="Nomor HP" inputMode="tel" value={contact} onChange={(e) => setContact(e.target.value)} />
 
                 <DatePicker label="Tanggal Misa *" value={tanggalMisa} onChange={handleTanggalChange} placeholder="Pilih tanggal misa" />
 

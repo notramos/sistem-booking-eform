@@ -85,23 +85,21 @@ export default function NewCongregationServicePage() {
   const createService = useCreateCongregationService();
   const { data: wilayahList } = useWilayah();
   const [currentStep, setCurrentStep] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [formData, setFormData] = useState<FormData>({ service_type: '' });
 
   // Opsi dropdown Lingkungan (neighborhood) & Wilayah (region) dari data master.
   const areaOptions = useMemo(() => {
     const wilayahOptions = (wilayahList ?? []).map((w) => ({ value: w.name, label: w.name }));
-    // Daftar lingkungan disajikan datar lintas wilayah, jadi nama saja
-    // ("St. Alfonsus 2") sulit dikenali — sertakan perumahan/wilayahnya.
-    const lingkunganOptions = (wilayahList ?? []).flatMap((w) =>
-      w.lingkungan.map((l) => ({
+    const selectedWilayah = (wilayahList ?? []).find((w) => w.name === formData.region);
+    const lingkunganOptions = (selectedWilayah?.lingkungan ?? [])
+      .filter((l) => l.is_active !== false)
+      .map((l) => ({
         value: l.name,
-        label: l.area ? `${l.name} — ${l.area}` : `${l.name} — ${w.name}`,
-      }))
-    );
+        label: l.area ? `${l.name} — ${l.area}` : l.name,
+      }));
     return { wilayahOptions, lingkunganOptions };
-  }, [wilayahList]);
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [formData, setFormData] = useState<FormData>({ service_type: '' });
+  }, [wilayahList, formData.region]);
 
   const injectAreaOptions = useCallback(
     (fields: ServiceFieldConfig[]): ServiceFieldConfig[] =>
@@ -137,6 +135,8 @@ export default function NewCongregationServicePage() {
   const updateField = useCallback((key: string, value: string) => {
     setFormData((prev) => {
       const next = { ...prev, [key]: value };
+
+      if (key === 'region') next.neighborhood = '';
 
       // Jadwal misa cuma punya 1 opsi (Sabtu/Jumat pertama) — auto-pilih tanpa perlu diklik user.
       if (key === 'dynamic_fields.tanggal_misa' && value) {

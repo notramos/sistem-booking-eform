@@ -53,8 +53,8 @@ const kontakFields: ServiceTypeConfig['steps'][0]['sections'][0]['fields'] = [
   { name: 'contact', label: 'Kontak (HP/Telepon)', type: 'tel', required: true, placeholder: 'Nomor yang bisa dihubungi' },
   { name: 'phone', label: 'Telepon', type: 'tel', required: false, placeholder: 'Nomor telepon rumah' },
   { name: 'mobile_phone', label: 'HP', type: 'tel', required: false, placeholder: 'Nomor HP' },
-  { name: 'neighborhood', label: 'Lingkungan', type: 'select', required: true, options: [] as { value: string; label: string }[], placeholder: 'Pilih lingkungan' },
-  { name: 'region', label: 'Wilayah', type: 'select', required: false, options: [] as { value: string; label: string }[], placeholder: 'Pilih wilayah' },
+  { name: 'region', label: 'Wilayah', type: 'select', required: true, options: [] as { value: string; label: string }[], placeholder: 'Pilih wilayah' },
+  { name: 'neighborhood', label: 'Lingkungan', type: 'select', required: true, options: [] as { value: string; label: string }[], placeholder: 'Pilih wilayah terlebih dahulu' },
   { name: 'parish', label: 'Paroki', type: 'text', required: false, placeholder: 'Nama paroki' },
 ];
 
@@ -516,8 +516,8 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
               { name: 'contact', label: 'Kontak Pelapor', type: 'tel', required: true },
               { name: 'phone', label: 'Telepon', type: 'tel', required: false },
               { name: 'mobile_phone', label: 'HP', type: 'tel', required: false },
+              { name: 'region', label: 'Wilayah', type: 'select', required: true, options: [] as { value: string; label: string }[] },
               { name: 'neighborhood', label: 'Lingkungan', type: 'select', required: true, options: [] as { value: string; label: string }[] },
-              { name: 'region', label: 'Wilayah', type: 'select', required: false, options: [] as { value: string; label: string }[] },
             ],
           },
           {
@@ -672,7 +672,8 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
             title: 'Data Pemohon',
             fields: [
               { name: 'applicant_name', label: 'Nama Pemohon', type: 'text', required: true, colSpan: 2 },
-              { name: 'neighborhood', label: 'Lingkungan', type: 'text', required: true },
+              { name: 'region', label: 'Wilayah', type: 'select', required: true, options: [] as { value: string; label: string }[] },
+              { name: 'neighborhood', label: 'Lingkungan', type: 'select', required: true, options: [] as { value: string; label: string }[] },
               { name: 'contact', label: 'Nomor Telepon/HP', type: 'tel', required: true },
             ],
           },

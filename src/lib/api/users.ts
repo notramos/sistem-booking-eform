@@ -7,7 +7,7 @@ export const usersApi = {
 
   get: (id: string) => apiClient.get<ApiResponse<User>>(`/users/${id}`),
 
-  create: (data: { name: string; email: string; password: string; role: string; phone?: string; department?: string; nip?: string }) =>
+  create: (data: { name: string; email: string; password: string; role: string; phone?: string; department?: string; position?: string; nip?: string; wilayah_id?: string | null; lingkungan_id?: string | null; parish?: string }) =>
     apiClient.post<ApiResponse<User>>('/users', data),
 
   update: (id: string, data: Partial<User & { role?: string }>) =>
@@ -22,7 +22,7 @@ export const usersApi = {
 
   profile: {
     get: () => apiClient.get<ApiResponse<User>>('/profile'),
-    update: (data: { name?: string; phone?: string; department?: string; position?: string }) =>
+    update: (data: { name?: string; phone?: string; department?: string; position?: string; wilayah_id?: string | null; lingkungan_id?: string | null; parish?: string }) =>
       apiClient.put<ApiResponse<User>>('/profile', data),
     changePassword: (currentPassword: string, newPassword: string, newPasswordConfirmation: string) =>
       apiClient.put<ApiResponse>('/profile/password', {

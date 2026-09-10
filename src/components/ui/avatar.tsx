@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { forwardRef, type HTMLAttributes } from 'react';
+import { forwardRef, type HTMLAttributes, type ImgHTMLAttributes } from 'react';
 
 const Avatar = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
@@ -14,8 +14,10 @@ const Avatar = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
 );
 Avatar.displayName = 'Avatar';
 
-const AvatarImage = forwardRef<HTMLImageElement, HTMLAttributes<HTMLImageElement>>(
+const AvatarImage = forwardRef<HTMLImageElement, ImgHTMLAttributes<HTMLImageElement>>(
   ({ className, ...props }, ref) => (
+    // Avatar adalah gambar dinamis dari storage backend, bukan aset build Next.js.
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
     <img
       ref={ref}
       className={cn('aspect-square h-full w-full', className)}
