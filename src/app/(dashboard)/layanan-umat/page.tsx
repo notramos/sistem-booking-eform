@@ -51,7 +51,7 @@ export default function LayananUmatPage() {
         </div>
         <Link href="/layanan-umat/new">
           <Button>
-            <Heart className="w-4 h-4 mr-2" /> Ajukan Baru
+            <Heart className="w-4 h-4 mr-2" /> Ajukan Intensi Misa
           </Button>
         </Link>
       </div>
@@ -64,7 +64,7 @@ export default function LayananUmatPage() {
         <EmptyState
           icon={Heart}
           title="Belum ada permohonan pelayanan umat"
-          action={{ label: 'Ajukan Sekarang', href: '/layanan-umat/new' }}
+          action={{ label: 'Ajukan Intensi Misa', href: '/layanan-umat/new' }}
         />
       ) : (
         <div className="space-y-3">

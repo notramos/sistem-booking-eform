@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useCreateCongregationService } from '@/hooks/useCongregationServices';
 import { useWilayah } from '@/hooks/useParish';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { FormSection } from '@/components/ui/form-section';
 import { DynamicFormFields } from '@/components/ui/dynamic-form-fields';
 import { MisaDeadlineNotice } from '@/components/ui/misa-deadline-notice';
@@ -14,7 +13,7 @@ import { DetailFields } from '@/components/detail/DetailFields';
 import { WizardProgress } from '@/components/ui/wizard-progress';
 import { WizardFooter } from '@/components/ui/wizard-footer';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Search, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen, CalendarPlus, MessagesSquare } from 'lucide-react';
+import { ArrowLeft, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen, CalendarPlus, MessagesSquare } from 'lucide-react';
 import Link from 'next/link';
 import { SERVICE_TYPES, SERVICE_TYPE_MAP, computeMisaScheduleOptions } from '@/lib/service-types';
 import { angkaKeTerbilang } from '@/lib/terbilang';
@@ -33,6 +32,7 @@ function getServiceTypeIcon(icon: string) {
 }
 
 const WIZARD_STEPS_BASE = [{ title: 'Pilih Pelayanan' }];
+const PUBLIC_SERVICE_TYPES = SERVICE_TYPES.filter((service) => service.value === 'intensi_misa');
 
 /** Samakan dengan logika kunci di DynamicFormFields — field.name bisa sudah mengandung prefix `dynamic_fields.` sendiri. */
 function fieldKeyOf(field: ServiceFieldConfig): string {
@@ -84,9 +84,10 @@ export default function NewCongregationServicePage() {
   const router = useRouter();
   const createService = useCreateCongregationService();
   const { data: wilayahList } = useWilayah();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [formData, setFormData] = useState<FormData>({ service_type: '' });
+  // Saat ini hanya Intensi Misa yang resmi dibuka untuk umat. Langsung masuk
+  // ke langkah pengisian agar pengguna tidak perlu memilih satu-satunya layanan.
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<FormData>({ service_type: 'intensi_misa' });
 
   // Opsi dropdown Lingkungan (neighborhood) & Wilayah (region) dari data master.
   const areaOptions = useMemo(() => {
@@ -162,14 +163,6 @@ export default function NewCongregationServicePage() {
   const updateDateField = useCallback((key: string, date: Date | undefined) => {
     updateField(key, date ? format(date, 'yyyy-MM-dd') : '');
   }, [updateField]);
-
-  const filteredTypes = useMemo(() => {
-    if (!searchQuery) return SERVICE_TYPES;
-    const q = searchQuery.toLowerCase();
-    return SERVICE_TYPES.filter(
-      (t) => t.label.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
 
   const validateCurrentStep = useCallback(
     (step: number) => {
@@ -254,13 +247,13 @@ export default function NewCongregationServicePage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Pelayanan Umat</h1>
-        <p className="text-muted-foreground mt-1">Ajukan permohonan pelayanan untuk jemaat</p>
+        <h1 className="text-2xl font-bold text-foreground">Intensi Misa</h1>
+        <p className="text-muted-foreground mt-1">Ajukan intensi untuk didoakan dalam perayaan Ekaristi</p>
       </div>
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>Form Permohonan Pelayanan Umat</CardTitle>
+          <CardTitle>Form Permohonan Intensi Misa</CardTitle>
           <CardDescription>
             {config
               ? `${config.label} — ${config.description}`
@@ -275,18 +268,12 @@ export default function NewCongregationServicePage() {
           {/* Step 0: Pilih Pelayanan */}
           {currentStep === 0 && (
             <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="text"
-                  placeholder="Cari jenis pelayanan..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+                <p className="font-medium text-foreground">Pelayanan digital yang tersedia</p>
+                <p className="mt-1 text-muted-foreground">Saat ini AlbertusKU membuka pengajuan Intensi Misa. Pelayanan lain akan tersedia secara bertahap.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {filteredTypes.map((t) => {
+                {PUBLIC_SERVICE_TYPES.map((t) => {
                   const selected = selectedType === t.value;
                   const Icon = getServiceTypeIcon(t.icon);
                   return (
@@ -317,11 +304,6 @@ export default function NewCongregationServicePage() {
                     </button>
                   );
                 })}
-                {filteredTypes.length === 0 && (
-                  <div className="col-span-full text-center py-8 text-muted-foreground">
-                    Tidak ada pelayanan yang sesuai dengan pencarian &quot;{searchQuery}&quot;
-                  </div>
-                )}
               </div>
 
               <WizardFooter onNext={handleNext} nextDisabled={!hasServiceType} />
