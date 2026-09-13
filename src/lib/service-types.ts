@@ -939,20 +939,34 @@ export function getServiceFieldLabel(typeKey: string | undefined, fieldName: str
  * Opsi jam jadwal misa tergantung hari dari `tanggal_misa` yang dipilih:
  * Jumat pertama > Minggu > Sabtu (pagi dan sore) > jadwal harian.
  */
-export function computeMisaScheduleOptions(dateStr: string): { value: string; label: string }[] {
-  const d = new Date(dateStr + 'T00:00:00');
-  const day = d.getDay(); // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
-  const isFirstFriday = day === 5 && d.getDate() <= 7;
+export function computeMisaScheduleOptions(dateStr: string, now = new Date()): { value: string; label: string }[] {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  if (Number.isNaN(d.getTime())) return [];
+  const day = d.getUTCDay(); // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
+  const isFirstFriday = day === 5 && d.getUTCDate() <= 7;
 
-  if (isFirstFriday) return [{ value: '19:30', label: '19.30 (Jumat Pertama)' }];
-  if (day === 0) {
-    return [
+  let options: { value: string; label: string }[];
+  if (isFirstFriday) options = [{ value: '19:30', label: '19.30 (Jumat Pertama)' }];
+  else if (day === 0) {
+    options = [
       { value: '06:00', label: '06.00' },
       { value: '08:30', label: '08.30' },
       { value: '17:30', label: '17.30' },
     ];
-  }
-  if (day === 6) return [{ value: '06:30', label: '06.30' }, { value: '17:30', label: '17.30' }];
-  if (day === 1 || day === 3) return [{ value: '06:30', label: '06.30' }];
-  return [{ value: '18:30', label: '18.30' }];
+  } else if (day === 6) options = [{ value: '06:30', label: '06.30' }, { value: '17:30', label: '17.30' }];
+  else if (day === 1 || day === 3) options = [{ value: '06:30', label: '06.30' }];
+  else options = [{ value: '18:30', label: '18.30' }];
+
+  // Jadwal dibandingkan memakai WIB, bukan timezone perangkat pengguna.
+  const wibParts = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(now);
+  const part = (type: string) => wibParts.find((item) => item.type === type)?.value ?? '';
+  const todayWib = `${part('year')}-${part('month')}-${part('day')}`;
+  const timeWib = `${part('hour')}:${part('minute')}`;
+
+  if (dateStr < todayWib) return [];
+  if (dateStr === todayWib) return options.filter((option) => option.value > timeWib);
+  return options;
 }

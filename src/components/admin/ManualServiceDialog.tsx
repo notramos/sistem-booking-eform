@@ -74,7 +74,8 @@ export function ManualServiceDialog() {
   })();
 
   const hasIntensi = ucapanSyukur.trim() || doaArwah.trim() || permohonanLainnya.trim();
-  const isValid = applicantName.trim() && contact.trim() && tanggalStr && jadwalMisa && hasIntensi && stipendiumAmount;
+  const isValid = applicantName.trim() && contact.trim() && tanggalStr && jadwalMisa &&
+    scheduleOptions.some((option) => option.value === jadwalMisa) && hasIntensi && stipendiumAmount;
 
   const resetForm = () => {
     setStep('pick');
@@ -220,11 +221,14 @@ export function ManualServiceDialog() {
                 <DatePicker label="Tanggal Misa *" value={tanggalMisa} onChange={handleTanggalChange} placeholder="Pilih tanggal misa" />
 
                 <Select label="Jadwal Misa *" value={jadwalMisa} onChange={(e) => setJadwalMisa(e.target.value)} disabled={!tanggalStr}>
-                  <option value="">{tanggalStr ? 'Pilih jam' : 'Pilih tanggal dulu'}</option>
+                  <option value="">{tanggalStr ? (scheduleOptions.length ? 'Pilih jam' : 'Semua jadwal sudah lewat') : 'Pilih tanggal dulu'}</option>
                   {scheduleOptions.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </Select>
+                {tanggalStr && scheduleOptions.length === 0 && (
+                  <p className="text-xs text-amber-700">Semua jadwal Misa pada tanggal ini sudah lewat. Pilih tanggal berikutnya.</p>
+                )}
 
                 <MisaDeadlineNotice date={tanggalStr} time={jadwalMisa} />
                 <Textarea label="Ucapan Syukur atas" rows={2} placeholder="Opsional" value={ucapanSyukur} onChange={(e) => setUcapanSyukur(e.target.value)} />

@@ -142,7 +142,7 @@ export default function NewCongregationServicePage() {
       // Jadwal misa cuma punya 1 opsi (Sabtu/Jumat pertama) — auto-pilih tanpa perlu diklik user.
       if (key === 'dynamic_fields.tanggal_misa' && value) {
         const options = computeMisaScheduleOptions(value);
-        if (options.length === 1) next['dynamic_fields.jadwal_misa'] = options[0].value;
+        next['dynamic_fields.jadwal_misa'] = options.length === 1 ? options[0].value : '';
       }
 
       // Hitung terbilang otomatis dari jumlah stipendium.
@@ -174,6 +174,15 @@ export default function NewCongregationServicePage() {
       if (!requiredFields) return true;
 
       const errors = getStepErrors(requiredFields, formData);
+      if (
+        config.value === 'intensi_misa' &&
+        formData['dynamic_fields.jadwal_misa'] &&
+        !computeMisaScheduleOptions(formData['dynamic_fields.tanggal_misa'] || '').some(
+          (option) => option.value === formData['dynamic_fields.jadwal_misa']
+        )
+      ) {
+        errors['dynamic_fields.jadwal_misa'] = 'Jadwal ini sudah lewat. Pilih jadwal atau tanggal lain.';
+      }
       setStepErrors(errors);
       return Object.keys(errors).length === 0;
     },
@@ -199,6 +208,14 @@ export default function NewCongregationServicePage() {
       if (fields) allRequiredFields = [...allRequiredFields, ...fields];
     }
     const allErrors = getStepErrors(allRequiredFields, formData);
+    if (
+      config.value === 'intensi_misa' &&
+      !computeMisaScheduleOptions(formData['dynamic_fields.tanggal_misa'] || '').some(
+        (option) => option.value === formData['dynamic_fields.jadwal_misa']
+      )
+    ) {
+      allErrors['dynamic_fields.jadwal_misa'] = 'Jadwal ini sudah lewat. Pilih jadwal atau tanggal lain.';
+    }
     setStepErrors(allErrors);
 
     if (Object.keys(allErrors).length > 0) return;
@@ -345,7 +362,14 @@ export default function NewCongregationServicePage() {
                     onDateChange={updateDateField}
                   />
                   {config.value === 'intensi_misa' && section.id === 'jadwal_misa' && (
-                    <div className="mt-4"><MisaDeadlineNotice date={formData['dynamic_fields.tanggal_misa']} time={formData['dynamic_fields.jadwal_misa']} /></div>
+                    <div className="mt-4 space-y-3">
+                      {formData['dynamic_fields.tanggal_misa'] && computeMisaScheduleOptions(formData['dynamic_fields.tanggal_misa']).length === 0 && (
+                        <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+                          Semua jadwal Misa pada tanggal ini sudah lewat. Silakan pilih tanggal berikutnya.
+                        </p>
+                      )}
+                      <MisaDeadlineNotice date={formData['dynamic_fields.tanggal_misa']} time={formData['dynamic_fields.jadwal_misa']} />
+                    </div>
                   )}
                 </FormSection>
               ))}
