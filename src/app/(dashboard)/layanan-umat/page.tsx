@@ -105,58 +105,69 @@ export default function LayananUmatPage() {
         </div>
       </section>
 
-      <SegmentedControl options={statuses} value={statusFilter} onChange={handleStatusFilter} />
-
-      {isLoading ? (
-        <Spinner size="lg" center label="Memuat permohonan..." />
-      ) : services.length === 0 ? (
-        <EmptyState
-          icon={Heart}
-          title="Belum ada permohonan pelayanan umat"
-          action={{ label: 'Ajukan Intensi Misa', href: '/layanan-umat/new' }}
-        />
-      ) : (
-        <div className="space-y-3">
-          {services.map((service) => {
-            const typeConfig = SERVICE_TYPE_MAP[service.service_type];
-            return (
-              <Link key={service.id} href={`/layanan-umat/${service.id}`}>
-                <Card className="hover:shadow-md hover:border-primary/50 transition-all cursor-pointer">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground">
-                          {typeConfig?.label ?? service.service_type}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">{service.applicant_name}</p>
-
-                        <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                          {isStaff && (
-                            <span className="flex items-center gap-1">
-                              <User className="w-4 h-4" />
-                              {service.user?.name ?? '-'}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <CalendarDays className="w-4 h-4" />
-                            {formatDate(service.created_at)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <Badge className={getStatusColor(service.status)}>
-                        {getStatusLabel(service.status)}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+      <section className="space-y-3 border-t pt-6">
+        <div>
+          <h2 className="text-base font-semibold text-foreground sm:text-lg">
+            {isStaff ? 'Daftar Permohonan' : 'Permohonan Saya'}
+          </h2>
+          <p className="text-xs text-muted-foreground sm:text-sm">
+            Lihat detail dan status permohonan pelayanan yang sudah diajukan.
+          </p>
         </div>
-      )}
 
-      <Pagination meta={meta} onPageChange={setPage} itemLabel="permohonan" />
+        <SegmentedControl options={statuses} value={statusFilter} onChange={handleStatusFilter} />
+
+        {isLoading ? (
+          <Spinner size="lg" center label="Memuat permohonan..." />
+        ) : services.length === 0 ? (
+          <EmptyState
+            icon={Heart}
+            title="Belum ada permohonan pelayanan umat"
+            action={{ label: 'Ajukan Intensi Misa', href: '/layanan-umat/new' }}
+          />
+        ) : (
+          <div className="space-y-3">
+            {services.map((service) => {
+              const typeConfig = SERVICE_TYPE_MAP[service.service_type];
+              return (
+                <Link key={service.id} href={`/layanan-umat/${service.id}`}>
+                  <Card className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md">
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-foreground">
+                            {typeConfig?.label ?? service.service_type}
+                          </p>
+                          <p className="mt-1 text-sm text-muted-foreground">{service.applicant_name}</p>
+
+                          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
+                            {isStaff && (
+                              <span className="flex items-center gap-1">
+                                <User className="h-4 w-4" />
+                                {service.user?.name ?? '-'}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <CalendarDays className="h-4 w-4" />
+                              {formatDate(service.created_at)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <Badge className={getStatusColor(service.status)}>
+                          {getStatusLabel(service.status)}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        <Pagination meta={meta} onPageChange={setPage} itemLabel="permohonan" />
+      </section>
     </div>
   );
 }
