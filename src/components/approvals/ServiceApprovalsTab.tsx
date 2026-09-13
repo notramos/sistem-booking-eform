@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Pagination } from '@/components/ui/pagination';
-import { formatDate, getInitials } from '@/lib/utils';
+import { formatDate, formatRelativeTime, getInitials } from '@/lib/utils';
 import { SERVICE_TYPE_MAP } from '@/lib/service-types';
 import { XCircle, CalendarDays, ClipboardList, ChevronRight, MapPin, Cake } from 'lucide-react';
 
@@ -52,7 +52,7 @@ export function ServiceApprovalsTab() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {services.map((service) => {
+          {services.map((service, index) => {
             const typeConfig = SERVICE_TYPE_MAP[service.service_type];
             const dynamicFieldsCount = Object.values(service.dynamic_fields ?? {}).filter((v) => v !== null && v !== '').length;
 
@@ -68,12 +68,16 @@ export function ServiceApprovalsTab() {
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="secondary" className="shrink-0 text-xs">#{((page - 1) * 15) + index + 1}</Badge>
                           <h3 className="font-semibold text-foreground">
                             {typeConfig?.label ?? service.service_type}
                           </h3>
                           {dynamicFieldsCount > 0 && (
                             <Badge variant="outline" className="shrink-0">{dynamicFieldsCount} detail terisi</Badge>
                           )}
+                          <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">
+                            Menunggu {formatRelativeTime(service.created_at)}
+                          </Badge>
                         </div>
                         <p className="text-sm text-primary mt-0.5">{service.applicant_name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -99,6 +103,10 @@ export function ServiceApprovalsTab() {
                             </span>
                           )}
                         </div>
+
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Antrean FIFO · diajukan {formatDate(service.created_at, 'long')}
+                        </p>
 
                         {service.description && (
                           <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{service.description}</p>

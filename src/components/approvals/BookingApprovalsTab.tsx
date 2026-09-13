@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Pagination } from '@/components/ui/pagination';
-import { formatDate, formatTime, getInitials, getStatusColor, getStatusLabel, getRoomDisplayLabel } from '@/lib/utils';
+import { formatDate, formatTime, formatRelativeTime, getInitials, getStatusColor, getStatusLabel, getRoomDisplayLabel } from '@/lib/utils';
 import { PURPOSE_LABELS } from '@/lib/constants';
 import { XCircle, CalendarDays, Clock, Users, ClipboardList, Church, Tag, ChevronRight, MapPin } from 'lucide-react';
 
@@ -56,7 +56,7 @@ export function BookingApprovalsTab() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {bookings.map((booking) => {
+          {bookings.map((booking, index) => {
             const dynamicFieldsCount = booking.service_details
               ? Object.values(booking.service_details.dynamic_fields ?? {}).filter((v) => v !== null && v !== '').length
               : 0;
@@ -73,6 +73,7 @@ export function BookingApprovalsTab() {
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="secondary" className="shrink-0 text-xs">#{((page - 1) * 15) + index + 1}</Badge>
                           <h3 className="font-semibold text-foreground">{booking.title}</h3>
                           {booking.service_details && (
                             <Badge variant="outline" className="gap-1 shrink-0">
@@ -87,6 +88,9 @@ export function BookingApprovalsTab() {
                           )}
                           <Badge className={`${getStatusColor(booking.status)} shrink-0 text-xs`}>
                             {getStatusLabel(booking.status)}
+                          </Badge>
+                          <Badge variant="outline" className="shrink-0 text-xs text-muted-foreground">
+                            Menunggu {formatRelativeTime(booking.created_at)}
                           </Badge>
                         </div>
                         <p className="text-sm text-primary mt-0.5 flex items-center gap-1">
@@ -128,6 +132,10 @@ export function BookingApprovalsTab() {
                             </span>
                           ) : null}
                         </div>
+
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Urutan berdasarkan waktu pengajuan · diajukan {formatDate(booking.created_at, 'long')}
+                        </p>
 
                         {booking.description && (
                           <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{booking.description}</p>

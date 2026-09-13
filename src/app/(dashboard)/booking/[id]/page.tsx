@@ -14,6 +14,7 @@ import { StatusStepper, type StepperStep } from '@/components/detail/StatusStepp
 import { ActivityTimeline, type TimelineItem } from '@/components/detail/ActivityTimeline'
 import { DetailFields, type DetailGroup } from '@/components/detail/DetailFields'
 import { RoomReallocationCard } from '@/components/booking/RoomReallocationCard'
+import { ApprovalChecklist } from '@/components/approvals/ApprovalChecklist'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter,
 } from '@/components/ui/dialog'
@@ -174,6 +175,7 @@ export default function BookingDetailPage() {
   const [approveNotes, setApproveNotes] = useState('')
   const [showReject, setShowReject] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
+  const [approvalChecks, setApprovalChecks] = useState([false, false, false, false])
   const [editingRecurringDate, setEditingRecurringDate] = useState<string | null>(null)
   const [deletingRecurringDate, setDeletingRecurringDate] = useState<string | null>(null)
 
@@ -226,6 +228,7 @@ export default function BookingDetailPage() {
   const canEditRecurringDates = isStaff && NON_FINAL_STATUSES.includes(booking.status)
   const canCancel = (isOwner || isStaff) && !!booking.is_cancellable
   const hasAnyAction = canActOnApproval || canEdit || canCancel
+  const canApproveAfterChecklist = approvalChecks.every(Boolean)
 
   // Dipakai dua kali: card sidebar (desktop) dan action bar melayang (mobile).
   const actionButtons = (
@@ -237,7 +240,7 @@ export default function BookingDetailPage() {
               <PlayCircle className="h-4 w-4" /> Mulai Review
             </Button>
           )}
-          <Button className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApprove(true)}>
+          <Button className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowApprove(true)} disabled={!canApproveAfterChecklist}>
             <CheckCircle2 className="h-4 w-4" /> Setujui
           </Button>
           <Button variant="outline" className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setShowReject(true)}>
@@ -363,6 +366,19 @@ export default function BookingDetailPage() {
           <StatusStepper steps={bookingSteps(booking.status)} />
         </CardContent>
       </Card>
+
+      {canActOnApproval && (
+        <ApprovalChecklist
+          items={[
+            'Tanggal dan jam peminjaman sudah diperiksa.',
+            'Ruangan dan kapasitasnya sudah sesuai kebutuhan.',
+            'Tidak ada konflik jadwal pada ruangan tersebut.',
+            'Data peminjam dan kegiatan sudah cukup jelas.',
+          ]}
+          checked={approvalChecks}
+          onChange={(index, value) => setApprovalChecks((current) => current.map((item, i) => i === index ? value : item))}
+        />
+      )}
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Kolom utama: versi web */}
@@ -507,7 +523,7 @@ export default function BookingDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShowApprove(false)}>Batal</Button>
-            <Button onClick={handleApprove} loading={approveMutation.isPending}>Ya, Setujui</Button>
+            <Button onClick={handleApprove} disabled={!canApproveAfterChecklist} loading={approveMutation.isPending}>Ya, Setujui</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

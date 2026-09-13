@@ -17,6 +17,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { StatusStepper, type StepperStep } from '@/components/detail/StatusStepper';
 import { ActivityTimeline, type TimelineItem } from '@/components/detail/ActivityTimeline';
 import { DetailFields, type DetailGroup } from '@/components/detail/DetailFields';
+import { ApprovalChecklist } from '@/components/approvals/ApprovalChecklist';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -63,6 +64,7 @@ export default function LayananUmatDetailPage() {
   const [approveNotes, setApproveNotes] = useState('');
   const [showReject, setShowReject] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [approvalChecks, setApprovalChecks] = useState([false, false, false]);
 
   if (isLoading) {
     return <Spinner size="lg" center label="Memuat detail permohonan..." />;
@@ -86,6 +88,7 @@ export default function LayananUmatDetailPage() {
 
   const typeConfig = SERVICE_TYPE_MAP[service.service_type];
   const hasActions = isStaff && service.status === 'pending';
+  const canApproveAfterChecklist = approvalChecks.every(Boolean);
 
   // Dipakai dua kali: card sidebar (desktop) dan action bar melayang (mobile).
   const actionButtons = (
@@ -94,6 +97,7 @@ export default function LayananUmatDetailPage() {
         className="w-full gap-2 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
         variant="outline"
         onClick={() => setShowApprove(true)}
+        disabled={!canApproveAfterChecklist}
       >
         <CheckCircle2 className="h-4 w-4" /> Setujui
       </Button>
@@ -227,6 +231,18 @@ export default function LayananUmatDetailPage() {
         </CardContent>
       </Card>
 
+      {hasActions && (
+        <ApprovalChecklist
+          items={[
+            'Data pemohon sudah diperiksa.',
+            'Tanggal dan jadwal pelayanan sudah sesuai.',
+            'Isi permohonan sudah dibaca dan cukup jelas.',
+          ]}
+          checked={approvalChecks}
+          onChange={(index, value) => setApprovalChecks((current) => current.map((item, i) => i === index ? value : item))}
+        />
+      )}
+
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Kolom utama: versi web */}
         <div className={cn('space-y-4 sm:space-y-6', hasActions ? 'lg:col-span-2' : 'lg:col-span-3')}>
@@ -308,7 +324,7 @@ export default function LayananUmatDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setShowApprove(false); setApproveNotes(''); }}>Batal</Button>
-            <Button onClick={handleApprove} loading={approveMutation.isPending}>
+            <Button onClick={handleApprove} disabled={!canApproveAfterChecklist} loading={approveMutation.isPending}>
               Ya, Setujui
             </Button>
           </DialogFooter>
