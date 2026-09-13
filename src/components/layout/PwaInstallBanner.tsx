@@ -15,14 +15,20 @@ interface PwaInstallBannerProps {
 }
 
 export function PwaInstallBanner({ compact = false }: PwaInstallBannerProps) {
-  const [show, setShow] = useState(() => typeof window !== 'undefined' && !window.localStorage.getItem(PWA_BANNER_DISMISSED_KEY));
+  const [show, setShow] = useState(false);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled] = useState(() => typeof window !== 'undefined' && (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
-  ));
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
+    // Nilai browser hanya dibaca setelah hydration agar render server dan client sama.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsInstalled(standalone);
+    if (!standalone && !window.localStorage.getItem(PWA_BANNER_DISMISSED_KEY)) {
+      setShow(true);
+    }
+
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
       setInstallEvent(event as BeforeInstallPromptEvent);
@@ -31,7 +37,7 @@ export function PwaInstallBanner({ compact = false }: PwaInstallBannerProps) {
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
     return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-  }, [isInstalled]);
+  }, []);
 
   const dismiss = () => {
     window.localStorage.setItem(PWA_BANNER_DISMISSED_KEY, '1');

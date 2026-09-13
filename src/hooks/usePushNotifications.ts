@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { pushSubscriptionsApi } from '@/lib/api/push-subscriptions';
 import { registerPushServiceWorker, subscriptionPayload, supportsPush, urlBase64ToUint8Array } from '@/lib/push';
 
+const FALLBACK_VAPID_PUBLIC_KEY = 'BHQuTe07ZecWUhFd7RC7l_775ZXfDHgANq71d4GhM0yx96fv_WynMZmUDEx-IX6ZMLvilEKMF2DGyhsEBYpX1rI';
+
 type PushState = 'unsupported' | 'default' | 'granted' | 'denied';
 
 export function usePushNotifications() {
@@ -28,7 +30,7 @@ export function usePushNotifications() {
 
   const enable = useCallback(async () => {
     if (!supportsPush()) throw new Error('Browser ini belum mendukung notifikasi push.');
-    const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || FALLBACK_VAPID_PUBLIC_KEY;
     if (!publicKey) throw new Error('Konfigurasi notifikasi belum lengkap.');
     setLoading(true);
     try {
