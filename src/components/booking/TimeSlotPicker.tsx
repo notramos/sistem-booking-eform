@@ -117,6 +117,8 @@ export function TimeSlotPicker({ start, end, onChange, roomId, date, label, erro
         <BookedSlotsTimeline
           date={date}
           roomId={roomId}
+          selectedStart={start}
+          selectedEnd={end}
           onPickSlot={(freeStart, freeEnd) => {
             const freeStartMin = toMin(freeStart);
             const freeEndMin = toMin(freeEnd);
