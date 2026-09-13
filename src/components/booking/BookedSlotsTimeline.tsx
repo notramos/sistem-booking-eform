@@ -45,16 +45,17 @@ export function BookedSlotsTimeline({ date, roomId, onPickSlot, selectedStart, s
 
   return (
     <div className="space-y-2">
-      <div className="relative h-14 overflow-hidden rounded-md border border-border bg-muted/30">
-        <div className="absolute inset-0 flex">
+      <div className="overflow-x-auto rounded-md border border-border bg-muted/30 pb-1 [-webkit-overflow-scrolling:touch]">
+        <div className="relative h-14 min-w-[640px] overflow-hidden">
+          <div className="absolute inset-0 flex">
           {segments.map((from) => {
             const to = from + step;
             const booked = isBooked(from, to);
             const free = !booked && isFree(from, to);
             const selected = selectedFrom !== null && selectedTo !== null && from >= selectedFrom && to <= selectedTo;
             const label = formatTime(from);
-            return (
-              <button
+              return (
+                <button
                 key={`segment-${from}`}
                 type="button"
                 disabled={!free || !onPickSlot}
@@ -71,18 +72,20 @@ export function BookedSlotsTimeline({ date, roomId, onPickSlot, selectedStart, s
               >
                 {booked && from % 60 === 0 && <span className="pointer-events-none absolute inset-x-0 top-1 text-center text-[9px] font-medium text-white">Terpesan</span>}
                 {free && selected && <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] font-semibold">✓</span>}
-              </button>
-            );
-          })}
-        </div>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex">
-          {segments.map((from) => (
-            <span key={`label-${from}`} className="relative min-w-0 flex-1 text-[9px] text-muted-foreground">
-              {from % 60 === 0 ? <span className="absolute left-1 bottom-0">{formatTime(from)}</span> : null}
-            </span>
-          ))}
+                </button>
+              );
+            })}
+          </div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex">
+            {segments.map((from) => (
+              <span key={`label-${from}`} className="relative min-w-0 flex-1 text-[9px] text-muted-foreground">
+                {from % 60 === 0 ? <span className="absolute bottom-0 left-1">{formatTime(from)}</span> : null}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
+      <p className="text-[11px] text-muted-foreground sm:hidden">Geser ke kiri/kanan untuk melihat semua jam. Ketuk slot 30 menit yang diinginkan.</p>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
