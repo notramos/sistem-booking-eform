@@ -38,10 +38,20 @@ export function usePushNotifications() {
       setPermission(result);
       if (result !== 'granted') throw new Error('Izin notifikasi belum diberikan.');
       const registration = await registerPushServiceWorker();
+      const existing = await registration.pushManager.getSubscription();
+      // Hapus subscription lama agar perangkat tidak memakai VAPID key dari
+      // deployment sebelumnya.
+      if (existing) await existing.unsubscribe();
       const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource });
       await pushSubscriptionsApi.save(subscriptionPayload(subscription));
       setEnabled(true);
       toast.success('Notifikasi AlbertusKU berhasil diaktifkan');
+    } catch (error) {
+      const message = error instanceof DOMException && error.name === 'AbortError'
+        ? 'Layanan push browser sedang gagal dihubungi. Coba matikan VPN/proxy, lalu ulangi beberapa saat lagi.'
+        : error instanceof Error ? error.message : 'Notifikasi belum dapat diaktifkan.';
+      toast.error(message);
+      throw error;
     } finally {
       setLoading(false);
     }

@@ -24,11 +24,11 @@ export function PushNotificationSettings() {
             <span className="mr-auto flex items-center gap-2 text-sm text-muted-foreground"><Smartphone className="h-4 w-4" />{push.enabled ? 'Notifikasi aktif di perangkat ini' : 'Notifikasi belum aktif di perangkat ini'}</span>
             {push.enabled ? (
               <>
-                <Button type="button" variant="outline" size="sm" onClick={() => void push.test()} disabled={push.loading}><Bell className="mr-1.5 h-4 w-4" />Tes Notifikasi</Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => void push.disable()} disabled={push.loading}><BellOff className="mr-1.5 h-4 w-4" />Nonaktifkan</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => { void push.test().catch(() => undefined); }} disabled={push.loading}><Bell className="mr-1.5 h-4 w-4" />Tes Notifikasi</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => { void push.disable().catch(() => undefined); }} disabled={push.loading}><BellOff className="mr-1.5 h-4 w-4" />Nonaktifkan</Button>
               </>
             ) : (
-              <Button type="button" size="sm" onClick={() => void push.enable()} disabled={push.loading}><Bell className="mr-1.5 h-4 w-4" />Aktifkan Notifikasi</Button>
+              <Button type="button" size="sm" onClick={() => { void push.enable().catch(() => undefined); }} disabled={push.loading}><Bell className="mr-1.5 h-4 w-4" />Aktifkan Notifikasi</Button>
             )}
           </div>
         )}
