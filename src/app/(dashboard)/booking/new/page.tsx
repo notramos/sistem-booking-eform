@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { addMonths, addWeeks, endOfMonth, format, startOfMonth } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useRoom, useRoomRecommendations } from '@/hooks/useRooms';
@@ -14,7 +14,6 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -142,6 +141,26 @@ export default function NewBookingPage() {
   const watchedBookingType = watch('bookingType');
   const watchedPattern = watch('pattern');
   const watchedDuration = watch('durationMonths');
+
+  const plannedDates = useMemo(() => {
+    if (watchedBookingType !== 'rutin') return [];
+    if (dateMode === 'manual') return manualDates;
+    if (!watchedDate || !watchedPattern || !watchedDuration) return [];
+
+    const anchor = new Date(watchedDate);
+    const maxDate = new Date(anchor.getFullYear(), 11, 31);
+    const durationEnd = addMonths(anchor, watchedDuration);
+    durationEnd.setDate(durationEnd.getDate() - 1);
+    const end = durationEnd < maxDate ? durationEnd : maxDate;
+    const dates: string[] = [];
+    let current = anchor;
+
+    while (current <= end) {
+      dates.push(format(current, 'yyyy-MM-dd'));
+      current = watchedPattern === 'weekly' ? addWeeks(current, 1) : addMonths(current, 1);
+    }
+    return dates;
+  }, [dateMode, manualDates, watchedBookingType, watchedDate, watchedDuration, watchedPattern]);
 
   const debouncedStart = useDebounce(watchedStart, 500);
   const debouncedEnd = useDebounce(watchedEnd, 500);
@@ -557,16 +576,24 @@ export default function NewBookingPage() {
                         name="durationMonths"
                         control={control}
                         render={({ field }) => (
-                          <Select
-                            label="Durasi *"
-                            value={field.value ?? ''}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                          >
-                            <option value="">Pilih durasi</option>
-                            {RECURRING_DURATION_OPTIONS.map((m) => (
-                              <option key={m} value={m}>{m} Bulan</option>
-                            ))}
-                          </Select>
+                          <div>
+                            <label className="text-sm font-medium leading-none mb-1.5 block">Durasi *</label>
+                            <div className="grid grid-cols-3 gap-1.5">
+                              {RECURRING_DURATION_OPTIONS.map((m) => (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => field.onChange(m)}
+                                  className={cn(
+                                    'rounded-lg border px-2 py-2 text-xs font-medium transition-colors sm:text-sm',
+                                    field.value === m ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-background hover:bg-accent'
+                                  )}
+                                >
+                                  {m} Bulan
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       />
                       {errors.durationMonths && <p className="text-destructive text-xs mt-1">{errors.durationMonths.message}</p>}
@@ -611,6 +638,25 @@ export default function NewBookingPage() {
                       </Button>
                     )}
                     <p className="text-xs text-muted-foreground">Tanggal harus dalam tahun yang sama dengan tanggal pertama dan minimal H+7.</p>
+                  </div>
+                )}
+
+                {plannedDates.length > 0 && !datePreview && (
+                  <div className="lg:col-span-2 space-y-2 rounded-lg border border-primary/20 bg-primary/[0.03] p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                        <Repeat className="w-3.5 h-3.5 text-primary" /> Tanggal yang direncanakan
+                      </p>
+                      <span className="text-xs text-muted-foreground">{plannedDates.length} tanggal</span>
+                    </div>
+                    <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto">
+                      {plannedDates.map((date) => (
+                        <Badge key={date} variant="secondary" className="text-xs">
+                          {format(new Date(date + 'T00:00:00'), 'd MMM yyyy', { locale: idLocale })}
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Ketersediaan setiap tanggal akan diperiksa setelah ruangan dipilih.</p>
                   </div>
                 )}
 

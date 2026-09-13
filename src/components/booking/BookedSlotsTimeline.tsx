@@ -91,6 +91,20 @@ export function BookedSlotsTimeline({ date, roomId, onPickSlot }: Props) {
           <span className="ml-auto italic">Klik slot hijau untuk mengisi jam</span>
         )}
       </div>
+
+      {data.booked_slots.length > 0 && (
+        <div className="space-y-1.5 rounded-lg border bg-muted/20 p-2.5">
+          <p className="text-xs font-medium text-foreground">Jadwal lain pada tanggal ini</p>
+          <div className="grid gap-1.5 sm:grid-cols-2">
+            {data.booked_slots.map((slot, index) => (
+              <div key={`booking-info-${index}`} className="flex items-center justify-between gap-2 rounded-md bg-background px-2.5 py-1.5 text-xs">
+                <span className="truncate text-muted-foreground">{slot.title ?? 'Terpakai'}</span>
+                <span className="shrink-0 font-medium text-foreground">{slot.start_time}–{slot.end_time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

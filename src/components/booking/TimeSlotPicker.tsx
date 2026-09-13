@@ -113,7 +113,19 @@ export function TimeSlotPicker({ start, end, onChange, roomId, date, label, erro
     <div className="space-y-3">
       {label && <label className="text-sm font-medium text-foreground block">{label}</label>}
 
-      {roomId && date && <BookedSlotsTimeline date={date} roomId={roomId} />}
+      {roomId && date && (
+        <BookedSlotsTimeline
+          date={date}
+          roomId={roomId}
+          onPickSlot={(freeStart, freeEnd) => {
+            const freeStartMin = toMin(freeStart);
+            const freeEndMin = toMin(freeEnd);
+            const selectedEnd = Math.min(freeStartMin + 60, freeEndMin);
+            setCustomEnd(false);
+            onChange(toHM(freeStartMin), toHM(selectedEnd));
+          }}
+        />
+      )}
 
       {/* Ringkasan pilihan */}
       <div
