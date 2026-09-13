@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Camera, Lock, MapPin, Phone, Save, ShieldCheck, User } from 'lucide-react';
 import { getInitials, getRoleLabel } from '@/lib/utils';
-import { PushNotificationSettings } from '@/components/notifications/PushNotificationSettings';
 
 function avatarUrl(path?: string | null) {
   if (!path) return undefined;
@@ -62,7 +61,6 @@ export default function ProfilePage() {
         </form></CardContent></Card>
 
         <Card><CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Lock className="h-5 w-5" />Keamanan Akun</CardTitle><CardDescription>Gunakan sedikitnya 8 karakter dan jangan gunakan password yang sama dengan akun lain.</CardDescription></CardHeader><CardContent><form onSubmit={(e) => { e.preventDefault(); if (passwordValid) changePassword.mutate(); }} className="space-y-4"><div className="grid gap-4 md:grid-cols-3"><Input label="Password saat ini" type="password" autoComplete="current-password" value={passwords.current_password} onChange={(e) => setPasswords({ ...passwords, current_password: e.target.value })} /><Input label="Password baru" type="password" minLength={8} autoComplete="new-password" value={passwords.new_password} onChange={(e) => setPasswords({ ...passwords, new_password: e.target.value })} /><Input label="Konfirmasi password" type="password" minLength={8} autoComplete="new-password" error={passwords.new_password_confirmation && passwords.new_password !== passwords.new_password_confirmation ? 'Konfirmasi belum sama' : undefined} value={passwords.new_password_confirmation} onChange={(e) => setPasswords({ ...passwords, new_password_confirmation: e.target.value })} /></div><Button type="submit" variant="outline" disabled={!passwordValid} loading={changePassword.isPending}><Lock className="mr-2 h-4 w-4" />Perbarui Password</Button></form></CardContent></Card>
-        <PushNotificationSettings />
       </div>
     </div>
   </div>;
