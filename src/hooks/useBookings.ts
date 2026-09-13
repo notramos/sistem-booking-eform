@@ -197,6 +197,19 @@ export function useUpdateBooking() {
   });
 }
 
+export function useAdminUpdateBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof bookingsApi.adminUpdate>[1] }) => bookingsApi.adminUpdate(id, data),
+    onSuccess: () => {
+      toast.success('Booking berhasil diperbarui');
+      qc.invalidateQueries({ queryKey: ['bookings'] });
+      qc.invalidateQueries({ queryKey: ['calendar-events'] });
+    },
+    onError: (err: { message?: string }) => toast.error(err.message || 'Gagal memperbarui booking'),
+  });
+}
+
 export function useUpdateRecurringDate() {
   const qc = useQueryClient();
   return useMutation({

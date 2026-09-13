@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useBookings } from '@/hooks/useBookings';
+import { useBookings, useCancelBooking } from '@/hooks/useBookings';
 import { useRooms } from '@/hooks/useRooms';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,9 +15,10 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, formatTime, getStatusColor, getStatusLabel, getRoomDisplayLabel } from '@/lib/utils';
-import { Eye, ClipboardList, X } from 'lucide-react';
+import { Eye, ClipboardList, X, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ManualBookingDialog } from '@/components/admin/ManualBookingDialog';
+import { EditBookingDialog } from '@/components/admin/EditBookingDialog';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Semua Status' },
@@ -51,6 +52,7 @@ export function AllBookingsTable() {
   });
 
   const bookings = data?.data ?? [];
+  const cancelBooking = useCancelBooking();
   const hasFilters = !!status || !!roomId || !!dateFrom || !!dateTo;
 
   const resetFilters = () => {
@@ -128,7 +130,7 @@ export function AllBookingsTable() {
                   <TableHead>Tanggal</TableHead>
                   <TableHead>Waktu</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-10"></TableHead>
+                  <TableHead className="w-28">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -143,11 +145,15 @@ export function AllBookingsTable() {
                       <Badge className={getStatusColor(booking.status)}>{getStatusLabel(booking.status)}</Badge>
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-1">
                       <Link href={`/booking/${booking.id}`}>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                           <Eye className="w-4 h-4" />
                         </Button>
                       </Link>
+                      <EditBookingDialog booking={booking} />
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" title="Hapus booking" disabled={booking.status === 'cancelled'} onClick={() => { if (window.confirm('Hapus booking ini dari jadwal? Riwayat akan dipertahankan sebagai Dibatalkan.')) cancelBooking.mutate(booking.id); }}><Trash2 className="w-4 h-4" /></Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

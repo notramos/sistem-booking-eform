@@ -59,6 +59,32 @@ export function useCreateManualCongregationService() {
   });
 }
 
+export function useAdminUpdateCongregationService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof congregationServicesApi.adminUpdate>[1] }) => congregationServicesApi.adminUpdate(id, data),
+    onSuccess: () => {
+      toast.success('Permohonan berhasil diperbarui');
+      queryClient.invalidateQueries({ queryKey: ['congregation-services'] });
+      queryClient.invalidateQueries({ queryKey: ['report-intensi-misa'] });
+    },
+    onError: (err: { message?: string }) => toast.error(err.message || 'Gagal memperbarui permohonan'),
+  });
+}
+
+export function useDeleteCongregationService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => congregationServicesApi.remove(id),
+    onSuccess: () => {
+      toast.success('Permohonan berhasil dihapus');
+      queryClient.invalidateQueries({ queryKey: ['congregation-services'] });
+      queryClient.invalidateQueries({ queryKey: ['report-intensi-misa'] });
+    },
+    onError: (err: { message?: string }) => toast.error(err.message || 'Gagal menghapus permohonan'),
+  });
+}
+
 export function useApproveCongregationService() {
   const queryClient = useQueryClient();
 

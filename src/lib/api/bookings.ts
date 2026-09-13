@@ -40,6 +40,9 @@ export const bookingsApi = {
   update: (id: string, data: Partial<Pick<Booking, 'title' | 'description' | 'room_id' | 'booking_date' | 'start_time' | 'end_time' | 'notes'>>) =>
     apiClient.put<ApiResponse<Booking>>(`/bookings/${id}`, data),
 
+  adminUpdate: (id: string, data: Partial<Pick<Booking, 'title' | 'description' | 'room_id' | 'booking_date' | 'start_time' | 'end_time' | 'notes' | 'contact_person' | 'expected_attendees' | 'status'>>) =>
+    apiClient.patch<ApiResponse<Booking>>(`/bookings/${id}/admin`, data),
+
   updateRecurringDate: (id: string, oldDate: string, newDate: string) =>
     apiClient.patch<ApiResponse<Booking>>(`/bookings/${id}/recurring-dates`, { old_date: oldDate, new_date: newDate }),
 

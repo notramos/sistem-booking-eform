@@ -46,6 +46,11 @@ export const congregationServicesApi = {
   createManual: (data: CreateManualCongregationServicePayload) =>
     apiClient.post<ApiResponse<CongregationService>>('/congregation-services/manual', data),
 
+  adminUpdate: (id: string, data: Partial<Pick<CongregationService, 'applicant_name' | 'contact' | 'region' | 'neighborhood' | 'service_date' | 'status' | 'description' | 'notes' | 'dynamic_fields'>>) =>
+    apiClient.patch<ApiResponse<CongregationService>>(`/congregation-services/${id}/admin`, data),
+
+  remove: (id: string) => apiClient.delete<ApiResponse>(`/congregation-services/${id}`),
+
   approve: (id: string, notes?: string) =>
     apiClient.post<ApiResponse<CongregationService>>(`/congregation-services/${id}/approve`, { notes }),
 

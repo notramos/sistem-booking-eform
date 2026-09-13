@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useCongregationServices } from '@/hooks/useCongregationServices';
+import { useCongregationServices, useDeleteCongregationService } from '@/hooks/useCongregationServices';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,8 @@ import { Pagination } from '@/components/ui/pagination';
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
 import { ManualServiceDialog } from '@/components/admin/ManualServiceDialog';
-import { Eye, ClipboardList, X } from 'lucide-react';
+import { EditIntensiMisaDialog } from '@/components/admin/EditIntensiMisaDialog';
+import { Eye, ClipboardList, X, Trash2 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Semua Status' },
@@ -36,6 +37,7 @@ export function AllServicesTable() {
   });
 
   const services = data?.data ?? [];
+  const deleteService = useDeleteCongregationService();
   const hasFilters = !!status || !!serviceType;
 
   const resetFilters = () => {
@@ -104,7 +106,7 @@ export function AllServicesTable() {
                   <TableHead className="hidden md:table-cell">Diajukan Oleh</TableHead>
                   <TableHead>Tanggal</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-10"></TableHead>
+                  <TableHead className="w-28">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,11 +122,15 @@ export function AllServicesTable() {
                         <Badge className={getStatusColor(service.status)}>{getStatusLabel(service.status)}</Badge>
                       </TableCell>
                       <TableCell>
+                        <div className="flex items-center gap-1">
                         <Link href={`/layanan-umat/${service.id}`}>
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             <Eye className="w-4 h-4" />
                           </Button>
                         </Link>
+                        {service.service_type === 'intensi_misa' && <EditIntensiMisaDialog service={service} />}
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" title="Hapus permohonan" onClick={() => { if (window.confirm('Hapus permohonan ini secara permanen?')) deleteService.mutate(service.id); }}><Trash2 className="w-4 h-4" /></Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
