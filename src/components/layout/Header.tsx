@@ -71,7 +71,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[22rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl p-0">
+            <DropdownMenuContent align="end" className="w-[calc(100vw-1rem)] sm:w-80 overflow-hidden rounded-2xl p-0">
               <div className="flex items-center justify-between bg-muted/30 px-4 py-3 border-b">
                 <div><p className="text-sm font-semibold">Notifikasi</p><p className="text-[11px] text-muted-foreground">Pembaruan terbaru akun Anda</p></div>
                 {unreadCount > 0 && (
