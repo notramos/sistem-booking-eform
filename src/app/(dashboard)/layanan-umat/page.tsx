@@ -12,8 +12,14 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
-import { SERVICE_TYPE_MAP } from '@/lib/service-types';
-import { CalendarDays, Heart, User } from 'lucide-react';
+import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
+import { CalendarDays, Heart, User, CalendarPlus, MessagesSquare, ArrowRight, LockKeyhole } from 'lucide-react';
+
+const SERVICE_ICONS = {
+  intensi_misa: Heart,
+  permohonan_misa: CalendarPlus,
+  konsultasi_romo: MessagesSquare,
+} as const;
 
 export default function LayananUmatPage() {
   const { hasAnyRole } = useAuth();
@@ -55,6 +61,49 @@ export default function LayananUmatPage() {
           </Button>
         </Link>
       </div>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Pilih Pelayanan Umat</h2>
+          <p className="text-sm text-muted-foreground">Saat ini pengajuan yang tersedia adalah Intensi Misa.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {SERVICE_TYPES.map((serviceType) => {
+            const Icon = SERVICE_ICONS[serviceType.value as keyof typeof SERVICE_ICONS] ?? Heart;
+            const isEnabled = serviceType.value === 'intensi_misa';
+            const content = (
+              <Card className={isEnabled
+                ? 'h-full border-primary/30 transition-all hover:border-primary hover:shadow-md'
+                : 'h-full border-dashed opacity-70'}
+              >
+                <CardContent className="flex h-full items-start gap-3 p-4">
+                  <div className={`rounded-xl p-2.5 ${isEnabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-semibold text-foreground">{serviceType.label}</h3>
+                      {isEnabled ? <ArrowRight className="h-4 w-4 shrink-0 text-primary" /> : <LockKeyhole className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                    </div>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{serviceType.description}</p>
+                    <Badge variant={isEnabled ? 'default' : 'secondary'} className="mt-3 text-xs">
+                      {isEnabled ? 'Tersedia' : 'Segera Hadir'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+
+            return isEnabled ? (
+              <Link key={serviceType.value} href="/layanan-umat/new" className="block">
+                {content}
+              </Link>
+            ) : (
+              <div key={serviceType.value} aria-disabled="true">{content}</div>
+            );
+          })}
+        </div>
+      </section>
 
       <SegmentedControl options={statuses} value={statusFilter} onChange={handleStatusFilter} />
 
