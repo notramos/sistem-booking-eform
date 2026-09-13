@@ -39,8 +39,8 @@ function NotificationRow({ notification, onRead }: { notification: Notification;
   const description = getNotificationDescription(notification)
 
   const content = (
-    <div className={cn('flex gap-3 px-4 py-3.5 sm:px-6 sm:py-4 transition group', href && 'hover:bg-muted/50', isUnread && 'bg-primary/[0.04]')}>
-      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full', meta.bg)}>
+    <div className={cn('flex gap-3 border-l-2 px-4 py-3.5 sm:px-6 sm:py-4 transition group', href && 'hover:bg-muted/50', isUnread ? 'border-l-primary bg-primary/[0.04]' : 'border-l-transparent')}>
+      <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-black/5 dark:ring-white/10', meta.bg)}>
         <Icon className={cn('h-4 w-4', meta.tone)} />
       </span>
       <div className="min-w-0 flex-1 space-y-0.5">
@@ -53,7 +53,7 @@ function NotificationRow({ notification, onRead }: { notification: Notification;
         {description && (
           <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
         )}
-        <p className="text-xs text-muted-foreground/70">{formatRelativeTime(notification.created_at)}</p>
+        <p className="text-xs text-muted-foreground/70">{formatRelativeTime(notification.created_at)}{isUnread ? ' · Baru' : ''}</p>
       </div>
       {href && (
         <ChevronRight className="mt-1 h-4 w-4 shrink-0 self-start text-muted-foreground/40 group-hover:text-primary" />

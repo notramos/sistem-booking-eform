@@ -14,18 +14,18 @@ interface NotificationMeta {
 
 /** Satu-satunya sumber ikon/label per tipe notifikasi — dipakai di Header (dropdown) dan halaman /notifications. */
 const NOTIFICATION_META: Record<string, NotificationMeta> = {
-  booking_created: { icon: CalendarDays, tone: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-950', label: 'Booking baru diajukan' },
-  booking_approved: { icon: CheckCheck, tone: 'text-green-600', bg: 'bg-green-100 dark:bg-green-950', label: 'Booking disetujui' },
-  booking_rejected: { icon: XCircle, tone: 'text-red-600', bg: 'bg-red-100 dark:bg-red-950', label: 'Booking ditolak' },
-  booking_cancelled: { icon: XCircle, tone: 'text-orange-600', bg: 'bg-orange-100 dark:bg-orange-950', label: 'Booking dibatalkan' },
-  booking_reminder: { icon: Clock, tone: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-950', label: 'Pengingat booking' },
-  booking_moved_to_admin_review: { icon: Send, tone: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-950', label: 'Menunggu persetujuan Admin' },
-  booking_forwarded_to_admin: { icon: Send, tone: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-950', label: 'Booking diteruskan ke Admin' },
-  booking_revision_requested: { icon: RotateCcw, tone: 'text-orange-600', bg: 'bg-orange-100 dark:bg-orange-950', label: 'Perlu revisi' },
-  recurring_booking_created: { icon: Repeat, tone: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-950', label: 'Booking rutin diajukan' },
-  congregation_service_created: { icon: Heart, tone: 'text-rose-600', bg: 'bg-rose-100 dark:bg-rose-950', label: 'Permohonan pelayanan baru' },
-  congregation_service_approved: { icon: CheckCheck, tone: 'text-green-600', bg: 'bg-green-100 dark:bg-green-950', label: 'Permohonan pelayanan disetujui' },
-  congregation_service_rejected: { icon: XCircle, tone: 'text-red-600', bg: 'bg-red-100 dark:bg-red-950', label: 'Permohonan pelayanan ditolak' },
+  booking_created: { icon: CalendarDays, tone: 'text-sky-700 dark:text-sky-300', bg: 'bg-sky-100 dark:bg-sky-950/50', label: 'Booking baru diajukan' },
+  booking_approved: { icon: CheckCheck, tone: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-100 dark:bg-emerald-950/50', label: 'Booking disetujui' },
+  booking_rejected: { icon: XCircle, tone: 'text-rose-700 dark:text-rose-300', bg: 'bg-rose-100 dark:bg-rose-950/50', label: 'Booking ditolak' },
+  booking_cancelled: { icon: XCircle, tone: 'text-slate-600 dark:text-slate-300', bg: 'bg-slate-100 dark:bg-slate-800', label: 'Booking dibatalkan' },
+  booking_reminder: { icon: Clock, tone: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-950/50', label: 'Pengingat booking' },
+  booking_moved_to_admin_review: { icon: Send, tone: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-100 dark:bg-indigo-950/50', label: 'Menunggu persetujuan Admin' },
+  booking_forwarded_to_admin: { icon: Send, tone: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-100 dark:bg-indigo-950/50', label: 'Booking diteruskan ke Admin' },
+  booking_revision_requested: { icon: RotateCcw, tone: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100 dark:bg-amber-950/50', label: 'Perlu revisi' },
+  recurring_booking_created: { icon: Repeat, tone: 'text-cyan-700 dark:text-cyan-300', bg: 'bg-cyan-100 dark:bg-cyan-950/50', label: 'Booking rutin diajukan' },
+  congregation_service_created: { icon: Heart, tone: 'text-violet-700 dark:text-violet-300', bg: 'bg-violet-100 dark:bg-violet-950/50', label: 'Permohonan pelayanan baru' },
+  congregation_service_approved: { icon: CheckCheck, tone: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-100 dark:bg-emerald-950/50', label: 'Permohonan pelayanan disetujui' },
+  congregation_service_rejected: { icon: XCircle, tone: 'text-rose-700 dark:text-rose-300', bg: 'bg-rose-100 dark:bg-rose-950/50', label: 'Permohonan pelayanan ditolak' },
 };
 
 export function getNotificationMeta(notification: Notification): NotificationMeta {

@@ -61,7 +61,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
+              <button aria-label={unreadCount > 0 ? `Notifikasi, ${unreadCount} belum dibaca` : 'Notifikasi'} className="relative p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-colors">
 
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
@@ -71,9 +71,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 max-w-[calc(100vw-2rem)] p-0">
-              <div className="flex items-center justify-between px-3 py-2.5 border-b">
-                <p className="text-sm font-semibold">Notifikasi</p>
+            <DropdownMenuContent align="end" className="w-[22rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl p-0">
+              <div className="flex items-center justify-between bg-muted/30 px-4 py-3 border-b">
+                <div><p className="text-sm font-semibold">Notifikasi</p><p className="text-[11px] text-muted-foreground">Pembaruan terbaru akun Anda</p></div>
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAllRead.mutate()}
@@ -97,10 +97,10 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                         key={n.id}
                         href={href}
                         onClick={() => !n.read_at && markRead.mutate(n.id)}
-                        className={`block px-3 py-2.5 border-b last:border-b-0 hover:bg-accent transition-colors ${!n.read_at ? 'bg-accent/40' : ''}`}
+                        className={`block border-b border-border/60 px-4 py-3 hover:bg-accent transition-colors ${!n.read_at ? 'bg-primary/[0.04]' : ''}`}
                       >
                         <div className="flex items-start gap-2.5">
-                          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${meta.bg}`}>
+                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-black/5 dark:ring-white/10 ${meta.bg}`}>
                             <Icon className={`w-3.5 h-3.5 ${meta.tone}`} />
                           </span>
                           <div className="min-w-0 flex-1">
