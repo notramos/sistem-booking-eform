@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { PwaInstallBanner } from "@/components/layout/PwaInstallBanner";
 
@@ -39,35 +39,54 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 py-10">
-      {/* Background panti imam */}
-      <div className="absolute inset-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/img/altar-bg.jpg"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-slate-900/60" />
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-4 shadow-lg p-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/img/albertus-logo.png" alt="Logo Paroki Santo Albertus Agung" className="w-full h-full object-contain" />
+    <main className="min-h-screen bg-[#fbf8f4] md:flex md:items-center md:justify-center md:p-6">
+      <div className="grid min-h-screen w-full overflow-hidden bg-background shadow-xl md:min-h-0 md:max-w-5xl md:grid-cols-[1.1fr_0.9fr] md:rounded-3xl">
+        <section className="relative hidden min-h-[640px] overflow-hidden bg-[#55121d] md:block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/altar-bg.jpg" alt="Interior Gereja Santo Albertus Agung" className="absolute inset-0 h-full w-full object-cover opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#4c0c18]/95 via-[#721b2a]/70 to-[#26070d]/90" />
+          <div className="relative flex h-full flex-col justify-between p-10 text-white lg:p-14">
+            <div className="flex items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white p-1.5 shadow-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/albertus-logo.png" alt="Logo AlbertusKU" className="h-full w-full object-contain" />
+              </div>
+              <div>
+                <p className="text-xl font-bold tracking-tight">AlbertusKU</p>
+                <p className="text-sm text-white/70">Gereja Santo Albertus Agung</p>
+              </div>
+            </div>
+            <div className="max-w-md">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#e8bd62]/40 bg-[#e8bd62]/10 px-3 py-1.5 text-xs font-medium text-[#f4d58f]">
+                <Sparkles className="h-3.5 w-3.5" /> Pelayanan digital paroki
+              </div>
+              <h1 className="text-4xl font-bold leading-tight lg:text-5xl">Melayani dengan lebih mudah.</h1>
+              <p className="mt-5 text-base leading-relaxed text-white/75">
+                Kelola peminjaman ruangan dan pelayanan umat dalam satu aplikasi yang sederhana, jelas, dan terhubung.
+              </p>
+            </div>
+            <p className="text-xs text-white/50">&copy; {new Date().getFullYear()} Gereja Santo Albertus Agung</p>
           </div>
-          <h1 className="text-2xl font-bold text-white drop-shadow">AlbertusKU</h1>
-          <p className="text-white/80 mt-1 drop-shadow">Sistem Peminjaman Ruangan Gereja</p>
-          <p className="text-sm text-white/60 drop-shadow">Gereja Albertus Agung</p>
-        </div>
+        </section>
 
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-center">Masuk</CardTitle>
-            <CardDescription className="text-center">Masukkan email dan password Anda</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-10 md:min-h-[640px] md:px-12 lg:px-16">
+          <div className="w-full max-w-md">
+            <div className="mb-8 text-center md:text-left">
+              <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-2 shadow-md ring-1 ring-primary/10 md:hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/albertus-logo.png" alt="Logo AlbertusKU" className="h-full w-full object-contain" />
+              </div>
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-primary">Selamat datang</p>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Masuk ke AlbertusKU</h1>
+              <p className="mt-2 text-sm text-muted-foreground">Gunakan akun Anda untuk melanjutkan.</p>
+            </div>
+
+            <Card className="border-0 bg-transparent shadow-none">
+              <CardHeader className="sr-only">
+                <CardTitle>Masuk</CardTitle>
+                <CardDescription>Masukkan email dan password Anda</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {errors.root && (
                 <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
@@ -110,26 +129,26 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <Button type="submit" loading={isSubmitting} className="w-full">
-                Masuk
+              <Button type="submit" loading={isSubmitting} className="h-12 w-full rounded-xl text-base shadow-md shadow-primary/20">
+                <ShieldCheck className="mr-2 h-4 w-4" /> Masuk dengan aman
               </Button>
             </form>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        <p className="text-center text-sm text-white/80 mt-6 drop-shadow">
-          Belum punya akun?{' '}
-          <Link href="/register" className="text-white font-medium hover:underline">
-            Daftar
-          </Link>
-        </p>
+            <p className="mt-7 text-center text-sm text-muted-foreground">
+              Belum punya akun?{' '}
+              <Link href="/register" className="font-semibold text-primary hover:underline">Daftar sekarang</Link>
+            </p>
 
-        <p className="text-center text-xs text-white/50 mt-4 drop-shadow">
-          &copy; {new Date().getFullYear()} Gereja Albertus Agung
-        </p>
+            <p className="mt-8 text-center text-xs text-muted-foreground/60 md:hidden">
+              &copy; {new Date().getFullYear()} Gereja Santo Albertus Agung
+            </p>
 
-        <PwaInstallBanner compact />
+            <PwaInstallBanner compact />
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
