@@ -6,7 +6,6 @@ import { useCongregationServices } from '@/hooks/useCongregationServices';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SegmentedControl } from '@/components/ui/segmented-control';
@@ -24,6 +23,7 @@ const SERVICE_ICONS = {
 export default function LayananUmatPage() {
   const { hasAnyRole } = useAuth();
   const isStaff = hasAnyRole(['sekretariat', 'p2', 'pastor', 'it_admin']);
+  const [view, setView] = useState<'services' | 'requests'>('services');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const { data, isLoading } = useCongregationServices({ status: statusFilter || undefined, page });
@@ -55,14 +55,18 @@ export default function LayananUmatPage() {
               : 'Riwayat permohonan pelayanan umat Anda'}
           </p>
         </div>
-        <Link href="/layanan-umat/new">
-          <Button>
-            <Heart className="w-4 h-4 mr-2" /> Ajukan Intensi Misa
-          </Button>
-        </Link>
       </div>
 
-      <section className="space-y-2">
+      <SegmentedControl
+        options={[
+          { value: 'services', label: 'Pilih Layanan' },
+          { value: 'requests', label: isStaff ? 'Daftar Permohonan' : 'Permohonan Saya' },
+        ]}
+        value={view}
+        onChange={(value) => setView(value as 'services' | 'requests')}
+      />
+
+      {view === 'services' && <section className="space-y-2">
         <div>
           <h2 className="text-base font-semibold text-foreground sm:text-lg">Pelayanan Umat</h2>
           <p className="text-xs text-muted-foreground sm:text-sm">Pilih layanan yang tersedia.</p>
@@ -103,9 +107,9 @@ export default function LayananUmatPage() {
             );
           })}
         </div>
-      </section>
+      </section>}
 
-      <section className="space-y-3 border-t pt-6">
+      {view === 'requests' && <section className="space-y-3">
         <div>
           <h2 className="text-base font-semibold text-foreground sm:text-lg">
             {isStaff ? 'Daftar Permohonan' : 'Permohonan Saya'}
@@ -167,7 +171,7 @@ export default function LayananUmatPage() {
         )}
 
         <Pagination meta={meta} onPageChange={setPage} itemLabel="permohonan" />
-      </section>
+      </section>}
     </div>
   );
 }
