@@ -25,7 +25,7 @@ import { RoomRecommendationList } from '@/components/booking/RoomRecommendationL
 import { TimeSlotPicker } from '@/components/booking/TimeSlotPicker';
 import { BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS, TATA_TERTIB_TEXT } from '@/lib/constants';
 import { cn, getMaxBookableDate, getRoomDisplayName } from '@/lib/utils';
-import { CalendarDays, ArrowLeft, Users, Repeat, CheckCircle2, XCircle } from 'lucide-react';
+import { CalendarDays, ArrowLeft, ArrowRight, Users, Repeat, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { roomsApi } from '@/lib/api/rooms';
 
@@ -117,6 +117,7 @@ export default function NewBookingPage() {
   const [dateMode, setDateMode] = useState<'auto' | 'manual'>('auto');
   const [manualDates, setManualDates] = useState<string[]>([]);
   const [manualDatePicker, setManualDatePicker] = useState(false);
+  const [step, setStep] = useState(1);
 
   const createBooking = useCreateBooking();
   const createRecurringBooking = useCreateRecurringBooking();
@@ -124,7 +125,7 @@ export default function NewBookingPage() {
   const updateBooking = useUpdateBooking();
   const { data: editBooking, isLoading: loadingEditBooking } = useBooking(editId ?? '');
 
-  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<BookingForm>({
+  const { register, handleSubmit, control, watch, setValue, trigger, formState: { errors } } = useForm<BookingForm>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       startTime: '09:00',
@@ -387,6 +388,29 @@ export default function NewBookingPage() {
     router.push('/my-bookings');
   };
 
+  const handleNext = async () => {
+    if (step === 1) {
+      const fields: (keyof BookingForm)[] = ['title', 'bookingDate', 'bookingType'];
+      if (watchedBookingType === 'rutin') fields.push('pattern', 'durationMonths');
+      if (await trigger(fields)) setStep(2);
+      return;
+    }
+    if (step === 2) {
+      const valid = await trigger('expectedAttendees');
+      if (valid && selectedRoomId) setStep(3);
+      else if (!selectedRoomId) toast.error('Pilih ruangan terlebih dahulu.');
+      return;
+    }
+    if (step === 3) {
+      const valid = await trigger(['startTime', 'endTime']);
+      if (!valid || isAvailable === false || checkingAvailability) {
+        if (isAvailable === false) toast.error('Pilih waktu lain karena ruangan tidak tersedia.');
+        return;
+      }
+      setStep(4);
+    }
+  };
+
   if (editId && loadingEditBooking) {
     return <Spinner size="lg" center label="Memuat data booking..." />;
   }
@@ -448,9 +472,21 @@ export default function NewBookingPage() {
         </p>
       </div>
 
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+        {['Detail Kegiatan', 'Pilih Ruangan', 'Atur Jadwal', 'Periksa & Ajukan'].map((label, index) => {
+          const number = index + 1;
+          return (
+            <div key={label} className={cn('rounded-lg border px-1.5 py-2 text-center text-[10px] leading-tight sm:px-2 sm:text-xs', number === step ? 'border-primary bg-primary text-primary-foreground' : number < step ? 'border-primary/30 bg-primary/5 text-primary' : 'text-muted-foreground')}>
+              <span className="block font-semibold">{number}</span>
+              <span className="mt-0.5 block">{label}</span>
+            </div>
+          );
+        })}
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* 1. Detail kegiatan */}
-        <Card>
+        {step === 1 && <Card>
           <CardHeader>
             <CardTitle>Detail Kegiatan</CardTitle>
             <CardDescription>Peminjam, tanggal, dan deskripsi kegiatan</CardDescription>
@@ -659,10 +695,10 @@ export default function NewBookingPage() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card>}
 
         {/* 2. Jumlah peserta → rekomendasi ruangan */}
-        <Card>
+        {step === 2 && <Card>
           <CardHeader>
             <CardTitle>Ruangan</CardTitle>
             <CardDescription>Masukkan jumlah peserta untuk melihat rekomendasi ruangan yang sesuai</CardDescription>
@@ -691,10 +727,10 @@ export default function NewBookingPage() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card>}
 
         {/* 3. Jam & ketersediaan (muncul setelah ruangan dipilih) */}
-        {selectedRoomId && (
+        {step === 3 && selectedRoomId && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
@@ -752,9 +788,21 @@ export default function NewBookingPage() {
           </Card>
         )}
 
-        {selectedRoomId && (
+        {step === 4 && selectedRoomId && (
           <Card>
+            <CardHeader>
+              <CardTitle>Periksa & Ajukan</CardTitle>
+              <CardDescription>Pastikan semua data sudah benar sebelum dikirim.</CardDescription>
+            </CardHeader>
             <CardContent className="p-4 space-y-3">
+              <div className="grid gap-2 rounded-lg border bg-muted/30 p-3 text-sm sm:grid-cols-2">
+                <div><span className="text-muted-foreground">Peminjam: </span><span className="font-medium">{watch('title') || '-'}</span></div>
+                <div><span className="text-muted-foreground">Jenis: </span><span className="font-medium">{watchedBookingType === 'rutin' ? 'Rutin' : 'Tidak rutin'}</span></div>
+                <div><span className="text-muted-foreground">Ruangan: </span><span className="font-medium">{selectedRoom ? `${getRoomDisplayName(selectedRoom)} · ${selectedRoom.capacity} orang` : '-'}</span></div>
+                <div><span className="text-muted-foreground">Tanggal: </span><span className="font-medium">{watchedDate ? format(watchedDate, 'd MMMM yyyy', { locale: idLocale }) : '-'}</span></div>
+                <div><span className="text-muted-foreground">Waktu: </span><span className="font-medium">{watchedStart} – {watchedEnd}</span></div>
+                <div><span className="text-muted-foreground">Peserta: </span><span className="font-medium">{attendeesNum || '-'} orang</span></div>
+              </div>
               <div className="text-sm text-muted-foreground max-h-40 overflow-y-auto whitespace-pre-line border rounded-lg p-3 bg-muted/30">
                 {TATA_TERTIB_TEXT}
               </div>
@@ -768,21 +816,33 @@ export default function NewBookingPage() {
           </Card>
         )}
 
-        <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" onClick={() => router.push(editId ? `/booking/${editId}` : '/booking/calendar')}>Batal</Button>
-          <Button
-            type="submit"
-            loading={editId ? updateBooking.isPending : watchedBookingType === 'rutin' ? createRecurringBooking.isPending : createBooking.isPending}
-            disabled={
-              !selectedRoomId || overCapacity || !consentChecked ||
-              (watchedBookingType === 'rutin'
-                ? !editId && (previewRecurring.isPending || !datePreview || datePreview.length === 0 || hasUnresolvedRecurringConflicts)
-                : isAvailable === false || checkingAvailability)
-            }
-          >
-            <CalendarDays className="w-4 h-4 mr-2" />
-            {editId ? 'Simpan Perubahan' : watchedBookingType === 'rutin' ? 'Ajukan Jadwal Rutin' : 'Ajukan Booking'}
-          </Button>
+        <div className="flex items-center justify-between gap-3">
+          {step === 1 ? (
+            <Button type="button" variant="outline" onClick={() => router.push(editId ? `/booking/${editId}` : '/booking/calendar')}>Batal</Button>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => setStep((current) => current - 1)}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> Sebelumnya
+            </Button>
+          )}
+          {step < 4 ? (
+            <Button type="button" onClick={() => void handleNext()}>
+              Selanjutnya <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              loading={editId ? updateBooking.isPending : watchedBookingType === 'rutin' ? createRecurringBooking.isPending : createBooking.isPending}
+              disabled={
+                !selectedRoomId || overCapacity || !consentChecked ||
+                (watchedBookingType === 'rutin'
+                  ? !editId && (previewRecurring.isPending || !datePreview || datePreview.length === 0 || hasUnresolvedRecurringConflicts)
+                  : isAvailable === false || checkingAvailability)
+              }
+            >
+              <CalendarDays className="mr-2 h-4 w-4" />
+              {editId ? 'Simpan Perubahan' : watchedBookingType === 'rutin' ? 'Ajukan Jadwal Rutin' : 'Ajukan Booking'}
+            </Button>
+          )}
         </div>
       </form>
     </div>
