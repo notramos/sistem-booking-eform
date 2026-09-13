@@ -11,6 +11,7 @@ import {
 import { authApi } from "@/lib/api/auth";
 import { useQueryClient } from '@tanstack/react-query';
 import type { User } from "@/types";
+import { removeCurrentPushSubscription, syncExistingPushSubscription } from '@/lib/push';
 
 interface AuthContextType {
   user: User | null;
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await authApi.getUser();
       setUser(res.data.data);
+      void syncExistingPushSubscription().catch(() => undefined);
       // isLoggingOut sengaja tidak direset di logout() (lihat komentar di sana) —
       // AuthProvider tidak ikut ter-unmount waktu pindah ke /login, jadi begitu ada
       // sesi valid lagi (login biasa, OTP, atau refresh setelah redirect), reset
@@ -64,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await authApi.login(email, password);
     queryClient.clear();
     setUser(res.data.data.user);
+    void syncExistingPushSubscription().catch(() => undefined);
     // isLoggingOut sengaja tidak direset saat logout (lihat komentar di logout()) —
     // AuthProvider ini tidak ikut ter-unmount waktu pindah ke /login, jadi nilainya
     // bertahan lintas sesi. Reset di sini supaya overlay logout tidak nyangkut
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     setIsLoggingOut(true);
     try {
+      await removeCurrentPushSubscription().catch(() => undefined);
       await authApi.logout();
     } finally {
       // User tetap dianggap keluar walau request logout ke server gagal (mis.

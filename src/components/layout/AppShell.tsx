@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
-import { ApkDownloadBanner } from '@/components/layout/ApkDownloadBanner';
+import { PwaInstallBanner } from '@/components/layout/PwaInstallBanner';
 import { LogoutOverlay } from '@/components/layout/LogoutOverlay';
 import { Spinner } from '@/components/ui/spinner';
 import { TataTertibDialog } from '@/components/ui/tata-tertib-dialog';
@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="md:pl-64">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <ApkDownloadBanner />
+        <PwaInstallBanner />
         <main className="p-4 sm:p-6">
           {loading ? <Spinner size="lg" center label="Memuat..." /> : children}
         </main>

@@ -11,7 +11,7 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/com
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { ApkDownloadBanner } from "@/components/layout/ApkDownloadBanner";
+import { PwaInstallBanner } from "@/components/layout/PwaInstallBanner";
 
 const loginSchema = z.object({
   email: z.string().email("Format email tidak valid"),
@@ -128,7 +128,7 @@ export default function LoginPage() {
           &copy; {new Date().getFullYear()} Gereja Albertus Agung
         </p>
 
-        <ApkDownloadBanner compact />
+        <PwaInstallBanner compact />
       </div>
     </div>
   );
