@@ -140,25 +140,54 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 py-10">
+    <main className="relative flex min-h-screen items-center justify-center bg-[#f6f4ef] px-4 py-8 md:px-6 md:py-6">
       <div className="absolute inset-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/img/altar-bg.jpg"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover md:hidden"
         />
-        <div className="absolute inset-0 bg-slate-900/60" />
+        <div className="absolute inset-0 bg-slate-900/60 md:hidden" />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
+      <div className="relative z-10 grid w-full max-w-5xl items-center md:grid-cols-[0.82fr_1.18fr] md:overflow-hidden md:rounded-3xl md:bg-white md:shadow-xl">
+        <section className="relative hidden min-h-[720px] self-stretch overflow-hidden bg-[#303a35] md:block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/altar-bg.jpg" alt="Interior Gereja Santo Albertus Agung" className="absolute inset-0 h-full w-full object-cover opacity-55 saturate-[0.65]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#25312d]/90 via-[#303a35]/75 to-[#252b28]/90" />
+          <div className="absolute inset-y-0 left-0 w-1 bg-[#c7a96b]/80" />
+          <div className="relative flex h-full flex-col justify-between p-10 text-white">
+            <div className="flex items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white p-1.5 shadow-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/img/albertus-logo.png" alt="Logo AlbertusKU" className="h-full w-full object-contain" />
+              </div>
+              <div><p className="text-xl font-bold tracking-tight">AlbertusKU</p><p className="text-sm text-white/70">Gereja Santo Albertus Agung</p></div>
+            </div>
+            <div>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[#ddc58f]">Bergabung dengan kami</p>
+              <h2 className="max-w-xs text-4xl font-semibold leading-tight tracking-tight">Satu akun untuk pelayanan paroki.</h2>
+              <div className="mt-5 h-px w-12 bg-[#c7a96b]" />
+              <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/80">Daftar dengan nomor WhatsApp, verifikasi akun, lalu lengkapi data keanggotaan Anda.</p>
+            </div>
+            <p className="text-xs text-white/50">&copy; {new Date().getFullYear()} Gereja Santo Albertus Agung</p>
+          </div>
+        </section>
+
+      <div className="relative z-10 mx-auto w-full max-w-md md:max-w-[30rem] md:px-10 md:py-9">
+        <div className="mb-6 text-center md:hidden">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-4 shadow-lg p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/img/albertus-logo.png" alt="Logo Paroki Santo Albertus Agung" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-white drop-shadow">AlbertusKU</h1>
           <p className="text-white/80 mt-1 drop-shadow">Daftar Akun Jemaat</p>
+        </div>
+
+        <div className="mb-6 hidden text-center md:block">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#526158]">Pendaftaran umat</p>
+          <p className="mt-2 text-sm text-muted-foreground">Buat akun AlbertusKU dalam tiga langkah.</p>
         </div>
 
         <Card className="shadow-lg">
@@ -188,7 +217,7 @@ export default function RegisterPage() {
                     <p className="text-destructive text-xs mt-1">{phoneForm.formState.errors.phone.message}</p>
                   )}
                 </div>
-                <Button type="submit" loading={registerStart.isPending} className="w-full">
+                <Button type="submit" loading={registerStart.isPending} className="w-full md:bg-[#34443d] md:text-white md:hover:bg-[#293831]">
                   Kirim Kode Verifikasi
                 </Button>
               </form>
@@ -214,7 +243,7 @@ export default function RegisterPage() {
                     <p className="text-destructive text-xs mt-1">{codeForm.formState.errors.code.message}</p>
                   )}
                 </div>
-                <Button type="submit" loading={registerVerify.isPending} className="w-full">
+                <Button type="submit" loading={registerVerify.isPending} className="w-full md:bg-[#34443d] md:text-white md:hover:bg-[#293831]">
                   Verifikasi
                 </Button>
                 <button
@@ -310,7 +339,7 @@ export default function RegisterPage() {
 
                 <Input id="parish" label="Paroki (opsional)" placeholder="Contoh: Paroki Santo Albertus Agung" {...profileForm.register('parish')} />
 
-                <Button type="submit" loading={registerComplete.isPending} className="w-full">
+                <Button type="submit" loading={registerComplete.isPending} className="w-full md:bg-[#34443d] md:text-white md:hover:bg-[#293831]">
                   Selesaikan Pendaftaran
                 </Button>
               </form>
@@ -318,13 +347,14 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-white/80 mt-6 drop-shadow">
+        <p className="mt-6 text-center text-sm text-white/80 drop-shadow md:text-muted-foreground md:drop-shadow-none">
           Sudah punya akun?{' '}
-          <Link href="/login" className="text-white font-medium hover:underline">
+          <Link href="/login" className="font-medium text-white hover:underline md:text-[#526158]">
             Masuk
           </Link>
         </p>
       </div>
-    </div>
+      </div>
+    </main>
   );
 }

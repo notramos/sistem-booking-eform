@@ -31,15 +31,15 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#f6f4ef] px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4">
-            <span className="text-white font-bold text-2xl">E</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-black/5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/albertus-logo.png" alt="Logo AlbertusKU" className="h-full w-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">AlbertusKU</h1>
-          <p className="text-gray-500 mt-1">Sistem Peminjaman Ruangan Gereja</p>
-          <p className="text-sm text-gray-400">Gereja Albertus Agung</p>
+          <p className="text-gray-500 mt-1">Gereja Santo Albertus Agung</p>
         </div>
 
         <Card>
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                 required
               />
 
-              <Button type="submit" loading={loading} className="w-full">
+              <Button type="submit" loading={loading} className="w-full bg-[#34443d] text-white hover:bg-[#293831]">
                 {!loading && <Mail className="w-4 h-4" />}
                 Kirim Link Reset
               </Button>
@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
             <div className="mt-6 text-center">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                className="inline-flex items-center gap-1 text-sm text-[#526158] hover:text-[#303a35]"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Kembali ke halaman masuk
