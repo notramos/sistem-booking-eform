@@ -18,7 +18,7 @@ import { useHolidays } from '@/hooks/useHolidays';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Plus, CalendarDays, Clock, MapPin, Eye, CalendarPlus, Info, ScrollText, DoorOpen, ListChecks, FileCheck2, BellRing } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CalendarDays, Clock, MapPin, Eye, CalendarPlus, Info, ScrollText, DoorOpen, ListChecks, FileCheck2, BellRing, List } from 'lucide-react';
 import { getStatusColor, getStatusLabel, getMaxBookableDate } from '@/lib/utils';
 import { BOOKING_MIN_ADVANCE_DAYS, OPERATING_HOURS, TATA_TERTIB_TEXT } from '@/lib/constants';
 import type { CalendarEvent } from '@/types';
@@ -69,6 +69,7 @@ export default function CalendarPage() {
   const [legendOpen, setLegendOpen] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [viewMode, setViewMode] = useState<'calendar' | 'agenda'>('calendar');
   // Booking selesai tetap terlihat sebagai riwayat, dengan warna tersendiri.
 
   const year = currentDate.getFullYear();
@@ -91,8 +92,8 @@ export default function CalendarPage() {
   const maxDate = useMemo(() => getMaxBookableDate(), []);
   const maxDateStr = useMemo(() => formatLocalDate(maxDate), [maxDate]);
   const isBookableDate = (dateStr: string) => dateStr >= minDateStr && dateStr <= maxDateStr;
-  // Cuma tanggal yang SUDAH LEWAT yang dibuat pudar — tanggal hari ini s/d H+7
-  // tetap terlihat jelas walau belum bisa dibooking (toast saat diklik sudah cukup jelaskan alasannya).
+  // Tanggal lampau tetap dapat dibuka untuk melihat histori, tetapi tanggal
+  // hari ini sampai H+7 diberi penanda netral karena belum dapat dipesan.
   const todayStr = useMemo(() => formatLocalDate(today), [today]);
   const isPastDate = (dateStr: string) => dateStr < todayStr;
 
@@ -112,10 +113,20 @@ export default function CalendarPage() {
 
   const days = useMemo(() => getMonthDays(year, month), [year, month]);
 
-  // Batas navigasi bulan — dipakai bersama oleh tombol panah dan shortcut keyboard
-  // supaya keduanya tidak bisa melewati rentang yang boleh dipesan.
-  const canGoPrev = !(year < today.getFullYear() || (year === today.getFullYear() && month <= today.getMonth()));
+  // Bulan lampau tetap dapat dibuka untuk melihat histori; pembatasan hanya
+  // berlaku untuk bulan mendatang yang melewati batas pemesanan.
+  const canGoPrev = true;
   const canGoNext = !(year > maxDate.getFullYear() || (year === maxDate.getFullYear() && month >= maxDate.getMonth()));
+
+  const agendaEvents = useMemo(
+    () => filteredEvents
+      .filter((event) => {
+        const date = toDateStr(event.start);
+        return date.startsWith(`${year}-`) && date.slice(5, 7) === String(month + 1).padStart(2, '0');
+      })
+      .sort((a, b) => a.start.localeCompare(b.start)),
+    [filteredEvents, month, year]
+  );
 
   function navigate(delta: number) {
     setCurrentDate(new Date(year, month + delta, 1));
@@ -186,7 +197,29 @@ export default function CalendarPage() {
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <div className="flex rounded-lg border bg-muted/30 p-0.5" role="tablist" aria-label="Tampilan jadwal">
+                <Button
+                  type="button"
+                  variant={viewMode === 'calendar' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-8 px-2.5 text-xs"
+                  onClick={() => setViewMode('calendar')}
+                  aria-selected={viewMode === 'calendar'}
+                >
+                  <CalendarDays className="mr-1.5 h-3.5 w-3.5" /> Kalender
+                </Button>
+                <Button
+                  type="button"
+                  variant={viewMode === 'agenda' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-8 px-2.5 text-xs"
+                  onClick={() => setViewMode('agenda')}
+                  aria-selected={viewMode === 'agenda'}
+                >
+                  <List className="mr-1.5 h-3.5 w-3.5" /> Agenda
+                </Button>
+              </div>
               <div className="relative">
                 <Button
                   variant="ghost"
@@ -211,6 +244,9 @@ export default function CalendarPage() {
                         <span className="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block" /> Booking Selesai
                       </span>
                       <span className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30 inline-block" /> Belum bisa dipesan (H+{BOOKING_MIN_ADVANCE_DAYS})
+                      </span>
+                      <span className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" /> Hari Libur Nasional
                       </span>
                     </div>
@@ -230,6 +266,8 @@ export default function CalendarPage() {
             <ErrorState message="Gagal memuat jadwal kalender." onRetry={() => refetch()} />
           ) : (
             <>
+            {viewMode === 'calendar' ? (
+              <>
               {/* Day headers */}
               <div className="grid grid-cols-7 mb-1">
                 {DAY_NAMES.map((name) => (
@@ -259,6 +297,7 @@ export default function CalendarPage() {
                   const overflow = dayEvents.length - maxVisible;
 
                   const isPast = isPastDate(dateStr);
+                  const isTooSoon = !isPast && !bookable;
 
                   return (
                     <div
@@ -267,12 +306,14 @@ export default function CalendarPage() {
                       className={`relative border-r border-b border-border p-1.5 min-h-[64px] sm:min-h-[88px] transition-colors cursor-pointer ${
                         isSelected
                           ? 'bg-primary/10 hover:bg-primary/20'
+                          : isTooSoon
+                            ? 'bg-muted/35 hover:bg-muted/55'
                           : isToday
                             ? 'bg-accent/40 hover:bg-accent/60'
                             : isRed
                               ? 'bg-red-50/60 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50'
                               : 'hover:bg-accent/60'
-                      } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${isPast ? 'opacity-60' : ''}`}
+                      } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${isPast ? 'opacity-55' : ''} ${isTooSoon ? 'text-muted-foreground' : ''}`}
                       onClick={() => {
                         setSelectedDate(dateStr);
                         // Tanggal lampau tetap bisa dibuka untuk melihat riwayat — tak perlu
@@ -291,7 +332,9 @@ export default function CalendarPage() {
                           ? 'bg-primary text-primary-foreground'
                           : isRed
                             ? 'text-red-600 dark:text-red-400'
-                            : 'text-foreground'
+                            : isTooSoon
+                              ? 'text-muted-foreground'
+                              : 'text-foreground'
                       }`}>
                         {dayNum}
                       </div>
@@ -327,6 +370,51 @@ export default function CalendarPage() {
                   );
                 })}
               </div>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <div className="rounded-lg border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                  Agenda {MONTH_NAMES[month]} {year}. Tanggal lampau tetap dapat dilihat, tetapi hanya tanggal mulai H+{BOOKING_MIN_ADVANCE_DAYS} yang dapat dipesan.
+                </div>
+                {agendaEvents.length === 0 ? (
+                  <EmptyState icon={CalendarDays} title="Belum ada jadwal" description="Tidak ada booking disetujui atau selesai pada bulan ini." />
+                ) : (
+                  <div className="divide-y rounded-lg border">
+                    {agendaEvents.map((event) => {
+                      const eventDate = toDateStr(event.start);
+                      const eventDay = new Date(`${eventDate}T00:00:00`);
+                      const canOpen = event.can_view_detail;
+                      return (
+                        <button
+                          key={event.id}
+                          type="button"
+                          disabled={!canOpen}
+                          onClick={() => canOpen && router.push(`/booking/${event.booking_id ?? event.id}`)}
+                          className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-muted/40 disabled:cursor-default"
+                        >
+                          <div className="flex w-12 shrink-0 flex-col items-center rounded-md border bg-background py-1">
+                            <span className="text-[10px] uppercase text-muted-foreground">{DAY_NAMES[eventDay.getDay()]}</span>
+                            <span className="text-lg font-semibold leading-none">{eventDay.getDate()}</span>
+                          </div>
+                          <span className="h-9 w-1 shrink-0 rounded-full" style={{ backgroundColor: event.backgroundColor || '#16a34a' }} />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">{event.title}</p>
+                            <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{event.start_time}–{event.end_time}</span>
+                              <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{event.room}</span>
+                            </p>
+                          </div>
+                          <Badge className={`${getStatusColor(event.status)} shrink-0 text-[10px]`}>
+                            {event.extendedProps?.status_label ?? getStatusLabel(event.status)}
+                          </Badge>
+                          {canOpen && <Eye className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
             </>
           )}
         </CardContent>
