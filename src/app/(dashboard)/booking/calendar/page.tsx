@@ -54,6 +54,10 @@ function toDateStr(iso: string) {
   return iso.slice(0, 10);
 }
 
+function formatTime(value: string) {
+  return value.slice(0, 5);
+}
+
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
@@ -311,15 +315,19 @@ export default function CalendarPage() {
                       title={holiday?.name}
                       className={`relative border-r border-b border-border p-1.5 min-h-[64px] sm:min-h-[88px] transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-primary/10 hover:bg-primary/20'
+                          ? 'bg-[#E7F0EA] hover:bg-[#DDEBE1]'
                           : isTooSoon
                             ? 'bg-muted/35 hover:bg-muted/55'
+                            : isPast && isRed
+                              ? 'bg-[#F4EEE5] hover:bg-[#EEE3D5]'
+                            : isPast
+                              ? 'bg-muted/30 hover:bg-muted/45'
                           : isToday
-                            ? 'bg-accent/40 hover:bg-accent/60'
+                            ? 'bg-[#F0F6F1] hover:bg-[#E7F0EA]'
                               : isRed
                                 ? 'bg-[#FFF8ED] hover:bg-[#FFF1D8] dark:bg-[#3b2d20]/40 dark:hover:bg-[#4a3826]/50'
                               : 'hover:bg-accent/60'
-                      } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${isPast ? 'opacity-55' : ''} ${isTooSoon ? 'text-muted-foreground' : ''}`}
+                      } ${isToday ? 'ring-2 ring-[#5E8C72] ring-inset' : ''} ${isTooSoon ? 'text-muted-foreground' : ''}`}
                       onClick={() => {
                         setSelectedDate(dateStr);
                         // Tanggal lampau tetap bisa dibuka untuk melihat riwayat — tak perlu
@@ -335,7 +343,7 @@ export default function CalendarPage() {
                       )}
                       <div className={`absolute top-1 right-1 text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
                         isToday
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'bg-[#5E8C72] text-white'
                             : isRed
                               ? 'text-[#A85D3A] dark:text-[#E4A477]'
                             : isTooSoon
@@ -406,7 +414,7 @@ export default function CalendarPage() {
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium">{event.title}</p>
                             <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{event.start_time}–{event.end_time}</span>
+                              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{formatTime(event.start_time)}–{formatTime(event.end_time)}</span>
                               <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{event.room}</span>
                             </p>
                           </div>
@@ -527,7 +535,7 @@ export default function CalendarPage() {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5" />
-                            {event.start_time} - {event.end_time}
+                            {formatTime(event.start_time)} - {formatTime(event.end_time)}
                           </span>
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5" />

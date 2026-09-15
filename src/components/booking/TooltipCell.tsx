@@ -14,7 +14,11 @@ import type { CalendarEvent } from '@/types';
  * klik di luar, dan hanya satu yang terbuka pada satu waktu.
  */
 export function TooltipCell({ event }: { event: CalendarEvent }) {
-  const color = event.backgroundColor || 'hsl(var(--muted-foreground))';
+  const color = event.status === 'completed'
+    ? '#87919A'
+    : event.room.toLowerCase().includes('auditorium')
+      ? '#8273A8'
+      : '#5E8C72';
   const isRecurring = event.extendedProps?.is_recurring;
 
   return (
@@ -28,7 +32,7 @@ export function TooltipCell({ event }: { event: CalendarEvent }) {
         >
           <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: color }} aria-hidden />
           <span className="text-[10px] font-medium leading-tight truncate" style={{ color }}>
-            {event.start_time} {event.title}
+            {event.start_time.slice(0, 5)} {event.title}
           </span>
         </div>
       </Popover.Trigger>
@@ -51,7 +55,7 @@ export function TooltipCell({ event }: { event: CalendarEvent }) {
               )}
             </div>
             <p className="text-muted-foreground">
-              {event.start_time} - {event.end_time}
+              {event.start_time.slice(0, 5)} - {event.end_time.slice(0, 5)}
             </p>
             <p className="text-muted-foreground flex items-center gap-1">
               <MapPin className="w-3 h-3 shrink-0" /> {event.room}
