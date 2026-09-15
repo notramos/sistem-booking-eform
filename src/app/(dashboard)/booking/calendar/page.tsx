@@ -58,6 +58,12 @@ function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+function calendarEventColor(event: CalendarEvent) {
+  if (event.status === 'completed') return '#87919A';
+  if (event.room.toLowerCase().includes('auditorium')) return '#8273A8';
+  return '#5E8C72';
+}
+
 export default function CalendarPage() {
   const { hasAnyRole } = useAuth();
   const canViewAll = hasAnyRole(['sekretariat', 'p2', 'pastor', 'it_admin']);
@@ -235,19 +241,19 @@ export default function CalendarPage() {
                     <div className="absolute right-0 top-full mt-1 z-50 w-56 max-w-[calc(100vw-2rem)] rounded-lg border bg-popover text-popover-foreground shadow-lg p-3 space-y-2 text-sm">
                       <p className="font-medium text-xs text-muted-foreground mb-1">Keterangan</p>
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Booking Disetujui
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#5E8C72] inline-block" /> Booking Disetujui
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: '#8b5cf6' }} /> Auditorium Disetujui
+                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: '#8273A8' }} /> Auditorium Disetujui
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-slate-500 inline-block" /> Booking Selesai
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#87919A] inline-block" /> Booking Selesai
                       </span>
                       <span className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30 inline-block" /> Belum bisa dipesan (H+{BOOKING_MIN_ADVANCE_DAYS})
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-foreground inline-block" /> Hari Libur Nasional
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#D58A4A] inline-block" /> Hari Libur Nasional
                       </span>
                     </div>
                   </>
@@ -310,8 +316,8 @@ export default function CalendarPage() {
                             ? 'bg-muted/35 hover:bg-muted/55'
                           : isToday
                             ? 'bg-accent/40 hover:bg-accent/60'
-                            : isRed
-                              ? 'bg-red-50/60 hover:bg-red-100 dark:bg-red-950/30 dark:hover:bg-red-950/50'
+                              : isRed
+                                ? 'bg-[#FFF8ED] hover:bg-[#FFF1D8] dark:bg-[#3b2d20]/40 dark:hover:bg-[#4a3826]/50'
                               : 'hover:bg-accent/60'
                       } ${isToday ? 'ring-2 ring-primary ring-inset' : ''} ${isPast ? 'opacity-55' : ''} ${isTooSoon ? 'text-muted-foreground' : ''}`}
                       onClick={() => {
@@ -325,13 +331,13 @@ export default function CalendarPage() {
                       }}
                     >
                       {holiday && (
-                        <span className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" aria-hidden />
+                        <span className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-[#D58A4A] shrink-0" aria-hidden />
                       )}
                       <div className={`absolute top-1 right-1 text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
                         isToday
                           ? 'bg-primary text-primary-foreground'
-                          : isRed
-                            ? 'text-red-600 dark:text-red-400'
+                            : isRed
+                              ? 'text-[#A85D3A] dark:text-[#E4A477]'
                             : isTooSoon
                               ? 'text-muted-foreground'
                               : 'text-foreground'
@@ -345,7 +351,7 @@ export default function CalendarPage() {
                             <span
                               key={event.id}
                               className="w-1.5 h-1.5 rounded-full shrink-0"
-                              style={{ backgroundColor: event.backgroundColor || 'hsl(var(--muted-foreground))' }}
+                              style={{ backgroundColor: calendarEventColor(event) }}
                               aria-hidden
                             />
                           ))}
@@ -396,7 +402,7 @@ export default function CalendarPage() {
                             <span className="text-[10px] uppercase text-muted-foreground">{DAY_NAMES[eventDay.getDay()]}</span>
                             <span className="text-lg font-semibold leading-none">{eventDay.getDate()}</span>
                           </div>
-                          <span className="h-9 w-1 shrink-0 rounded-full" style={{ backgroundColor: event.backgroundColor || '#16a34a' }} />
+                          <span className="h-9 w-1 shrink-0 rounded-full" style={{ backgroundColor: calendarEventColor(event) }} />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium">{event.title}</p>
                             <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
