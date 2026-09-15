@@ -25,7 +25,7 @@ import { cn, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { SERVICE_TYPE_MAP, getServiceFieldLabel } from '@/lib/service-types';
 import { formatWibDateTime } from '@/lib/misa-deadline';
 import {
-  ArrowLeft, FileText, CheckCircle2, XCircle, Clock, User as UserIcon,
+  ArrowLeft, FileText, CheckCircle2, XCircle, Clock, User as UserIcon, CalendarDays,
 } from 'lucide-react';
 
 /** Tanggal ditampilkan panjang ("5 April 2026"), sisanya apa adanya. Nilai yang
@@ -35,6 +35,13 @@ function formatValue(raw: unknown, type?: string): string | null {
   const text = String(raw);
   if (type === 'date' && !Number.isNaN(new Date(text).getTime())) return formatDate(text, 'long');
   return text;
+}
+
+function formatRupiah(raw: unknown) {
+  const amount = Number(String(raw ?? '').replace(/[^0-9]/g, ''));
+  return Number.isFinite(amount) && amount > 0
+    ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount)
+    : '-';
 }
 
 function serviceSteps(status: string): StepperStep[] {
@@ -156,6 +163,9 @@ export default function LayananUmatDetailPage() {
     ] });
   }
 
+  const misaFields = service.dynamic_fields ?? {};
+  const isIntensiMisa = service.service_type === 'intensi_misa';
+
   const timelineItems: TimelineItem[] = [
     {
       icon: <FileText className="h-4 w-4" />,
@@ -230,6 +240,35 @@ export default function LayananUmatDetailPage() {
           <StatusStepper steps={serviceSteps(service.status)} />
         </CardContent>
       </Card>
+
+      {isIntensiMisa && (
+        <Card className="border-[#DDEBE1] bg-[#F7FAF7]">
+          <CardHeader className="p-4 pb-3 sm:p-6 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <CalendarDays className="h-5 w-5 shrink-0 text-[#5E8C72]" /> Ringkasan Intensi Misa
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3 p-4 pt-0 sm:grid-cols-3 sm:p-6 sm:pt-0">
+            <div className="rounded-lg bg-background p-3">
+              <p className="text-xs text-muted-foreground">Tanggal Misa</p>
+              <p className="mt-1 text-sm font-semibold">{formatValue(misaFields.tanggal_misa, 'date') ?? '-'}</p>
+            </div>
+            <div className="rounded-lg bg-background p-3">
+              <p className="text-xs text-muted-foreground">Jadwal Misa</p>
+              <p className="mt-1 text-sm font-semibold">{String(misaFields.jadwal_misa ?? '-')}</p>
+            </div>
+            <div className="rounded-lg bg-background p-3">
+              <p className="text-xs text-muted-foreground">Pemohon</p>
+              <p className="mt-1 break-words text-sm font-semibold">{service.applicant_name}</p>
+            </div>
+            <div className="col-span-2 rounded-lg bg-background p-3 sm:col-span-1">
+              <p className="text-xs text-muted-foreground">Stipendium</p>
+              <p className="mt-1 text-sm font-semibold">{formatRupiah(misaFields.stipendium_amount)}</p>
+              {misaFields.stipendium_terbilang ? <p className="mt-0.5 text-xs text-muted-foreground">{String(misaFields.stipendium_terbilang)}</p> : null}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {hasActions && (
         <ApprovalChecklist

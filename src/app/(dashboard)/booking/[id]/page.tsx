@@ -93,6 +93,11 @@ function logTone(action: string): TimelineItem['tone'] {
   return 'muted'
 }
 
+function bookingActivityTitle(description: string | null | undefined) {
+  const value = description?.trim();
+  return value ? value.split(' — ')[0] : 'Peminjaman Ruangan';
+}
+
 /**
  * Dialog ganti satu tanggal dalam seri booking rutin. Komponen terpisah (bukan
  * inline di BookingDetailPage) supaya useDayAvailability bisa dipanggil dengan
@@ -332,7 +337,8 @@ export default function BookingDetailPage() {
         <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">{booking.title}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">{bookingActivityTitle(booking.description)}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Peminjam: <span className="font-medium text-foreground">{booking.title}</span></p>
               {booking.booking_type === 'rutin' && (
                 <Badge variant="outline" className="shrink-0">
                   Rutin · {booking.recurring_dates?.length ?? 0} tanggal
@@ -350,7 +356,7 @@ export default function BookingDetailPage() {
                 <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDate(booking.booking_date, 'long')}</span>
               )}
               <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0" />{formatTime(booking.start_time)}–{formatTime(booking.end_time)}</span>
-              <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5 shrink-0" />{booking.user?.name ?? '-'}</span>
+              <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5 shrink-0" />Diajukan oleh {booking.user?.name ?? '-'}</span>
               <span className="text-muted-foreground/70">Diajukan {formatDate(booking.created_at, 'long')}</span>
             </div>
           </div>
