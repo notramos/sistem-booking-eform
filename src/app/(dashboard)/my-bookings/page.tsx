@@ -7,13 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
-import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, formatTime, getStatusColor, getStatusLabel, getRoomDisplayLabel, cn } from '@/lib/utils';
 import { PURPOSE_LABELS } from '@/lib/constants';
-import { CalendarDays, Clock, MapPin, Calendar, Search, Tag, Users } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Calendar, Search, Tag, Users, SlidersHorizontal, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MyBookingsPage() {
@@ -40,13 +40,20 @@ export default function MyBookingsPage() {
     setPage(1);
   };
 
+  const resetFilters = () => {
+    setStatusFilter('');
+    setSearchInput('');
+    setSearch('');
+    setPage(1);
+  };
+
+  const hasFilters = Boolean(statusFilter || searchInput);
+
   const statuses = [
     { value: '', label: 'Semua' },
     { value: 'pending', label: 'Menunggu' },
     { value: 'sekretariat_review', label: 'Ditinjau Sekretariat' },
     { value: 'admin_review', label: 'Ditinjau Admin' },
-    { value: 'revision_sekretariat', label: 'Revisi (Sekretariat)' },
-    { value: 'revision_admin', label: 'Revisi (Admin)' },
     { value: 'approved', label: 'Disetujui' },
     { value: 'rejected', label: 'Ditolak' },
     { value: 'cancelled', label: 'Dibatalkan' },
@@ -67,26 +74,74 @@ export default function MyBookingsPage() {
         </Link>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SegmentedControl options={statuses} value={statusFilter} onChange={handleStatusFilter} />
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Cari judul booking..."
-            className="pl-8"
-          />
-        </div>
-      </div>
+      <Card className="border-border/80 bg-muted/[0.12] shadow-sm">
+        <CardContent className="p-4 sm:p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E7F0EA] text-[#526F5E]">
+              <SlidersHorizontal className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Cari & Filter Booking</p>
+              <p className="text-xs text-muted-foreground">Temukan peminjaman berdasarkan peminjam atau status.</p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px_auto] sm:items-end">
+            <div className="space-y-1">
+              <label htmlFor="booking-search" className="text-xs font-medium text-muted-foreground">Pencarian</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="booking-search"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Cari nama peminjam..."
+                  className="h-10 bg-background pl-9 pr-9"
+                />
+                {searchInput && (
+                  <button
+                    type="button"
+                    aria-label="Hapus pencarian"
+                    onClick={() => setSearchInput('')}
+                    className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <Select
+              id="booking-status"
+              label="Status"
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              className="h-10 bg-background"
+            >
+              {statuses.map((status) => <option key={status.value || 'all'} value={status.value}>{status.label}</option>)}
+            </Select>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={resetFilters}
+              disabled={!hasFilters}
+              className="h-10 justify-center text-muted-foreground sm:px-3"
+            >
+              <X className="mr-1.5 h-4 w-4" /> Reset
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {isLoading ? (
         <Spinner size="lg" center label="Memuat booking..." />
       ) : bookings.length === 0 ? (
         <EmptyState
           icon={Calendar}
-          title="Belum ada booking"
-          action={{ label: 'Booking Sekarang', href: '/rooms' }}
+          title={hasFilters ? 'Booking tidak ditemukan' : 'Belum ada booking'}
+          description={hasFilters ? 'Coba ubah kata pencarian atau status yang dipilih.' : 'Peminjaman yang Anda ajukan akan tampil di halaman ini.'}
+          action={hasFilters ? { label: 'Reset Filter', onClick: resetFilters } : { label: 'Booking Sekarang', href: '/rooms' }}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
