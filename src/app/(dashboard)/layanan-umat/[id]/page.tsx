@@ -28,6 +28,11 @@ import {
   ArrowLeft, FileText, CheckCircle2, XCircle, Clock, User as UserIcon, CalendarDays,
 } from 'lucide-react';
 
+const INTENSI_SUMMARY_KEYS = new Set([
+  'tanggal_misa', 'jadwal_misa', 'stipendium_amount', 'stipendium_terbilang',
+  'ucapan_syukur', 'doa_arwah', 'permohonan_lainnya',
+]);
+
 /** Tanggal ditampilkan panjang ("5 April 2026"), sisanya apa adanya. Nilai yang
  *  ternyata bukan tanggal valid tetap ditampilkan mentah, bukan "Invalid Date". */
 function formatValue(raw: unknown, type?: string): string | null {
@@ -133,7 +138,8 @@ export default function LayananUmatDetailPage() {
             const key = f.name.replace(/^dynamic_fields\./, '');
             shownKeys.add(key);
             const raw = f.dynamicField ? service.dynamic_fields?.[key] : record[key];
-            return { label: f.label, value: formatValue(raw, f.type) };
+            const shownInIntensiSummary = service.service_type === 'intensi_misa' && INTENSI_SUMMARY_KEYS.has(key);
+            return { label: f.label, value: shownInIntensiSummary ? null : formatValue(raw, f.type) };
           }),
         }))
       )
@@ -165,6 +171,11 @@ export default function LayananUmatDetailPage() {
 
   const misaFields = service.dynamic_fields ?? {};
   const isIntensiMisa = service.service_type === 'intensi_misa';
+  const misaIntentions = [
+    { label: 'Ucapan Syukur', value: formatValue(misaFields.ucapan_syukur) },
+    { label: 'Doa Arwah', value: formatValue(misaFields.doa_arwah) },
+    { label: 'Permohonan Lainnya', value: formatValue(misaFields.permohonan_lainnya) },
+  ].filter((item) => item.value);
 
   const timelineItems: TimelineItem[] = [
     {
@@ -234,21 +245,15 @@ export default function LayananUmatDetailPage() {
         </div>
       </div>
 
-      {/* Status stepper */}
-      <Card>
-        <CardContent className="p-4 sm:py-5 sm:px-6">
-          <StatusStepper steps={serviceSteps(service.status)} />
-        </CardContent>
-      </Card>
-
       {isIntensiMisa && (
-        <Card className="border-[#DDEBE1] bg-[#F7FAF7]">
+        <Card className="overflow-hidden border-[#DDEBE1] bg-[#F7FAF7]">
+          <div className="h-1 bg-[#5E8C72]" />
           <CardHeader className="p-4 pb-3 sm:p-6 sm:pb-4">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <CalendarDays className="h-5 w-5 shrink-0 text-[#5E8C72]" /> Ringkasan Intensi Misa
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3 p-4 pt-0 sm:grid-cols-3 sm:p-6 sm:pt-0">
+          <CardContent className="grid grid-cols-2 gap-3 p-4 pt-0 sm:grid-cols-4 sm:p-6 sm:pt-0">
             <div className="rounded-lg bg-background p-3">
               <p className="text-xs text-muted-foreground">Tanggal Misa</p>
               <p className="mt-1 text-sm font-semibold">{formatValue(misaFields.tanggal_misa, 'date') ?? '-'}</p>
@@ -261,14 +266,40 @@ export default function LayananUmatDetailPage() {
               <p className="text-xs text-muted-foreground">Pemohon</p>
               <p className="mt-1 break-words text-sm font-semibold">{service.applicant_name}</p>
             </div>
-            <div className="col-span-2 rounded-lg bg-background p-3 sm:col-span-1">
+            <div className="rounded-lg bg-background p-3">
               <p className="text-xs text-muted-foreground">Stipendium</p>
               <p className="mt-1 text-sm font-semibold">{formatRupiah(misaFields.stipendium_amount)}</p>
               {misaFields.stipendium_terbilang ? <p className="mt-0.5 text-xs text-muted-foreground">{String(misaFields.stipendium_terbilang)}</p> : null}
+              <a href="/img/qris-intensi-misa.jpeg" target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-medium text-[#526158] hover:underline">Lihat QRIS</a>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {isIntensiMisa && misaIntentions.length > 0 && (
+        <Card>
+          <CardHeader className="p-4 pb-3 sm:p-6 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <FileText className="h-5 w-5 shrink-0 text-[#5E8C72]" /> Isi Intensi
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 p-4 pt-0 sm:grid-cols-3 sm:p-6 sm:pt-0">
+            {misaIntentions.map((item) => (
+              <div key={item.label} className="rounded-lg border-l-4 border-l-[#D5B36A] bg-muted/25 p-3">
+                <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+                <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{item.value}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Status stepper */}
+      <Card>
+        <CardContent className="p-4 sm:py-5 sm:px-6">
+          <StatusStepper steps={serviceSteps(service.status)} />
+        </CardContent>
+      </Card>
 
       {hasActions && (
         <ApprovalChecklist
@@ -346,8 +377,8 @@ export default function LayananUmatDetailPage() {
       {/* Action bar mobile — supaya staf tidak perlu scroll melewati seluruh detail
           & riwayat hanya untuk menyetujui/menolak. */}
       {hasActions && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur lg:hidden">
-          <div className="flex gap-2 [&>*]:flex-1">{actionButtons}</div>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden">
+          <div className="mx-auto grid max-w-lg grid-cols-2 gap-2 [&>*]:w-full">{actionButtons}</div>
         </div>
       )}
 

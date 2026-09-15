@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import {
   Clock, FileText, XCircle, CheckCircle2, ArrowLeft, PlayCircle, Pencil, Info, Trash2,
-  MapPin, CalendarDays, User as UserIcon,
+  CalendarDays, User as UserIcon,
 } from 'lucide-react'
 import {
   useBooking, useCancelBooking,
@@ -338,24 +338,14 @@ export default function BookingDetailPage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-bold text-foreground break-words">{bookingActivityTitle(booking.description)}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Peminjam: <span className="font-medium text-foreground">{booking.title}</span></p>
               {booking.booking_type === 'rutin' && (
                 <Badge variant="outline" className="shrink-0">
                   Rutin · {booking.recurring_dates?.length ?? 0} tanggal
                 </Badge>
               )}
             </div>
+            <p className="mt-1 text-sm text-muted-foreground">Peminjam: <span className="font-medium text-foreground">{booking.title}</span></p>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-              {booking.room && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 shrink-0" />{getRoomDisplayLabel(booking.room)}</span>}
-              {booking.booking_type === 'rutin' && booking.recurring_dates && booking.recurring_dates.length > 1 ? (
-                <span className="inline-flex items-center gap-1">
-                  <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                  {formatDate(booking.recurring_dates[0], 'long')} – {formatDate(booking.recurring_dates[booking.recurring_dates.length - 1], 'long')}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0" />{formatDate(booking.booking_date, 'long')}</span>
-              )}
-              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0" />{formatTime(booking.start_time)}–{formatTime(booking.end_time)}</span>
               <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5 shrink-0" />Diajukan oleh {booking.user?.name ?? '-'}</span>
               <span className="text-muted-foreground/70">Diajukan {formatDate(booking.created_at, 'long')}</span>
             </div>
@@ -365,6 +355,34 @@ export default function BookingDetailPage() {
           </Badge>
         </div>
       </div>
+
+      {/* Ringkasan keputusan — informasi yang paling dibutuhkan ditampilkan
+          sebelum status dan detail panjang, terutama untuk layar mobile. */}
+      <Card className="overflow-hidden border-[#DDEBE1] bg-[#F7FAF7]">
+        <div className="h-1 bg-[#5E8C72]" />
+        <CardContent className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:p-5">
+          <div className="min-w-0 rounded-lg bg-background p-3">
+            <p className="text-[11px] text-muted-foreground">Kegiatan</p>
+            <p className="mt-1 break-words text-sm font-semibold text-foreground">{bookingActivityTitle(booking.description)}</p>
+          </div>
+          <div className="min-w-0 rounded-lg bg-background p-3">
+            <p className="text-[11px] text-muted-foreground">Ruangan</p>
+            <p className="mt-1 break-words text-sm font-semibold text-foreground">{getRoomDisplayLabel(booking.room) || '-'}</p>
+          </div>
+          <div className="min-w-0 rounded-lg bg-background p-3">
+            <p className="text-[11px] text-muted-foreground">Tanggal</p>
+            <p className="mt-1 break-words text-sm font-semibold text-foreground">
+              {booking.booking_type === 'rutin' && booking.recurring_dates && booking.recurring_dates.length > 1
+                ? `${formatDate(booking.recurring_dates[0], 'long')} – ${formatDate(booking.recurring_dates[booking.recurring_dates.length - 1], 'long')}`
+                : formatDate(booking.booking_date, 'long')}
+            </p>
+          </div>
+          <div className="min-w-0 rounded-lg bg-background p-3">
+            <p className="text-[11px] text-muted-foreground">Waktu</p>
+            <p className="mt-1 text-sm font-semibold text-foreground">{formatTime(booking.start_time)} – {formatTime(booking.end_time)}</p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Status stepper */}
       <Card>
@@ -491,8 +509,8 @@ export default function BookingDetailPage() {
       {/* Action bar mobile — supaya staf tidak perlu scroll melewati seluruh detail
           & riwayat hanya untuk menyetujui/menolak. */}
       {hasAnyAction && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur lg:hidden">
-          <div className="flex gap-2 [&>*]:flex-1">{actionButtons}</div>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden">
+          <div className="mx-auto grid max-w-lg grid-cols-2 gap-2 [&>*]:w-full">{actionButtons}</div>
         </div>
       )}
 

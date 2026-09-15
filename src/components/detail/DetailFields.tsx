@@ -32,7 +32,7 @@ export function DetailFields({ groups }: { groups: DetailGroup[] }) {
   return (
     <div className="space-y-4 sm:space-y-6">
       {nonEmpty.map((group, gi) => (
-        <div key={gi}>
+        <section key={gi} className="rounded-xl border bg-muted/[0.16] p-3.5 sm:p-4">
           {group.title && (
             <h3 className="mb-2 sm:mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {group.title}
@@ -46,7 +46,7 @@ export function DetailFields({ groups }: { groups: DetailGroup[] }) {
               </div>
             ))}
           </dl>
-        </div>
+        </section>
       ))}
     </div>
   );
