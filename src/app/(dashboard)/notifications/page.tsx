@@ -13,7 +13,6 @@ import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead 
 import { getNotificationMeta, getNotificationTitle, getNotificationDescription, getNotificationHref } from '@/lib/notifications'
 import { formatRelativeTime, cn } from '@/lib/utils'
 import type { Notification } from '@/types'
-import { PushNotificationSettings } from '@/components/notifications/PushNotificationSettings'
 
 /** Kelompok waktu supaya daftar panjang tetap mudah dipindai. */
 function bucketOf(createdAt: string): string {
@@ -123,8 +122,6 @@ export default function NotificationsPage() {
         value={filter}
         onChange={(v) => setFilter(v as 'all' | 'unread')}
       />
-
-      <PushNotificationSettings />
 
       <Card>
         <CardContent className="p-0">

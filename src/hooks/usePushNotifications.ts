@@ -25,6 +25,7 @@ export function usePushNotifications() {
     registerPushServiceWorker()
       .then((registration) => registration.pushManager.getSubscription())
       .then((subscription) => setEnabled(Boolean(subscription)))
+      .catch(() => setEnabled(false))
       .finally(() => setLoading(false));
   }, []);
 

@@ -11,6 +11,7 @@ import { getNotificationMeta, getNotificationTitle, getNotificationDescription, 
 import { getInitials, getRoleLabel, formatRelativeTime } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { PushNotificationSettings } from '@/components/notifications/PushNotificationSettings';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,6 +85,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                   </button>
                 )}
               </div>
+              <PushNotificationSettings />
               <div className="max-h-80 overflow-y-auto">
                 {recentNotifs.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">Belum ada notifikasi</p>
