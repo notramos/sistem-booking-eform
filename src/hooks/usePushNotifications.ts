@@ -40,10 +40,19 @@ export function usePushNotifications() {
       if (result !== 'granted') throw new Error('Izin notifikasi belum diberikan.');
       const registration = await registerPushServiceWorker();
       const existing = await registration.pushManager.getSubscription();
-      // Hapus subscription lama agar perangkat tidak memakai VAPID key dari
-      // deployment sebelumnya.
-      if (existing) await existing.unsubscribe();
-      const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource });
+      const applicationServerKey = urlBase64ToUint8Array(publicKey);
+      const existingKey = existing?.options.applicationServerKey;
+      const existingKeyBytes = existingKey ? new Uint8Array(existingKey) : null;
+      const keyMatches = existingKeyBytes?.length === applicationServerKey.length &&
+        existingKeyBytes.every((byte, index) => byte === applicationServerKey[index]);
+
+      // Pakai kembali subscription yang masih cocok. Melepasnya setiap kali
+      // tombol ditekan membuat perangkat kehilangan push jika layanan browser
+      // sedang gagal membuat subscription pengganti.
+      if (existing && !keyMatches) await existing.unsubscribe();
+      const subscription = existing && keyMatches
+        ? existing
+        : await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey as unknown as BufferSource });
       await pushSubscriptionsApi.save(subscriptionPayload(subscription));
       setEnabled(true);
       toast.success('Notifikasi AlbertusKU berhasil diaktifkan');

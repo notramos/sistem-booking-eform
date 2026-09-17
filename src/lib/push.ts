@@ -8,7 +8,8 @@ export function supportsPush(): boolean {
 }
 
 export async function registerPushServiceWorker(): Promise<ServiceWorkerRegistration> {
-  return navigator.serviceWorker.register(PUSH_SW_PATH, { scope: '/' });
+  await navigator.serviceWorker.register(PUSH_SW_PATH, { scope: '/' });
+  return navigator.serviceWorker.ready;
 }
 
 export function urlBase64ToUint8Array(value: string): Uint8Array {
