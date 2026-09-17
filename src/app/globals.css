@@ -74,6 +74,95 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Toast umpan balik: permukaan netral, warna hanya untuk membedakan makna. */
+.albertus-toaster {
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif !important;
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'] {
+  min-height: 56px;
+  padding: 12px 42px 12px 14px;
+  gap: 11px;
+  border: 1px solid hsl(var(--border));
+  border-left: 3px solid hsl(var(--primary));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  box-shadow: 0 8px 24px rgb(25 28 36 / 10%), 0 1px 3px rgb(25 28 36 / 5%);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'][data-type='success'] {
+  border-left-color: #337d63;
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'][data-type='error'] {
+  border-left-color: #b44d4d;
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'][data-type='warning'] {
+  border-left-color: #a77624;
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'][data-type='info'] {
+  border-left-color: #49738f;
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'] [data-icon] {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  border-radius: 8px;
+  background: hsl(var(--secondary));
+  color: hsl(var(--primary));
+  align-items: center;
+  justify-content: center;
+}
+
+.albertus-toaster [data-sonner-toast][data-type='success'] [data-icon] {
+  background: #edf6f0;
+  color: #337d63;
+}
+
+.albertus-toaster [data-sonner-toast][data-type='error'] [data-icon] {
+  background: #fbefef;
+  color: #b44d4d;
+}
+
+.albertus-toaster [data-sonner-toast][data-type='warning'] [data-icon] {
+  background: #fbf4e8;
+  color: #a77624;
+}
+
+.albertus-toaster [data-sonner-toast][data-type='info'] [data-icon] {
+  background: #edf3f7;
+  color: #49738f;
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'] [data-title] {
+  font-weight: 550;
+  line-height: 1.45;
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'] [data-close-button] {
+  left: auto;
+  right: 11px;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+}
+
+.albertus-toaster [data-sonner-toast][data-styled='true'] [data-close-button]:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
