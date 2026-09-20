@@ -346,11 +346,11 @@ export default function NewCongregationServicePage() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src="/img/qris-intensi-misa.jpeg"
-                        alt="QRIS Stipendium Intensi Misa - Gereja Albertus"
+                        alt="QRIS Sumbangan Intensi Misa - Gereja Albertus"
                         className="w-full max-w-[240px] rounded-md border bg-white"
                       />
                       <p className="text-center text-xs text-muted-foreground">
-                        Scan QRIS di atas untuk pembayaran stipendium intensi misa.
+                        Scan QRIS di atas untuk pembayaran sumbangan intensi misa.
                       </p>
                     </div>
                   )}

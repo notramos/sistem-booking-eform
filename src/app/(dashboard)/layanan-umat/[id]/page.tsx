@@ -267,7 +267,7 @@ export default function LayananUmatDetailPage() {
               <p className="mt-1 break-words text-sm font-semibold">{service.applicant_name}</p>
             </div>
             <div className="rounded-lg bg-background p-3">
-              <p className="text-xs text-muted-foreground">Stipendium</p>
+              <p className="text-xs text-muted-foreground">Sumbangan Intensi</p>
               <p className="mt-1 text-sm font-semibold">{formatRupiah(misaFields.stipendium_amount)}</p>
               {misaFields.stipendium_terbilang ? <p className="mt-0.5 text-xs text-muted-foreground">{String(misaFields.stipendium_terbilang)}</p> : null}
               <a href="/img/qris-intensi-misa.jpeg" target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-medium text-[#526158] hover:underline">Lihat QRIS</a>

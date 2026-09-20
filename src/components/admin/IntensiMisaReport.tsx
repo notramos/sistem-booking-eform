@@ -109,7 +109,7 @@ export function IntensiMisaReport() {
                     ))}
                   </dl>
                   <div className="border-t pt-3 space-y-1 text-xs text-muted-foreground">
-                    <p>Stipendium: <span className="font-medium text-foreground">{row.stipendium === null ? 'Belum tercatat' : rupiah.format(row.stipendium)}</span></p>
+                    <p>Sumbangan Intensi: <span className="font-medium text-foreground">{row.stipendium === null ? 'Belum tercatat' : rupiah.format(row.stipendium)}</span></p>
                     <p>Pengajuan / pencatatan: {row.submitted_at ? formatWibDateTime(row.submitted_at) : '-'}</p>
                     <p>Diterima Sekretariat: {row.received_at ? formatWibDateTime(row.received_at) : 'Belum tercatat terpisah'}</p>
                   </div>

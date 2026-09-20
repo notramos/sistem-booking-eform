@@ -46,7 +46,7 @@ export function EditIntensiMisaDialog({ service }: { service: CongregationServic
         <DatePicker label="Tanggal Misa *" value={date} onChange={(d) => { setDate(d); setSchedule(''); }} />
         <Select label="Jadwal Misa *" value={schedule} onChange={(e) => setSchedule(e.target.value)} disabled={!dateStr}><option value="">Pilih jadwal</option>{options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</Select>
         <Textarea label="Ucapan Syukur" rows={2} value={syukur} onChange={(e) => setSyukur(e.target.value)} /><Textarea label="Doa Arwah" rows={2} value={arwah} onChange={(e) => setArwah(e.target.value)} /><Textarea label="Permohonan Lainnya" rows={2} value={lainnya} onChange={(e) => setLainnya(e.target.value)} />
-        <Input label="Stipendium (Rp)" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <Input label="Sumbangan Intensi (Rp)" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
         <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>{['pending','approved','rejected'].map((s) => <option key={s} value={s}>{s}</option>)}</Select>
       </div>
       <DialogFooter><Button variant="ghost" onClick={() => setOpen(false)}>Batal</Button><Button onClick={save} loading={update.isPending}>Simpan</Button></DialogFooter>

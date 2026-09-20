@@ -239,7 +239,7 @@ export function ManualServiceDialog() {
                 )}
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Input label="Jumlah Stipendium (Rp) *" type="number" min="0" placeholder="Contoh: 50000" value={stipendiumAmount} onChange={(e) => setStipendiumAmount(e.target.value)} />
+                  <Input label="Jumlah Sumbangan Intensi (Rp) *" type="number" min="0" placeholder="Contoh: 50000" value={stipendiumAmount} onChange={(e) => setStipendiumAmount(e.target.value)} />
                   <Input label="Terbilang" readOnly value={stipendiumTerbilang} placeholder="Terisi otomatis" />
                 </div>
 

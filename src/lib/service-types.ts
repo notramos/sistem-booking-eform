@@ -719,14 +719,14 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
         ],
       },
       {
-        title: 'Stipendium',
+        title: 'Sumbangan Intensi',
         sections: [
           {
             id: 'stipendium',
-            title: 'Stipendium',
+            title: 'Sumbangan Intensi',
             fields: [
-              { name: 'dynamic_fields.stipendium_amount', label: 'Jumlah Stipendium (Rp)', type: 'number', required: true, placeholder: 'Contoh: 50000', dynamicField: true },
-              { name: 'dynamic_fields.stipendium_terbilang', label: 'Terbilang', type: 'text', required: false, colSpan: 2, readOnly: true, placeholder: 'Terisi otomatis dari jumlah stipendium', dynamicField: true },
+              { name: 'dynamic_fields.stipendium_amount', label: 'Jumlah Sumbangan Intensi (Rp)', type: 'number', required: true, placeholder: 'Contoh: 50000', dynamicField: true },
+              { name: 'dynamic_fields.stipendium_terbilang', label: 'Terbilang', type: 'text', required: false, colSpan: 2, readOnly: true, placeholder: 'Terisi otomatis dari jumlah sumbangan intensi', dynamicField: true },
             ],
           },
         ],
