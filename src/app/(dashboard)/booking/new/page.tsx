@@ -22,7 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { RoomRecommendationList } from '@/components/booking/RoomRecommendationList';
 import { TimeSlotPicker } from '@/components/booking/TimeSlotPicker';
-import { BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS, TATA_TERTIB_TEXT } from '@/lib/constants';
+import { BOOKING_MIN_ADVANCE_DAYS, RECURRING_DURATION_OPTIONS, TATA_TERTIB_TEXT, PURPOSE_LABELS } from '@/lib/constants';
 import { cn, getMaxBookableDate, getRoomDisplayName } from '@/lib/utils';
 import { CalendarDays, ArrowLeft, ArrowRight, Users, Repeat, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -67,7 +67,7 @@ const bookingSchema = z.object({
   durationMonths: z.number().optional(),
   startTime: z.string().min(1, 'Waktu mulai wajib diisi'),
   endTime: z.string().min(1, 'Waktu selesai wajib diisi'),
-  purposeType: z.string().optional(),
+  purposeType: z.string().min(1, 'Jenis kegiatan wajib dipilih'),
   expectedAttendees: z.string().optional(),
   notes: z.string().optional(),
 }).superRefine((data, ctx) => {
@@ -141,6 +141,7 @@ export default function NewBookingPage() {
   const watchedBookingType = watch('bookingType');
   const watchedPattern = watch('pattern');
   const watchedDuration = watch('durationMonths');
+  const watchedPurpose = watch('purposeType');
 
   const plannedDates = useMemo(() => {
     if (watchedBookingType !== 'rutin') return [];
@@ -174,7 +175,7 @@ export default function NewBookingPage() {
   // — atau tahun depan mulai November), mengikuti backend.
   const { min: minDate } = useMemo(() => dateBounds(), []);
 
-  const { data: recommendations, isFetching: loadingRecommendations } = useRoomRecommendations(dateStr, debouncedAttendees);
+  const { data: recommendations, isFetching: loadingRecommendations } = useRoomRecommendations(dateStr, debouncedAttendees, watchedPurpose);
   const { data: selectedRoom } = useRoom(selectedRoomId || '');
 
   const overCapacity = !!selectedRoom && attendeesNum > 0 && attendeesNum > selectedRoom.capacity;
@@ -209,7 +210,7 @@ export default function NewBookingPage() {
     setValue('bookingDate', new Date(editBooking.booking_date.substring(0, 10) + 'T00:00:00'));
     setValue('startTime', editBooking.start_time.substring(0, 5));
     setValue('endTime', editBooking.end_time.substring(0, 5));
-    setValue('purposeType', editBooking.purpose_type ?? undefined);
+    setValue('purposeType', editBooking.purpose_type ?? 'publik');
     setValue('expectedAttendees', editBooking.expected_attendees ? String(editBooking.expected_attendees) : undefined);
     setValue('notes', editBooking.notes ?? undefined);
     setSelectedRoomId(editBooking.room_id);
@@ -363,6 +364,7 @@ export default function NewBookingPage() {
           start_time: data.startTime,
           end_time: data.endTime,
           notes: data.notes || undefined,
+          purpose_type: data.purposeType,
         },
       });
       router.push(`/booking/${editId}`);
@@ -409,7 +411,7 @@ export default function NewBookingPage() {
 
   const handleNext = async () => {
     if (step === 1) {
-      const fields: (keyof BookingForm)[] = ['title', 'bookingDate', 'bookingType'];
+      const fields: (keyof BookingForm)[] = ['title', 'bookingDate', 'bookingType', 'purposeType'];
       if (watchedBookingType === 'rutin') fields.push('pattern', 'durationMonths');
       if (await trigger(fields)) setStep(2);
       return;
@@ -517,6 +519,15 @@ export default function NewBookingPage() {
             </div>
 
             <Textarea id="description" label="Deskripsi" placeholder="Deskripsi kegiatan..." rows={3} {...register('description')} />
+
+            <div>
+              <label htmlFor="purposeType" className="mb-1.5 block text-sm font-medium">Jenis Kegiatan *</label>
+              <select id="purposeType" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" {...register('purposeType', { onChange: () => setSelectedRoomId(null) })}>
+                <option value="">Pilih jenis kegiatan</option>
+                {Object.entries(PURPOSE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+              {watchedPurpose === 'latihan_koor' && <p className="mt-1 text-xs text-muted-foreground">Latihan Koor hanya dapat memakai Aristoteles atau Cecilia (501).</p>}
+            </div>
 
             {!editId && (
               <div>
@@ -760,6 +771,8 @@ export default function NewBookingPage() {
             />
 
             {attendeesNum > 0 && dateStr ? (
+              <>
+              {watchedPurpose === 'latihan_koor' && <p className="text-sm text-muted-foreground">Pilihan khusus Latihan Koor: Aristoteles dan Cecilia (501) sesuai kapasitas.</p>}
               <RoomRecommendationList
                 items={recommendations ?? []}
                 attendees={attendeesNum}
@@ -767,6 +780,7 @@ export default function NewBookingPage() {
                 onSelect={setSelectedRoomId}
                 loading={loadingRecommendations}
               />
+              </>
             ) : (
               <div className="text-center py-8 text-sm text-muted-foreground border border-dashed rounded-lg">
                 Isi jumlah peserta terlebih dahulu untuk melihat rekomendasi ruangan.
@@ -792,6 +806,7 @@ export default function NewBookingPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <p className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">Pilih rentang dari awal persiapan sampai selesai beres-beres. Seluruh rentang tersebut akan dipesan dan dipakai untuk mengecek bentrok.</p>
               <Controller
                 name="startTime"
                 control={control}
@@ -813,6 +828,8 @@ export default function NewBookingPage() {
                   />
                 )}
               />
+
+              {watchedEnd > '17:30' && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Jika peminjaman melewati pukul 17.30, kunci ruangan diambil di pos sekuriti.</p>}
 
               {overCapacity && (
                 <div className="p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
@@ -844,11 +861,13 @@ export default function NewBookingPage() {
               <div className="grid gap-2 rounded-lg border bg-muted/30 p-3 text-sm sm:grid-cols-2">
                 <div><span className="text-muted-foreground">Peminjam: </span><span className="font-medium">{watch('title') || '-'}</span></div>
                 <div><span className="text-muted-foreground">Jenis: </span><span className="font-medium">{watchedBookingType === 'rutin' ? 'Rutin' : 'Tidak rutin'}</span></div>
+                <div><span className="text-muted-foreground">Kegiatan: </span><span className="font-medium">{PURPOSE_LABELS[watchedPurpose] || '-'}</span></div>
                 <div><span className="text-muted-foreground">Ruangan: </span><span className="font-medium">{selectedRoom ? `${getRoomDisplayName(selectedRoom)} · ${selectedRoom.capacity} orang` : '-'}</span></div>
                 <div><span className="text-muted-foreground">Tanggal: </span><span className="font-medium">{watchedDate ? format(watchedDate, 'd MMMM yyyy', { locale: idLocale }) : '-'}</span></div>
                 <div><span className="text-muted-foreground">Waktu: </span><span className="font-medium">{watchedStart} – {watchedEnd}</span></div>
                 <div><span className="text-muted-foreground">Peserta: </span><span className="font-medium">{attendeesNum || '-'} orang</span></div>
               </div>
+              {watchedEnd > '17:30' && <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Kunci ruangan diambil di pos sekuriti karena peminjaman melewati pukul 17.30.</p>}
               <div className="text-sm text-muted-foreground max-h-40 overflow-y-auto whitespace-pre-line border rounded-lg p-3 bg-muted/30">
                 {TATA_TERTIB_TEXT}
               </div>

@@ -12,12 +12,14 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
-import { CalendarDays, Heart, User, CalendarPlus, MessagesSquare, ArrowRight, LockKeyhole } from 'lucide-react';
+import { CalendarDays, Heart, User, CalendarPlus, MessagesSquare, ArrowRight, LockKeyhole, Church, FlaskConical } from 'lucide-react';
 
 const SERVICE_ICONS = {
   intensi_misa: Heart,
   permohonan_misa: CalendarPlus,
+  misa_lingkungan: Church,
   konsultasi_romo: MessagesSquare,
+  sakramen_minyak_suci: FlaskConical,
 } as const;
 
 export default function LayananUmatPage() {
@@ -74,7 +76,7 @@ export default function LayananUmatPage() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {SERVICE_TYPES.map((serviceType) => {
             const Icon = SERVICE_ICONS[serviceType.value as keyof typeof SERVICE_ICONS] ?? Heart;
-            const isEnabled = serviceType.value === 'intensi_misa';
+            const isEnabled = ['intensi_misa', 'misa_lingkungan', 'konsultasi_romo', 'sakramen_minyak_suci'].includes(serviceType.value);
             const content = (
               <Card className={isEnabled
                 ? 'border-primary/30 transition-all hover:border-primary hover:shadow-md'
@@ -98,7 +100,7 @@ export default function LayananUmatPage() {
             );
 
             return isEnabled ? (
-              <Link key={serviceType.value} href="/layanan-umat/new" className="block">
+              <Link key={serviceType.value} href={`/layanan-umat/new?type=${serviceType.value}`} className="block">
                 {content}
               </Link>
             ) : (

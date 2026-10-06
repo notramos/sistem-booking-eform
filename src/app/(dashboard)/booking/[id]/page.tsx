@@ -385,6 +385,11 @@ export default function BookingDetailPage() {
       </Card>
 
       {/* Status stepper */}
+      {booking.end_time > '17:30' && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Peminjaman melewati pukul 17.30. Kunci ruangan diambil di pos sekuriti. Waktu persiapan dan beres-beres termasuk dalam rentang peminjaman.
+        </div>
+      )}
       <Card>
         <CardContent className="p-4 sm:py-5 sm:px-6">
           <StatusStepper steps={bookingSteps(booking.status)} />

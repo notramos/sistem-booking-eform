@@ -69,6 +69,8 @@ export function getNotificationDescription(notification: Notification): string |
         data.service_type_label,
         data.applicant_name,
         data.service_date ? formatDate(data.service_date) : null,
+        data.service_time || null,
+        data.service_place || null,
       ].filter(Boolean).join(' · ') || null;
 
     case 'congregation_service_rejected': {
@@ -89,7 +91,7 @@ export function getNotificationDescription(notification: Notification): string |
     }
 
     default:
-      return [data.title, ...bookingWhen()].filter(Boolean).join(' · ') || null;
+      return [data.title, ...bookingWhen(), data.key_pickup].filter(Boolean).join(' · ') || null;
   }
 }
 

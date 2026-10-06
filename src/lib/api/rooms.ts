@@ -20,8 +20,8 @@ export const roomsApi = {
   availability: (id: string, date: string, startTime: string, endTime: string, excludeBookingId?: string) =>
     apiClient.get<ApiResponse<{ available: boolean }>>(`/rooms/${id}/availability`, { params: { date, start_time: startTime, end_time: endTime, exclude_booking_id: excludeBookingId } }),
 
-  recommendations: (date: string, attendees: number) =>
-    apiClient.get<ApiResponse<RoomRecommendation[]>>('/rooms/recommendations', { params: { date, attendees } }),
+  recommendations: (date: string, attendees: number, purposeType?: string) =>
+    apiClient.get<ApiResponse<RoomRecommendation[]>>('/rooms/recommendations', { params: { date, attendees, purpose_type: purposeType === 'latihan_koor' ? purposeType : undefined } }),
 
   dayAvailability: (id: string, date: string) =>
     apiClient.get<ApiResponse<DayAvailability>>(`/rooms/${id}/day-availability`, { params: { date } }),

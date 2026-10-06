@@ -27,10 +27,12 @@ export const PURPOSE_LABELS: Record<string, string> = {
   ibadah: 'Ibadah & Persekutuan',
   acara_keluarga: 'Acara Keluarga',
   latihan_musik: 'Latihan Musik',
+  latihan_koor: 'Latihan Koor',
   pembinaan: 'Pembinaan',
   rapat: 'Rapat Pelayanan',
   seminar: 'Seminar & Training',
   publik: 'Acara Publik',
+  acara_lainnya: 'Acara Lainnya',
 };
 
 /**

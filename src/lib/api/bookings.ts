@@ -37,7 +37,7 @@ export const bookingsApi = {
     skipped_count: number;
   }>>('/bookings/recurring', data),
 
-  update: (id: string, data: Partial<Pick<Booking, 'title' | 'description' | 'room_id' | 'booking_date' | 'start_time' | 'end_time' | 'notes'>>) =>
+  update: (id: string, data: Partial<Pick<Booking, 'title' | 'description' | 'room_id' | 'booking_date' | 'start_time' | 'end_time' | 'notes' | 'purpose_type'>>) =>
     apiClient.put<ApiResponse<Booking>>(`/bookings/${id}`, data),
 
   adminUpdate: (id: string, data: Partial<Pick<Booking, 'title' | 'description' | 'room_id' | 'booking_date' | 'start_time' | 'end_time' | 'notes' | 'contact_person' | 'expected_attendees' | 'status'>>) =>

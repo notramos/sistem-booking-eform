@@ -3,11 +3,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roomsApi } from '@/lib/api/rooms';
 
-export function useRoomRecommendations(date?: string, attendees?: number) {
+export function useRoomRecommendations(date?: string, attendees?: number, purposeType?: string) {
   return useQuery({
-    queryKey: ['room-recommendations', date, attendees],
+    queryKey: ['room-recommendations', date, attendees, purposeType],
     queryFn: async () => {
-      const res = await roomsApi.recommendations(date!, attendees!);
+      const res = await roomsApi.recommendations(date!, attendees!, purposeType);
       return res.data.data;
     },
     enabled: !!date && !!attendees && attendees > 0,

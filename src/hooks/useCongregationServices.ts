@@ -89,8 +89,8 @@ export function useApproveCongregationService() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
-      congregationServicesApi.approve(id, notes),
+    mutationFn: ({ id, notes, service_date, service_time, service_place }: { id: string; notes?: string; service_date?: string; service_time?: string; service_place?: string }) =>
+      congregationServicesApi.approve(id, { notes, service_date, service_time, service_place }),
     onSuccess: () => {
       toast.success('Permohonan berhasil disetujui');
       queryClient.invalidateQueries({ queryKey: ['congregation-services'] });

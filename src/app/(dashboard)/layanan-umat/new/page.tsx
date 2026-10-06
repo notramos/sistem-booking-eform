@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, type ComponentType } from 'react';
 import { format } from 'date-fns';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCreateCongregationService } from '@/hooks/useCongregationServices';
 import { useWilayah } from '@/hooks/useParish';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
@@ -32,7 +32,7 @@ function getServiceTypeIcon(icon: string) {
 }
 
 const WIZARD_STEPS_BASE = [{ title: 'Pilih Pelayanan' }];
-const PUBLIC_SERVICE_TYPES = SERVICE_TYPES.filter((service) => service.value === 'intensi_misa');
+const PUBLIC_SERVICE_TYPES = SERVICE_TYPES.filter((service) => ['intensi_misa', 'misa_lingkungan', 'konsultasi_romo', 'sakramen_minyak_suci'].includes(service.value));
 
 /** Samakan dengan logika kunci di DynamicFormFields — field.name bisa sudah mengandung prefix `dynamic_fields.` sendiri. */
 function fieldKeyOf(field: ServiceFieldConfig): string {
@@ -82,12 +82,13 @@ function getReviewFields(config: ServiceTypeConfig, formData: FormData) {
 
 export default function NewCongregationServicePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedType = searchParams.get('type');
+  const initialType = PUBLIC_SERVICE_TYPES.some((service) => service.value === requestedType) ? requestedType! : 'intensi_misa';
   const createService = useCreateCongregationService();
   const { data: wilayahList } = useWilayah();
-  // Saat ini hanya Intensi Misa yang resmi dibuka untuk umat. Langsung masuk
-  // ke langkah pengisian agar pengguna tidak perlu memilih satu-satunya layanan.
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<FormData>({ service_type: 'intensi_misa' });
+  const [formData, setFormData] = useState<FormData>({ service_type: initialType });
 
   // Opsi dropdown Lingkungan (neighborhood) & Wilayah (region) dari data master.
   const areaOptions = useMemo(() => {
@@ -264,13 +265,13 @@ export default function NewCongregationServicePage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Intensi Misa</h1>
-        <p className="text-muted-foreground mt-1">Ajukan intensi untuk didoakan dalam perayaan Ekaristi</p>
+        <h1 className="text-2xl font-bold text-foreground">{config?.label ?? 'Pelayanan Umat'}</h1>
+        <p className="text-muted-foreground mt-1">{config?.description ?? 'Ajukan permohonan pelayanan umat'}</p>
       </div>
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>Form Permohonan Intensi Misa</CardTitle>
+          <CardTitle>Form Permohonan {config?.label ?? 'Pelayanan'}</CardTitle>
           <CardDescription>
             {config
               ? `${config.label} — ${config.description}`

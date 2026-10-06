@@ -151,6 +151,9 @@ export interface Notification {
     applicant_name?: string;
     contact?: string;
     service_date?: string;
+    service_time?: string;
+    service_place?: string;
+    key_pickup?: string;
     notes?: string;
     type: string;
   };

@@ -51,8 +51,8 @@ export const congregationServicesApi = {
 
   remove: (id: string) => apiClient.delete<ApiResponse>(`/congregation-services/${id}`),
 
-  approve: (id: string, notes?: string) =>
-    apiClient.post<ApiResponse<CongregationService>>(`/congregation-services/${id}/approve`, { notes }),
+  approve: (id: string, payload?: { notes?: string; service_date?: string; service_time?: string; service_place?: string }) =>
+    apiClient.post<ApiResponse<CongregationService>>(`/congregation-services/${id}/approve`, payload),
 
   reject: (id: string, reason: string) =>
     apiClient.post<ApiResponse<CongregationService>>(`/congregation-services/${id}/reject`, { reason }),

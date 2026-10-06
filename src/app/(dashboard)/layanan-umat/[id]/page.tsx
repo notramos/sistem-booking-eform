@@ -13,6 +13,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { StatusStepper, type StepperStep } from '@/components/detail/StatusStepper';
 import { ActivityTimeline, type TimelineItem } from '@/components/detail/ActivityTimeline';
@@ -74,6 +75,9 @@ export default function LayananUmatDetailPage() {
 
   const [showApprove, setShowApprove] = useState(false);
   const [approveNotes, setApproveNotes] = useState('');
+  const [finalDate, setFinalDate] = useState('');
+  const [finalTime, setFinalTime] = useState('');
+  const [finalPlace, setFinalPlace] = useState('');
   const [showReject, setShowReject] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [approvalChecks, setApprovalChecks] = useState([false, false, false]);
@@ -99,6 +103,7 @@ export default function LayananUmatDetailPage() {
   }
 
   const typeConfig = SERVICE_TYPE_MAP[service.service_type];
+  const needsSchedule = ['misa_lingkungan', 'konsultasi_romo', 'sakramen_minyak_suci'].includes(service.service_type);
   const hasActions = isStaff && service.status === 'pending';
   const canApproveAfterChecklist = approvalChecks.every(Boolean);
 
@@ -203,7 +208,8 @@ export default function LayananUmatDetailPage() {
   }
 
   const handleApprove = async () => {
-    await approveMutation.mutateAsync({ id: service.id, notes: approveNotes || undefined });
+    await approveMutation.mutateAsync({ id: service.id, notes: approveNotes || undefined,
+      ...(needsSchedule ? { service_date: finalDate, service_time: finalTime, service_place: finalPlace } : {}) });
     setShowApprove(false);
     setApproveNotes('');
   };
@@ -295,6 +301,14 @@ export default function LayananUmatDetailPage() {
       )}
 
       {/* Status stepper */}
+      {needsSchedule && service.status === 'approved' && service.service_date && (
+        <Card><CardHeader><CardTitle className="text-base">Jadwal yang Dikonfirmasi</CardTitle></CardHeader>
+          <CardContent className="grid gap-3 text-sm sm:grid-cols-3">
+            <div><span className="text-muted-foreground">Tanggal</span><p className="font-medium">{formatDate(service.service_date, 'long')}</p></div>
+            <div><span className="text-muted-foreground">Jam</span><p className="font-medium">{String(service.dynamic_fields?.confirmed_time || '-')}</p></div>
+            <div><span className="text-muted-foreground">Tempat</span><p className="font-medium">{String(service.dynamic_fields?.confirmed_place || '-')}</p></div>
+          </CardContent></Card>
+      )}
       <Card>
         <CardContent className="p-4 sm:py-5 sm:px-6">
           <StatusStepper steps={serviceSteps(service.status)} />
@@ -389,12 +403,19 @@ export default function LayananUmatDetailPage() {
             <DialogDescription>Permohonan pelayanan umat ini akan disetujui.</DialogDescription>
           </DialogHeader>
           <div className="py-2">
+            {needsSchedule && <div className="mb-4 space-y-3 rounded-lg border bg-muted/20 p-3">
+              <p className="text-sm font-semibold">Jadwal final dari sekretariat *</p>
+              <Input label="Tanggal" type="date" min={new Date().toLocaleDateString('en-CA')} value={finalDate} onChange={(event) => setFinalDate(event.target.value)} />
+              <Input label="Jam" type="time" value={finalTime} onChange={(event) => setFinalTime(event.target.value)} />
+              <Input label="Tempat" value={finalPlace} onChange={(event) => setFinalPlace(event.target.value)} placeholder="Gereja, rumah, atau lokasi lain" />
+              <p className="text-xs text-muted-foreground">Pemohon akan menerima jadwal ini pada notifikasi persetujuan.</p>
+            </div>}
             <label className="text-sm font-medium text-foreground mb-1 block">Catatan (opsional)</label>
             <Textarea rows={2} placeholder="Tambahkan catatan..." value={approveNotes} onChange={(e) => setApproveNotes(e.target.value)} />
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setShowApprove(false); setApproveNotes(''); }}>Batal</Button>
-            <Button onClick={handleApprove} disabled={!canApproveAfterChecklist} loading={approveMutation.isPending}>
+            <Button onClick={handleApprove} disabled={!canApproveAfterChecklist || (needsSchedule && (!finalDate || !finalTime || !finalPlace.trim()))} loading={approveMutation.isPending}>
               Ya, Setujui
             </Button>
           </DialogFooter>
