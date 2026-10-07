@@ -32,20 +32,21 @@ function getServiceTypeIcon(icon: string) {
 }
 
 const WIZARD_STEPS_BASE = [{ title: 'Pilih Pelayanan' }];
-const PUBLIC_SERVICE_TYPES = SERVICE_TYPES.filter((service) => ['intensi_misa', 'misa_lingkungan', 'konsultasi_romo', 'sakramen_minyak_suci'].includes(service.value));
+const PUBLIC_SERVICE_TYPES = SERVICE_TYPES.filter((service) => ['intensi_misa', 'permohonan_misa', 'konsultasi_romo', 'sakramen_minyak_suci'].includes(service.value));
 
 /** Samakan dengan logika kunci di DynamicFormFields — field.name bisa sudah mengandung prefix `dynamic_fields.` sendiri. */
 function fieldKeyOf(field: ServiceFieldConfig): string {
   return field.dynamicField && !field.name.startsWith('dynamic_fields.') ? `dynamic_fields.${field.name}` : field.name;
 }
 
-function buildStepSchema(stepIndex: number, config: ServiceTypeConfig) {
+function buildStepSchema(stepIndex: number, config: ServiceTypeConfig, data: FormData) {
   const stepConfig = config.steps[stepIndex];
   if (!stepConfig) return null;
 
   const requiredFields: string[] = [];
   for (const section of stepConfig.sections) {
     for (const field of section.fields) {
+      if (field.name === 'dynamic_fields.nama_kaling' && config.value === 'permohonan_misa' && data['dynamic_fields.jenis_misa'] !== 'lingkungan') continue;
       if (field.required) {
         requiredFields.push(fieldKeyOf(field));
       }
@@ -84,11 +85,12 @@ export default function NewCongregationServicePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedType = searchParams.get('type');
-  const initialType = PUBLIC_SERVICE_TYPES.some((service) => service.value === requestedType) ? requestedType! : 'intensi_misa';
+  const legacyLingkunganLink = requestedType === 'misa_lingkungan';
+  const initialType = legacyLingkunganLink ? 'permohonan_misa' : PUBLIC_SERVICE_TYPES.some((service) => service.value === requestedType) ? requestedType! : 'intensi_misa';
   const createService = useCreateCongregationService();
   const { data: wilayahList } = useWilayah();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<FormData>({ service_type: initialType });
+  const [formData, setFormData] = useState<FormData>({ service_type: initialType, ...(legacyLingkunganLink ? { 'dynamic_fields.jenis_misa': 'lingkungan' } : {}) });
 
   // Opsi dropdown Lingkungan (neighborhood) & Wilayah (region) dari data master.
   const areaOptions = useMemo(() => {
@@ -139,6 +141,7 @@ export default function NewCongregationServicePage() {
       const next = { ...prev, [key]: value };
 
       if (key === 'region') next.neighborhood = '';
+      if (key === 'dynamic_fields.jenis_misa' && value !== 'lingkungan') next['dynamic_fields.nama_kaling'] = '';
 
       // Jadwal misa cuma punya 1 opsi (Sabtu/Jumat pertama) — auto-pilih tanpa perlu diklik user.
       if (key === 'dynamic_fields.tanggal_misa' && value) {
@@ -171,7 +174,7 @@ export default function NewCongregationServicePage() {
       const stepConfigIndex = step - 1;
       if (stepConfigIndex < 0 || stepConfigIndex >= config.steps.length) return true;
 
-      const requiredFields = buildStepSchema(stepConfigIndex, config);
+      const requiredFields = buildStepSchema(stepConfigIndex, config, formData);
       if (!requiredFields) return true;
 
       const errors = getStepErrors(requiredFields, formData);
@@ -205,7 +208,7 @@ export default function NewCongregationServicePage() {
 
     let allRequiredFields: string[] = [];
     for (let i = 0; i < config.steps.length; i++) {
-      const fields = buildStepSchema(i, config);
+      const fields = buildStepSchema(i, config, formData);
       if (fields) allRequiredFields = [...allRequiredFields, ...fields];
     }
     const allErrors = getStepErrors(allRequiredFields, formData);
@@ -271,7 +274,7 @@ export default function NewCongregationServicePage() {
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>Form Permohonan {config?.label ?? 'Pelayanan'}</CardTitle>
+          <CardTitle>Formulir {config?.label ?? 'Pelayanan'}</CardTitle>
           <CardDescription>
             {config
               ? `${config.label} — ${config.description}`
@@ -356,7 +359,7 @@ export default function NewCongregationServicePage() {
                     </div>
                   )}
                   <DynamicFormFields
-                    fields={injectAreaOptions(section.fields)}
+                    fields={injectAreaOptions(section.fields.filter((field) => field.name !== 'dynamic_fields.nama_kaling' || config.value !== 'permohonan_misa' || formData['dynamic_fields.jenis_misa'] === 'lingkungan'))}
                     formData={formData}
                     errors={stepErrors}
                     onChange={updateField}

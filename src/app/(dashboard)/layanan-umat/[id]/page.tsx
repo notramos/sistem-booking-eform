@@ -103,7 +103,7 @@ export default function LayananUmatDetailPage() {
   }
 
   const typeConfig = SERVICE_TYPE_MAP[service.service_type];
-  const needsSchedule = ['misa_lingkungan', 'konsultasi_romo', 'sakramen_minyak_suci'].includes(service.service_type);
+  const needsSchedule = ['permohonan_misa', 'konsultasi_romo', 'sakramen_minyak_suci'].includes(service.service_type);
   const hasActions = isStaff && service.status === 'pending';
   const canApproveAfterChecklist = approvalChecks.every(Boolean);
 

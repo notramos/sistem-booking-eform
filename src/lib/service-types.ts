@@ -731,7 +731,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
   {
     value: 'permohonan_misa',
     label: 'Permohonan Misa',
-    description: 'Permohonan agar misa diadakan di luar jadwal tetap — misa lingkungan, rumah, arwah, atau syukur',
+    description: 'Ajukan misa lingkungan, rumah, arwah, atau syukur. Jadwal final ditentukan sekretariat.',
     icon: 'CalendarPlus',
     theme: 'text-amber-600',
     steps: [
@@ -743,7 +743,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
             title: 'Data Pemohon',
             fields: [
               { name: 'applicant_name', label: 'Nama Pemohon', type: 'text', required: true, colSpan: 2 },
-              ...kontakFields.filter((f) => ['contact', 'neighborhood', 'address'].includes(f.name)),
+              ...kontakFields.filter((f) => ['contact', 'region', 'neighborhood', 'address'].includes(f.name)),
             ],
           },
         ],
@@ -771,6 +771,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
                   { value: 'lainnya', label: 'Lainnya' },
                 ],
               },
+              { name: 'dynamic_fields.nama_kaling', label: 'Nama Ketua Lingkungan (Kaling)', type: 'text', required: true, dynamicField: true, colSpan: 2 },
               {
                 name: 'description',
                 label: 'Keterangan / Intensi Misa',
@@ -886,34 +887,6 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    value: 'misa_lingkungan',
-    label: 'Misa Lingkungan',
-    description: 'Ajukan misa lingkungan. Sekretariat akan menentukan dan mengonfirmasi jadwal final.',
-    icon: 'Church',
-    theme: 'text-amber-700',
-    steps: [
-      { title: 'Pemohon & Kaling', sections: [
-        { id: 'pemohon', title: 'Data Pemohon', fields: [
-          { name: 'applicant_name', label: 'Nama Pemohon', type: 'text', required: true, colSpan: 2 },
-          { name: 'contact', label: 'Nomor HP', type: 'tel', required: true },
-          { name: 'region', label: 'Wilayah', type: 'select', required: true, options: [] },
-          { name: 'neighborhood', label: 'Lingkungan', type: 'select', required: true, options: [] },
-          { name: 'dynamic_fields.nama_kaling', label: 'Nama Ketua Lingkungan (Kaling)', type: 'text', required: true, dynamicField: true, colSpan: 2 },
-        ] },
-      ] },
-      { title: 'Rencana Misa', description: 'Tanggal dan jam berikut adalah usulan, bukan jadwal final.', sections: [
-        { id: 'rencana_misa', title: 'Waktu & Tempat yang Diusulkan', fields: [
-          { name: 'dynamic_fields.tanggal_diminta', label: 'Tanggal Diusulkan', type: 'date', required: true, dynamicField: true },
-          { name: 'dynamic_fields.waktu_preferensi', label: 'Jam Diusulkan', type: 'time', required: true, dynamicField: true },
-          { name: 'dynamic_fields.tempat_misa', label: 'Tempat Misa', type: 'text', required: true, dynamicField: true },
-          { name: 'dynamic_fields.alamat_misa', label: 'Alamat Tempat Misa', type: 'textarea', required: true, dynamicField: true, colSpan: 2 },
-          { name: 'dynamic_fields.perkiraan_umat', label: 'Perkiraan Umat', type: 'number', required: false, dynamicField: true },
-          { name: 'description', label: 'Keterangan', type: 'textarea', required: false, colSpan: 2 },
-        ] },
-      ] },
     ],
   },
 ];
