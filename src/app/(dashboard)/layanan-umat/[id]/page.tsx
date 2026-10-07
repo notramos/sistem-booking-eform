@@ -23,7 +23,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { cn, formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
-import { SERVICE_TYPE_MAP, getServiceFieldLabel } from '@/lib/service-types';
+import { SERVICE_TYPE_MAP, getServiceFieldLabel, getServiceDisplayLabel } from '@/lib/service-types';
 import { formatWibDateTime } from '@/lib/misa-deadline';
 import {
   ArrowLeft, FileText, CheckCircle2, XCircle, Clock, User as UserIcon, CalendarDays,
@@ -235,7 +235,7 @@ export default function LayananUmatDetailPage() {
         <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground break-words">
-              {typeConfig?.label ?? service.service_type}
+              {getServiceDisplayLabel(service.service_type, service.dynamic_fields)}
             </h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5 shrink-0" />{service.applicant_name}</span>

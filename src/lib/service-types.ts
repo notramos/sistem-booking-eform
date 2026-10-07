@@ -1,5 +1,24 @@
 import type { ServiceTypeConfig } from '@/types';
 
+const MISA_KIND_LABELS: Record<string, string> = {
+  lingkungan: 'Misa Lingkungan',
+  arwah: 'Misa Arwah (Requiem)',
+  syukur: 'Misa Syukur',
+  rumah: 'Misa di Rumah / Keluarga',
+  lainnya: 'Lainnya',
+};
+
+export function getServiceDisplayLabel(serviceType: string, dynamicFields?: Record<string, unknown> | null): string {
+  const base = SERVICE_TYPE_MAP[serviceType]?.label ?? serviceType;
+  if (serviceType !== 'permohonan_misa') return base;
+  const kind = dynamicFields?.jenis_misa;
+  return typeof kind === 'string' && MISA_KIND_LABELS[kind] ? `${base} · ${MISA_KIND_LABELS[kind]}` : base;
+}
+
+export function getMisaKindLabel(kind: string): string {
+  return MISA_KIND_LABELS[kind] ?? kind;
+}
+
 export const RELIGION_OPTIONS = [
   { value: 'Katolik', label: 'Katolik' },
   { value: 'Kristen', label: 'Kristen' },

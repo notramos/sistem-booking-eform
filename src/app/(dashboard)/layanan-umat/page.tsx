@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
-import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
+import { SERVICE_TYPES, getServiceDisplayLabel } from '@/lib/service-types';
 import { CalendarDays, Heart, User, CalendarPlus, MessagesSquare, ArrowRight, LockKeyhole, FlaskConical } from 'lucide-react';
 
 const SERVICE_ICONS = {
@@ -132,7 +132,6 @@ export default function LayananUmatPage() {
         ) : (
           <div className="space-y-3">
             {services.map((service) => {
-              const typeConfig = SERVICE_TYPE_MAP[service.service_type];
               return (
                 <Link key={service.id} href={`/layanan-umat/${service.id}`}>
                   <Card className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md">
@@ -140,7 +139,7 @@ export default function LayananUmatPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-foreground">
-                            {typeConfig?.label ?? service.service_type}
+                            {getServiceDisplayLabel(service.service_type, service.dynamic_fields)}
                           </p>
                           <p className="mt-1 text-sm text-muted-foreground">{service.applicant_name}</p>
 

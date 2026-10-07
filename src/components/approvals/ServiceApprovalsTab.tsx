@@ -11,7 +11,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, formatRelativeTime, getInitials } from '@/lib/utils';
-import { SERVICE_TYPE_MAP } from '@/lib/service-types';
+import { getServiceDisplayLabel } from '@/lib/service-types';
 import { XCircle, CalendarDays, ClipboardList, ChevronRight, MapPin, Cake } from 'lucide-react';
 
 export function ServiceApprovalsTab() {
@@ -53,7 +53,6 @@ export function ServiceApprovalsTab() {
       ) : (
         <div className="space-y-4">
           {services.map((service, index) => {
-            const typeConfig = SERVICE_TYPE_MAP[service.service_type];
             const dynamicFieldsCount = Object.values(service.dynamic_fields ?? {}).filter((v) => v !== null && v !== '').length;
 
             return (
@@ -70,7 +69,7 @@ export function ServiceApprovalsTab() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="secondary" className="shrink-0 text-xs">#{((page - 1) * 15) + index + 1}</Badge>
                           <h3 className="font-semibold text-foreground">
-                            {typeConfig?.label ?? service.service_type}
+                            {getServiceDisplayLabel(service.service_type, service.dynamic_fields)}
                           </h3>
                           {dynamicFieldsCount > 0 && (
                             <Badge variant="outline" className="shrink-0">{dynamicFieldsCount} detail terisi</Badge>

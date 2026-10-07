@@ -13,7 +13,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
-import { SERVICE_TYPES, SERVICE_TYPE_MAP } from '@/lib/service-types';
+import { SERVICE_TYPES, getServiceDisplayLabel } from '@/lib/service-types';
 import { ManualServiceDialog } from '@/components/admin/ManualServiceDialog';
 import { EditIntensiMisaDialog } from '@/components/admin/EditIntensiMisaDialog';
 import { Eye, ClipboardList, X, Trash2 } from 'lucide-react';
@@ -111,10 +111,9 @@ export function AllServicesTable() {
               </TableHeader>
               <TableBody>
                 {services.map((service) => {
-                  const typeConfig = SERVICE_TYPE_MAP[service.service_type];
                   return (
                     <TableRow key={service.id}>
-                      <TableCell className="font-medium">{typeConfig?.label ?? service.service_type}</TableCell>
+                      <TableCell className="font-medium">{getServiceDisplayLabel(service.service_type, service.dynamic_fields)}</TableCell>
                       <TableCell>{service.applicant_name}</TableCell>
                       <TableCell className="hidden md:table-cell">{service.user?.name ?? '-'}</TableCell>
                       <TableCell>{formatDate(service.created_at)}</TableCell>

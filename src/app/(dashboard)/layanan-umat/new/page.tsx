@@ -15,7 +15,7 @@ import { WizardFooter } from '@/components/ui/wizard-footer';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Heart, Droplets, Bird, Flame, Church, FileText, FileCheck, Cross, FlaskConical, DoorOpen, Radio, HelpCircle, Info, BookOpen, CalendarPlus, MessagesSquare } from 'lucide-react';
 import Link from 'next/link';
-import { SERVICE_TYPES, SERVICE_TYPE_MAP, computeMisaScheduleOptions } from '@/lib/service-types';
+import { SERVICE_TYPES, SERVICE_TYPE_MAP, computeMisaScheduleOptions, getMisaKindLabel } from '@/lib/service-types';
 import { angkaKeTerbilang } from '@/lib/terbilang';
 import type { ServiceTypeConfig, ServiceFieldConfig } from '@/types';
 import { cn } from '@/lib/utils';
@@ -71,7 +71,12 @@ function getReviewFields(config: ServiceTypeConfig, formData: FormData) {
   for (const step of config.steps) {
     for (const section of step.sections) {
       const fields = section.fields
-        .map((f) => ({ label: f.label, value: formData[fieldKeyOf(f)] || null }))
+        .map((f) => ({
+          label: f.label,
+          value: f.name === 'dynamic_fields.jenis_misa'
+            ? (formData[fieldKeyOf(f)] ? getMisaKindLabel(formData[fieldKeyOf(f)]) : null)
+            : formData[fieldKeyOf(f)] || null,
+        }))
         .filter((f) => f.value !== null);
       if (fields.length > 0) {
         sections.push({ title: section.title, fields });
@@ -270,6 +275,11 @@ export default function NewCongregationServicePage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">{config?.label ?? 'Pelayanan Umat'}</h1>
         <p className="text-muted-foreground mt-1">{config?.description ?? 'Ajukan permohonan pelayanan umat'}</p>
+        {config?.value === 'permohonan_misa' && formData['dynamic_fields.jenis_misa'] && (
+          <p className="mt-2 text-sm font-medium text-primary">
+            Jenis permohonan: {getMisaKindLabel(formData['dynamic_fields.jenis_misa'])}
+          </p>
+        )}
       </div>
 
       <Card>
