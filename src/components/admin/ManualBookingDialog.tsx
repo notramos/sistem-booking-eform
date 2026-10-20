@@ -107,7 +107,7 @@ export function ManualBookingDialog() {
               ))}
             </Select>
 
-            <DatePicker label="Tanggal *" value={date} onChange={setDate} placeholder="Pilih tanggal (tanpa batas H+7)" />
+            <DatePicker label="Tanggal *" value={date} onChange={setDate} placeholder="Pilih tanggal (termasuk 2027, tanpa batas H+7)" monthYearDropdown />
 
             <TimeSlotPicker
               label="Waktu *"

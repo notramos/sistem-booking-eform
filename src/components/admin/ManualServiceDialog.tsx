@@ -218,7 +218,7 @@ export function ManualServiceDialog() {
                 </div>
                 <Input label="Kontak *" placeholder="Nomor HP" inputMode="tel" value={contact} onChange={(e) => setContact(e.target.value)} />
 
-                <DatePicker label="Tanggal Misa *" value={tanggalMisa} onChange={handleTanggalChange} placeholder="Pilih tanggal misa" />
+                <DatePicker label="Tanggal Misa *" value={tanggalMisa} onChange={handleTanggalChange} placeholder="Pilih tanggal misa (termasuk 2027)" monthYearDropdown />
 
                 <Select label="Jadwal Misa *" value={jadwalMisa} onChange={(e) => setJadwalMisa(e.target.value)} disabled={!tanggalStr}>
                   <option value="">{tanggalStr ? (scheduleOptions.length ? 'Pilih jam' : 'Semua jadwal sudah lewat') : 'Pilih tanggal dulu'}</option>
