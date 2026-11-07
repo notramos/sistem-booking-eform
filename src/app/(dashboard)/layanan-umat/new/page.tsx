@@ -75,7 +75,7 @@ function getReviewFields(config: ServiceTypeConfig, formData: FormData) {
           label: f.label,
           value: f.name === 'dynamic_fields.jenis_misa'
             ? (formData[fieldKeyOf(f)] ? getMisaKindLabel(formData[fieldKeyOf(f)]) : null)
-            : formData[fieldKeyOf(f)] || null,
+            : (f.options?.find((option) => option.value === formData[fieldKeyOf(f)])?.label ?? formData[fieldKeyOf(f)] ?? null),
         }))
         .filter((f) => f.value !== null);
       if (fields.length > 0) {
@@ -301,7 +301,7 @@ export default function NewCongregationServicePage() {
             <div className="space-y-4">
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
                 <p className="font-medium text-foreground">Pelayanan digital yang tersedia</p>
-                <p className="mt-1 text-muted-foreground">Saat ini AlbertusKU membuka pengajuan Intensi Misa. Pelayanan lain akan tersedia secara bertahap.</p>
+                <p className="mt-1 text-muted-foreground">Pilih Intensi Misa, Permohonan Misa, Konsultasi Romo, atau Perminyakan. Layanan lain akan tersedia secara bertahap.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {PUBLIC_SERVICE_TYPES.map((t) => {
@@ -375,6 +375,16 @@ export default function NewCongregationServicePage() {
                     onChange={updateField}
                     onDateChange={updateDateField}
                   />
+                  {config.value === 'permohonan_misa' && section.id === 'waktu_tempat' && (
+                    <p className="mt-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+                      Tanggal dan jam di atas adalah usulan. Sekretariat akan menetapkan jadwal final dan mengirimkannya melalui notifikasi setelah permohonan diproses.
+                    </p>
+                  )}
+                  {config.value === 'konsultasi_romo' && section.id === 'detail_konsultasi' && (
+                    <p className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                      Anda tidak perlu menuliskan kronologi pribadi. Sekretariat akan menghubungi Anda untuk memastikan jadwal konsultasi.
+                    </p>
+                  )}
                   {config.value === 'intensi_misa' && section.id === 'jadwal_misa' && (
                     <div className="mt-4 space-y-3">
                       {formData['dynamic_fields.tanggal_misa'] && computeMisaScheduleOptions(formData['dynamic_fields.tanggal_misa']).length === 0 && (

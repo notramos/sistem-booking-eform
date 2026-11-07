@@ -526,7 +526,20 @@ export default function NewBookingPage() {
                 <option value="">Pilih jenis kegiatan</option>
                 {Object.entries(PURPOSE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
-              {watchedPurpose === 'latihan_koor' && <p className="mt-1 text-xs text-muted-foreground">Latihan Koor hanya dapat memakai Aristoteles atau Cecilia (501).</p>}
+              {watchedPurpose === 'latihan_koor' && (
+                <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                  <p className="font-medium text-foreground">Ketentuan Latihan Koor</p>
+                  <p className="mt-1 text-muted-foreground">Pilih Panti Koor Gereja, Lobby Aristoteles, atau Ruang St. Cecilia (501) sesuai kapasitas dan ketersediaan.</p>
+                  <p className="mt-1 text-muted-foreground">Di Panti Koor Gereja: tidak menggunakan AC, lampu hanya di area panti koor, dan matikan kembali sesudah latihan.</p>
+                </div>
+              )}
+              {watchedPurpose === 'latihan_lektor_pemazmur' && (
+                <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                  <p className="font-medium text-foreground">Ketentuan Latihan Lektor & Pemazmur</p>
+                  <p className="mt-1 text-muted-foreground">Lokasi latihan: Area Altar Gereja. Pilih waktu setelah misa harian atau misa Minggu selesai; sekretariat akan memeriksa kesesuaian jadwal.</p>
+                  <p className="mt-1 text-muted-foreground">Tidak menggunakan AC. Lampu dan mikrofon hanya di sekitar altar.</p>
+                </div>
+              )}
             </div>
 
             {!editId && (
@@ -772,7 +785,8 @@ export default function NewBookingPage() {
 
             {attendeesNum > 0 && dateStr ? (
               <>
-              {watchedPurpose === 'latihan_koor' && <p className="text-sm text-muted-foreground">Pilihan khusus Latihan Koor: Aristoteles dan Cecilia (501) sesuai kapasitas.</p>}
+              {watchedPurpose === 'latihan_koor' && <p className="text-sm text-muted-foreground">Pilihan Latihan Koor: Panti Koor Gereja, Lobby Aristoteles, atau Ruang St. Cecilia (501).</p>}
+              {watchedPurpose === 'latihan_lektor_pemazmur' && <p className="text-sm text-muted-foreground">Latihan Lektor & Pemazmur menggunakan Area Altar Gereja setelah misa selesai.</p>}
               <RoomRecommendationList
                 items={recommendations ?? []}
                 attendees={attendeesNum}

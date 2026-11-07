@@ -88,6 +88,7 @@ export function DynamicFormFields({
                   value={value}
                   onChange={(v) => onChange(fieldKey, v)}
                   name={fieldKey}
+                  label={field.label}
                   error={error}
                 />
               </div>

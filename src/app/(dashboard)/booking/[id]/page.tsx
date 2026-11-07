@@ -390,6 +390,16 @@ export default function BookingDetailPage() {
           Peminjaman melewati pukul 17.30. Kunci ruangan diambil di pos sekuriti. Waktu persiapan dan beres-beres termasuk dalam rentang peminjaman.
         </div>
       )}
+      {booking.purpose_type === 'latihan_koor' && booking.room?.slug === 'panti-koor-gereja' && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-foreground">
+          Ketentuan Panti Koor: tanpa AC; lampu hanya di area panti koor dan dimatikan kembali setelah latihan.
+        </div>
+      )}
+      {booking.purpose_type === 'latihan_lektor_pemazmur' && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-foreground">
+          Latihan dilakukan setelah misa selesai. Tanpa AC; lampu dan mikrofon hanya di sekitar altar. Sekretariat perlu memeriksa jadwal misa sebelum menyetujui.
+        </div>
+      )}
       <Card>
         <CardContent className="p-4 sm:py-5 sm:px-6">
           <StatusStepper steps={bookingSteps(booking.status)} />
@@ -402,7 +412,9 @@ export default function BookingDetailPage() {
             'Tanggal dan jam peminjaman sudah diperiksa.',
             'Ruangan dan kapasitasnya sudah sesuai kebutuhan.',
             'Tidak ada konflik jadwal pada ruangan tersebut.',
-            'Data peminjam dan kegiatan sudah cukup jelas.',
+            booking.purpose_type === 'latihan_lektor_pemazmur'
+              ? 'Jadwal latihan sudah dipastikan setelah misa selesai; data peminjam dan kegiatan jelas.'
+              : 'Data peminjam dan kegiatan sudah cukup jelas.',
           ]}
           checked={approvalChecks}
           onChange={(index, value) => setApprovalChecks((current) => current.map((item, i) => i === index ? value : item))}

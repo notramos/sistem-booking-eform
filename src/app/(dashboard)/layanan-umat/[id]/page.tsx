@@ -144,7 +144,8 @@ export default function LayananUmatDetailPage() {
             shownKeys.add(key);
             const raw = f.dynamicField ? service.dynamic_fields?.[key] : record[key];
             const shownInIntensiSummary = service.service_type === 'intensi_misa' && INTENSI_SUMMARY_KEYS.has(key);
-            return { label: f.label, value: shownInIntensiSummary ? null : formatValue(raw, f.type) };
+            const optionLabel = f.options?.find((option) => option.value === raw)?.label;
+            return { label: f.label, value: shownInIntensiSummary ? null : formatValue(optionLabel ?? raw, f.type) };
           }),
         }))
       )

@@ -12,32 +12,35 @@ interface FormRadioGroupProps {
   value: string;
   onChange: (value: string) => void;
   name: string;
+  label?: string;
   error?: string;
 }
 
-export function FormRadioGroup({ options, value, onChange, name, error }: FormRadioGroupProps) {
+export function FormRadioGroup({ options, value, onChange, name, label, error }: FormRadioGroupProps) {
   return (
     <div>
-      <div className="flex gap-2">
+      <div role="radiogroup" aria-label={label ?? name} className="grid grid-cols-2 gap-2">
         {options.map((opt) => {
           const selected = value === opt.value;
           return (
-            <button
-              key={opt.value}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              name={name}
-              onClick={() => onChange(opt.value)}
-              className={cn(
-                'flex-1 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all',
+            <label key={opt.value} className="relative cursor-pointer">
+              <input
+                type="radio"
+                name={name}
+                value={opt.value}
+                checked={selected}
+                onChange={() => onChange(opt.value)}
+                className="peer sr-only"
+              />
+              <span className={cn(
+                'flex min-h-11 items-center justify-center rounded-lg border px-3 py-2.5 text-center text-sm font-medium leading-snug transition-colors peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-ring',
                 selected
                   ? 'bg-primary/10 border-primary text-primary ring-1 ring-primary'
                   : 'bg-background border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
-              )}
-            >
-              {opt.label}
-            </button>
+              )}>
+                {opt.label}
+              </span>
+            </label>
           );
         })}
       </div>

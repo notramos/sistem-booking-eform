@@ -28,6 +28,7 @@ export const PURPOSE_LABELS: Record<string, string> = {
   acara_keluarga: 'Acara Keluarga',
   latihan_musik: 'Latihan Musik',
   latihan_koor: 'Latihan Koor',
+  latihan_lektor_pemazmur: 'Latihan Lektor & Pemazmur',
   pembinaan: 'Pembinaan',
   rapat: 'Rapat Pelayanan',
   seminar: 'Seminar & Training',
@@ -62,5 +63,8 @@ export const TATA_TERTIB_TEXT = `
 2. Data dan informasi yang diisi harus benar dan dapat dipertanggungjawabkan.
 3. Pemohon wajib menjaga kebersihan dan ketertiban ruangan yang digunakan.
 4. Perubahan atau pembatalan booking harus dilakukan sesegera mungkin agar tidak menghalangi jemaat lain.
-5. Pihak sekretariat/admin berhak menolak atau meminta revisi pengajuan yang tidak sesuai ketentuan.
+5. Pihak sekretariat/admin berhak menolak pengajuan yang tidak sesuai ketentuan.
+6. Latihan koor wajib diajukan dengan formulir lengkap. Bila memakai panti koor gereja, jangan gunakan AC; lampu hanya di area panti koor dan wajib dimatikan setelah latihan.
+7. Latihan lektor dan pemazmur di gereja wajib diajukan dengan formulir lengkap dan dilakukan setelah misa harian atau misa Minggu selesai. Jangan gunakan AC; lampu dan mikrofon hanya di sekitar altar.
+8. Waktu persiapan dan beres-beres harus termasuk dalam rentang peminjaman. Jika melewati pukul 17.30, kunci ruangan diambil di pos sekuriti.
 `.trim();

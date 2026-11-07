@@ -117,6 +117,14 @@ export function ManualBookingDialog() {
               roomId={roomId || undefined}
               date={dateStr}
             />
+            <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              Sertakan waktu persiapan hingga beres-beres dalam rentang peminjaman.
+            </p>
+            {endTime > '17:30' && (
+              <p className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground">
+                Peminjaman melewati 17.30: kunci ruangan diambil di pos sekuriti.
+              </p>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <Input label="Kontak" placeholder="Nomor HP" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} />

@@ -2,7 +2,8 @@ import type { ServiceTypeConfig } from '@/types';
 
 const MISA_KIND_LABELS: Record<string, string> = {
   lingkungan: 'Misa Lingkungan',
-  arwah: 'Misa Arwah (Requiem)',
+  arwah: 'Misa Arwah',
+  requiem: 'Misa Requiem',
   syukur: 'Misa Syukur',
   rumah: 'Misa di Rumah / Keluarga',
   lainnya: 'Lainnya',
@@ -575,7 +576,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
             id: 'data_pribadi',
             title: 'Data Pribadi',
             fields: [
-              { name: 'applicant_name', label: 'Nama Lengkap', type: 'text', required: true, colSpan: 2 },
+              { name: 'applicant_name', label: 'Nama Pemohon', type: 'text', required: true, colSpan: 2 },
               { name: 'dynamic_fields.baptismal_name', label: 'Nama Baptis (jika ada)', type: 'text', required: false, dynamicField: true },
               { name: 'address', label: 'Alamat Pelayanan', type: 'textarea', required: true, colSpan: 2 },
               { name: 'contact', label: 'Nomor Kontak Keluarga', type: 'tel', required: true },
@@ -592,11 +593,13 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
           },
           {
             id: 'penerimaan',
-            title: 'Penerimaan Sakramen',
+            title: 'Petugas & Penerima',
             fields: [
+              { name: 'dynamic_fields.pemberi_sakramen', label: 'Yang Memberikan Sakramen', type: 'text', required: true, placeholder: 'Nama romo / petugas', dynamicField: true },
+              { name: 'dynamic_fields.penerima_sakramen', label: 'Yang Menerima Sakramen', type: 'text', required: true, placeholder: 'Nama umat yang menerima', dynamicField: true },
               { name: 'dynamic_fields.reception_date', label: 'Tanggal yang Diusulkan', type: 'date', required: true, dynamicField: true },
               { name: 'dynamic_fields.reception_time', label: 'Jam yang Diusulkan', type: 'time', required: false, dynamicField: true },
-              { name: 'dynamic_fields.reception_place', label: 'Lokasi (rumah / rumah sakit)', type: 'text', required: true, dynamicField: true },
+              { name: 'dynamic_fields.reception_place', label: 'Tempat Pelayanan', type: 'text', required: true, placeholder: 'Rumah / rumah sakit / lokasi lain', dynamicField: true },
             ],
           },
         ],
@@ -750,7 +753,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
   {
     value: 'permohonan_misa',
     label: 'Permohonan Misa',
-    description: 'Ajukan misa lingkungan, rumah, arwah, atau syukur. Jadwal final ditentukan sekretariat.',
+    description: 'Ajukan misa lingkungan, arwah, requiem, atau syukur. Jadwal final ditentukan sekretariat.',
     icon: 'CalendarPlus',
     theme: 'text-amber-600',
     steps: [
@@ -762,7 +765,7 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
             title: 'Data Pemohon',
             fields: [
               { name: 'applicant_name', label: 'Nama Pemohon', type: 'text', required: true, colSpan: 2 },
-              ...kontakFields.filter((f) => ['contact', 'region', 'neighborhood', 'address'].includes(f.name)),
+              ...kontakFields.filter((f) => ['contact', 'region', 'neighborhood', 'address'].includes(f.name)).map((f) => f.name === 'address' ? { ...f, label: 'Alamat Pemohon' } : f),
             ],
           },
         ],
@@ -784,10 +787,9 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
                 dynamicField: true,
                 options: [
                   { value: 'lingkungan', label: 'Misa Lingkungan' },
-                  { value: 'arwah', label: 'Misa Arwah (Requiem)' },
+                  { value: 'arwah', label: 'Misa Arwah' },
+                  { value: 'requiem', label: 'Misa Requiem' },
                   { value: 'syukur', label: 'Misa Syukur' },
-                  { value: 'rumah', label: 'Misa di Rumah / Keluarga' },
-                  { value: 'lainnya', label: 'Lainnya' },
                 ],
               },
               { name: 'dynamic_fields.nama_kaling', label: 'Nama Ketua Lingkungan (Kaling)', type: 'text', required: true, dynamicField: true, colSpan: 2 },
@@ -811,7 +813,6 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
               { name: 'dynamic_fields.tanggal_misa_diminta', label: 'Tanggal Diminta', type: 'date', required: true, dynamicField: true },
               { name: 'dynamic_fields.jam_misa_diminta', label: 'Jam Diminta', type: 'time', required: true, dynamicField: true },
               { name: 'dynamic_fields.tempat_misa', label: 'Tempat Misa', type: 'text', required: true, placeholder: 'Gereja / rumah / balai lingkungan', dynamicField: true },
-              { name: 'dynamic_fields.perkiraan_umat', label: 'Perkiraan Jumlah Umat', type: 'number', required: false, placeholder: 'Contoh: 50', dynamicField: true },
               { name: 'dynamic_fields.alamat_misa', label: 'Alamat Lengkap (bila di luar gereja)', type: 'textarea', required: false, colSpan: 2, placeholder: 'Alamat tempat misa diadakan', dynamicField: true },
               { name: 'dynamic_fields.kebutuhan_petugas', label: 'Kebutuhan Petugas (opsional)', type: 'textarea', required: false, colSpan: 2, placeholder: 'Misdinar, lektor, organis, dll', dynamicField: true },
             ],
@@ -856,19 +857,11 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
                 colSpan: 2,
                 dynamicField: true,
                 options: [
-                  { value: 'pernikahan', label: 'Pernikahan' },
+                  { value: 'pra_pernikahan', label: 'Pra-Pernikahan' },
                   { value: 'rumah_tangga', label: 'Rumah Tangga' },
                   { value: 'pribadi', label: 'Pribadi' },
                   { value: 'lainnya', label: 'Lainnya' },
                 ],
-              },
-              {
-                name: 'description',
-                label: 'Kronologi Singkat',
-                type: 'textarea',
-                required: true,
-                colSpan: 2,
-                placeholder: 'Ceritakan singkat hal yang ingin dikonsultasikan',
               },
             ],
           },
@@ -888,18 +881,6 @@ export const SERVICE_TYPES: ServiceTypeConfig[] = [
                   { value: 'pagi', label: 'Pagi (08.00–11.00)' },
                   { value: 'siang', label: 'Siang (11.00–14.00)' },
                   { value: 'sore', label: 'Sore (16.00–19.00)' },
-                ],
-              },
-              {
-                name: 'dynamic_fields.sifat',
-                label: 'Sifat Permohonan',
-                type: 'radio',
-                required: true,
-                colSpan: 2,
-                dynamicField: true,
-                options: [
-                  { value: 'biasa', label: 'Biasa' },
-                  { value: 'mendesak', label: 'Mendesak' },
                 ],
               },
             ],
