@@ -109,6 +109,7 @@ export function getRoleBadgeColor(role: string): string {
     pastor: 'bg-amber-100 text-amber-800',
     sekretariat: 'bg-blue-100 text-blue-800',
     umat: 'bg-green-100 text-green-800',
+    ketua_lingkungan: 'bg-teal-100 text-teal-800',
   };
   return colors[role] || 'bg-gray-100 text-gray-800';
 }
@@ -120,6 +121,7 @@ export function getRoleLabel(role: string): string {
     pastor: 'Pastor',
     sekretariat: 'Sekretariat',
     umat: 'Umat',
+    ketua_lingkungan: 'Ketua Lingkungan',
   };
   return labels[role] || role;
 }

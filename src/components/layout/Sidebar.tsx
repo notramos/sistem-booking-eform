@@ -12,7 +12,7 @@ import {
   Users, BarChart3, Settings, ClipboardList, Building2, Shield, Bell, Heart, Database,
 } from 'lucide-react';
 
-const ALL_ROLES = ['umat', 'sekretariat', 'p2', 'pastor', 'it_admin'];
+const ALL_ROLES = ['umat', 'ketua_lingkungan', 'sekretariat', 'p2', 'pastor', 'it_admin'];
 // P2, Pastor, IT Admin sederajat (wewenang penuh) — bedanya cuma IT Admin yang
 // bisa kelola user internal, jadi "Kelola User" dipisah pakai role list sendiri.
 const FULL_ACCESS_ROLES = ['p2', 'pastor', 'it_admin'];

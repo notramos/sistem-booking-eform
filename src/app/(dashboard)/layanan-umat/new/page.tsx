@@ -19,6 +19,8 @@ import { SERVICE_TYPES, SERVICE_TYPE_MAP, computeMisaScheduleOptions, getMisaKin
 import { angkaKeTerbilang } from '@/lib/terbilang';
 import type { ServiceTypeConfig, ServiceFieldConfig } from '@/types';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { canRequestService } from '@/lib/service-access';
 
 type FormData = Record<string, string>;
 
@@ -90,6 +92,9 @@ export default function NewCongregationServicePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedType = searchParams.get('type');
+  const { user, loading: authLoading } = useAuth();
+  const roles = useMemo(() => user?.roles?.map((role) => role.name) ?? [], [user?.roles]);
+  const allowedServiceTypes = PUBLIC_SERVICE_TYPES.filter((service) => canRequestService(roles, service.value));
   const legacyLingkunganLink = requestedType === 'misa_lingkungan';
   const initialType = legacyLingkunganLink ? 'permohonan_misa' : PUBLIC_SERVICE_TYPES.some((service) => service.value === requestedType) ? requestedType! : 'intensi_misa';
   const createService = useCreateCongregationService();
@@ -263,6 +268,15 @@ export default function NewCongregationServicePage() {
 
   const hasServiceType = !!selectedType;
 
+  if (authLoading) return null;
+  if (!config || !canRequestService(roles, config.value)) {
+    return <div className="mx-auto max-w-lg space-y-3 rounded-xl border bg-card p-6 text-center">
+      <h1 className="text-lg font-semibold">Layanan ini tidak tersedia untuk akun Anda</h1>
+      <p className="text-sm text-muted-foreground">Pilih layanan yang sesuai dengan peran akun Anda.</p>
+      <Link href="/layanan-umat" className="inline-block text-sm font-medium text-primary underline">Kembali ke daftar layanan</Link>
+    </div>;
+  }
+
   return (
     <div className="space-y-6">
       <Link
@@ -301,10 +315,10 @@ export default function NewCongregationServicePage() {
             <div className="space-y-4">
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
                 <p className="font-medium text-foreground">Pelayanan digital yang tersedia</p>
-                <p className="mt-1 text-muted-foreground">Pilih Intensi Misa, Permohonan Misa, Konsultasi Romo, atau Perminyakan. Layanan lain akan tersedia secara bertahap.</p>
+                <p className="mt-1 text-muted-foreground">Pilih layanan yang tersedia untuk akun Anda.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {PUBLIC_SERVICE_TYPES.map((t) => {
+                {allowedServiceTypes.map((t) => {
                   const selected = selectedType === t.value;
                   const Icon = getServiceTypeIcon(t.icon);
                   return (

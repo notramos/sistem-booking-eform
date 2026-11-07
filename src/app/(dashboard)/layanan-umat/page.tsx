@@ -12,6 +12,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Pagination } from '@/components/ui/pagination';
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { SERVICE_TYPES, getServiceDisplayLabel } from '@/lib/service-types';
+import { canRequestService } from '@/lib/service-access';
 import { CalendarDays, Heart, User, CalendarPlus, MessagesSquare, ArrowRight, LockKeyhole, FlaskConical } from 'lucide-react';
 
 const SERVICE_ICONS = {
@@ -22,7 +23,8 @@ const SERVICE_ICONS = {
 } as const;
 
 export default function LayananUmatPage() {
-  const { hasAnyRole } = useAuth();
+  const { hasAnyRole, user } = useAuth();
+  const roles = user?.roles?.map((role) => role.name) ?? [];
   const isStaff = hasAnyRole(['sekretariat', 'p2', 'pastor', 'it_admin']);
   const [view, setView] = useState<'services' | 'requests'>('services');
   const [statusFilter, setStatusFilter] = useState('');
@@ -75,7 +77,8 @@ export default function LayananUmatPage() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {SERVICE_TYPES.map((serviceType) => {
             const Icon = SERVICE_ICONS[serviceType.value as keyof typeof SERVICE_ICONS] ?? Heart;
-            const isEnabled = ['intensi_misa', 'permohonan_misa', 'konsultasi_romo', 'sakramen_minyak_suci'].includes(serviceType.value);
+            const isEnabled = canRequestService(roles, serviceType.value);
+            const roleRestricted = ['permohonan_misa', 'sakramen_minyak_suci'].includes(serviceType.value) && !isEnabled;
             const content = (
               <Card className={isEnabled
                 ? 'border-primary/30 transition-all hover:border-primary hover:shadow-md'
@@ -91,7 +94,7 @@ export default function LayananUmatPage() {
                       {isEnabled ? <ArrowRight className="h-4 w-4 shrink-0 text-primary" /> : <LockKeyhole className="h-4 w-4 shrink-0 text-muted-foreground" />}
                     </div>
                     <Badge variant={isEnabled ? 'default' : 'secondary'} className="mt-1 text-[10px] leading-4 sm:mt-2 sm:text-xs">
-                      {isEnabled ? 'Tersedia' : 'Segera Hadir'}
+                      {isEnabled ? 'Tersedia' : roleRestricted ? 'Khusus Ketua Lingkungan' : 'Segera Hadir'}
                     </Badge>
                   </div>
                 </CardContent>

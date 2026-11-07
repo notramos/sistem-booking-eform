@@ -14,7 +14,7 @@ import { useState } from "react";
 import { PwaInstallBanner } from "@/components/layout/PwaInstallBanner";
 
 const loginSchema = z.object({
-  email: z.string().email("Format email tidak valid"),
+  email: z.string().trim().min(1, "Email atau UserName wajib diisi"),
   password: z.string().min(1, "Password wajib diisi"),
 });
 type LoginForm = z.infer<typeof loginSchema>;
@@ -34,7 +34,7 @@ export default function LoginPage() {
       router.push("/booking/calendar");
     } catch (err: unknown) {
       const e = err as { message?: string };
-      setError("root", { message: e?.message || "Email atau password salah" });
+      setError("root", { message: e?.message || "Email/UserName atau password salah" });
     }
   };
 
@@ -84,7 +84,7 @@ export default function LoginPage() {
             <Card className="border-0 bg-transparent shadow-none">
               <CardHeader className="sr-only">
                 <CardTitle>Masuk</CardTitle>
-                <CardDescription>Masukkan email dan password Anda</CardDescription>
+                <CardDescription>Masukkan email atau UserName dan password Anda</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -97,9 +97,10 @@ export default function LoginPage() {
               <div>
                 <Input
                   id="email"
-                  label="Email"
-                  type="email"
-                  placeholder="nama@email.com"
+                  label="Email atau UserName"
+                  type="text"
+                  autoComplete="username"
+                  placeholder="Email atau UserName Anda"
                   {...register("email")}
                 />
                 {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}

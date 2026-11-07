@@ -20,11 +20,11 @@ import { Eye, Mail, MapPin, Pencil, Phone, Plus, Search, ShieldCheck, UserCheck,
 import type { User, Wilayah } from '@/types';
 
 const ROLES = [
-  { value: 'umat', label: 'Umat' }, { value: 'sekretariat', label: 'Sekretariat' },
+  { value: 'umat', label: 'Umat' }, { value: 'ketua_lingkungan', label: 'Ketua Lingkungan' }, { value: 'sekretariat', label: 'Sekretariat' },
   { value: 'p2', label: 'P2' }, { value: 'pastor', label: 'Pastor' }, { value: 'it_admin', label: 'IT Admin' },
 ];
-type UserForm = { name: string; email: string; password: string; role: string; phone: string; department: string; position: string; nip: string; wilayah_id: string; lingkungan_id: string; parish: string };
-const emptyForm: UserForm = { name: '', email: '', password: '', role: 'umat', phone: '', department: '', position: '', nip: '', wilayah_id: '', lingkungan_id: '', parish: 'Paroki Harapan Indah' };
+type UserForm = { name: string; email: string; username: string; password: string; role: string; phone: string; department: string; position: string; nip: string; wilayah_id: string; lingkungan_id: string; parish: string };
+const emptyForm: UserForm = { name: '', email: '', username: '', password: '', role: 'umat', phone: '', department: '', position: '', nip: '', wilayah_id: '', lingkungan_id: '', parish: 'Paroki Harapan Indah' };
 
 function avatarUrl(path?: string | null) {
   if (!path) return undefined;
@@ -40,6 +40,7 @@ function UserEditor({ value, onChange, wilayah, editing }: { value: UserForm; on
     <section className="space-y-3"><p className="text-sm font-semibold">Informasi akun</p><div className="grid gap-3 sm:grid-cols-2">
       <Input label="Nama lengkap *" value={value.name} onChange={(e) => set('name', e.target.value)} required />
       <Input label="Email *" type="email" value={value.email} onChange={(e) => set('email', e.target.value)} required />
+      <Input label="UserName (opsional)" value={value.username} onChange={(e) => set('username', e.target.value)} autoComplete="off" />
       {!editing && <Input label="Password awal *" type="password" minLength={8} value={value.password} onChange={(e) => set('password', e.target.value)} required />}
       <Select label="Role *" value={value.role} onChange={(e) => set('role', e.target.value)}>{ROLES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</Select>
     </div></section>
@@ -79,7 +80,7 @@ export default function AdminUsersPage() {
   });
   const toggleActive = useMutation({ mutationFn: (id: string) => usersApi.toggleActive(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); toast.success('Status user berhasil diubah'); setToggleTarget(null); }, onError: mutationError });
   const openCreate = () => { setEditingUser(null); setForm(emptyForm); setEditorOpen(true); };
-  const openEdit = (item: User) => { setEditingUser(item); setForm({ name: item.name, email: item.email, password: '', role: item.roles?.[0]?.name || 'umat', phone: item.phone || '', department: item.department || '', position: item.position || '', nip: item.nip || '', wilayah_id: item.wilayah_id || '', lingkungan_id: item.lingkungan_id || '', parish: item.parish || 'Paroki Harapan Indah' }); setEditorOpen(true); };
+  const openEdit = (item: User) => { setEditingUser(item); setForm({ name: item.name, email: item.email, username: item.username || '', password: '', role: item.roles?.[0]?.name || 'umat', phone: item.phone || '', department: item.department || '', position: item.position || '', nip: item.nip || '', wilayah_id: item.wilayah_id || '', lingkungan_id: item.lingkungan_id || '', parish: item.parish || 'Paroki Harapan Indah' }); setEditorOpen(true); };
   const users = usersData?.data ?? [], activeOnPage = users.filter((item) => item.is_active).length;
 
   return <div className="space-y-5">
@@ -87,7 +88,7 @@ export default function AdminUsersPage() {
     <div className="grid gap-3 sm:grid-cols-3">
       <Card><CardContent className="flex items-center gap-3 p-4"><span className="rounded-xl bg-primary/10 p-2.5 text-primary"><Users className="h-5 w-5" /></span><div><p className="text-xs text-muted-foreground">Total user</p><p className="text-xl font-bold">{usersData?.meta?.total ?? 0}</p></div></CardContent></Card>
       <Card><CardContent className="flex items-center gap-3 p-4"><span className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-600"><UserCheck className="h-5 w-5" /></span><div><p className="text-xs text-muted-foreground">Aktif di halaman ini</p><p className="text-xl font-bold">{activeOnPage}</p></div></CardContent></Card>
-      <Card><CardContent className="flex items-center gap-3 p-4"><span className="rounded-xl bg-amber-500/10 p-2.5 text-amber-600"><ShieldCheck className="h-5 w-5" /></span><div><p className="text-xs text-muted-foreground">Akun internal</p><p className="text-xl font-bold">{users.filter((item) => item.roles?.[0]?.name !== 'umat').length}</p></div></CardContent></Card>
+      <Card><CardContent className="flex items-center gap-3 p-4"><span className="rounded-xl bg-amber-500/10 p-2.5 text-amber-600"><ShieldCheck className="h-5 w-5" /></span><div><p className="text-xs text-muted-foreground">Akun internal</p><p className="text-xl font-bold">{users.filter((item) => !['umat', 'ketua_lingkungan'].includes(item.roles?.[0]?.name || '')).length}</p></div></CardContent></Card>
     </div>
     <Card><CardHeader className="pb-3"><CardTitle className="text-base">Cari dan filter</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px_160px_auto]">
       <Input placeholder="Cari nama, email, atau NIP" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); setSearch(searchDraft.trim()); } }} />

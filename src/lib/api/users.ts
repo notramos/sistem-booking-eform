@@ -7,7 +7,7 @@ export const usersApi = {
 
   get: (id: string) => apiClient.get<ApiResponse<User>>(`/users/${id}`),
 
-  create: (data: { name: string; email: string; password: string; role: string; phone?: string; department?: string; position?: string; nip?: string; wilayah_id?: string | null; lingkungan_id?: string | null; parish?: string }) =>
+  create: (data: { name: string; email: string; username?: string; password: string; role: string; phone?: string; department?: string; position?: string; nip?: string; wilayah_id?: string | null; lingkungan_id?: string | null; parish?: string }) =>
     apiClient.post<ApiResponse<User>>('/users', data),
 
   update: (id: string, data: Partial<User & { role?: string }>) =>
