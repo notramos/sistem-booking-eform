@@ -524,7 +524,9 @@ export default function NewBookingPage() {
               <label htmlFor="purposeType" className="mb-1.5 block text-sm font-medium">Jenis Kegiatan *</label>
               <select id="purposeType" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" {...register('purposeType', { onChange: () => setSelectedRoomId(null) })}>
                 <option value="">Pilih jenis kegiatan</option>
-                {Object.entries(PURPOSE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                {(['latihan_koor', 'latihan_lektor_pemazmur', 'acara_lainnya'] as const).map((value) => (
+                  <option key={value} value={value}>{PURPOSE_LABELS[value]}</option>
+                ))}
               </select>
               {watchedPurpose === 'latihan_koor' && (
                 <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
